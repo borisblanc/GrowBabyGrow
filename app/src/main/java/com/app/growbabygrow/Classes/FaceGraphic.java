@@ -49,6 +49,28 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
     PointF leftCheek = null;
     PointF rightCheek = null;
 
+    private static final float FACE_POSITION_RADIUS = 10.0f;
+    private static final float ID_TEXT_SIZE = 40.0f;
+    private static final float ID_Y_OFFSET = 50.0f;
+    private static final float ID_X_OFFSET = -50.0f;
+    private static final float BOX_STROKE_WIDTH = 5.0f;
+
+    private static final int COLOR_CHOICES[] = {
+            Color.BLUE,
+            Color.CYAN,
+            Color.GREEN,
+            Color.MAGENTA,
+            Color.RED,
+            Color.WHITE,
+            Color.YELLOW
+    };
+
+    private Paint mFacePositionPaint;
+    private Paint mIdPaint;
+    private Paint mBoxPaint;
+
+    private static int mCurrentColorIndex = 0;
+
     private volatile Face mFace;
 
     public FaceGraphic(GraphicOverlay overlay, Context context) {
@@ -59,6 +81,25 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         marker = BitmapFactory.decodeResource(resources, R.drawable.marker, opt);
 
 
+    }
+
+    public FaceGraphic(GraphicOverlay overlay) {
+        super(overlay);
+
+        mCurrentColorIndex = (mCurrentColorIndex + 1) % COLOR_CHOICES.length;
+        final int selectedColor = COLOR_CHOICES[mCurrentColorIndex];
+
+        mFacePositionPaint = new Paint();
+        mFacePositionPaint.setColor(selectedColor);
+
+        mIdPaint = new Paint();
+        mIdPaint.setColor(selectedColor);
+        mIdPaint.setTextSize(ID_TEXT_SIZE);
+
+        mBoxPaint = new Paint();
+        mBoxPaint.setColor(selectedColor);
+        mBoxPaint.setStyle(Paint.Style.STROKE);
+        mBoxPaint.setStrokeWidth(BOX_STROKE_WIDTH);
     }
 
     public void setId(int id) {
@@ -90,28 +131,57 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         mFace = null;
     }
 
+//    @Override
+//    public void draw(Canvas canvas) {
+//        Face face = mFace;
+//        if (face == null) {
+//            return;
+//        }
+//
+//        // Draws a circle at the position of the detected face, with the face's track id below.
+//        float x = translateX(face.getPosition().x + face.getWidth() / 2);
+//        float y = translateY(face.getPosition().y + face.getHeight() / 2);
+//        canvas.drawCircle(x, y, FACE_POSITION_RADIUS, mFacePositionPaint);
+//        canvas.drawText("id: " + faceId, x + ID_X_OFFSET, y + ID_Y_OFFSET, mIdPaint);
+//        canvas.drawText("happiness: " + String.format("%.2f", face.getIsSmilingProbability()), x - ID_X_OFFSET, y - ID_Y_OFFSET, mIdPaint);
+//        canvas.drawText("right eye: " + String.format("%.2f", face.getIsRightEyeOpenProbability()), x + ID_X_OFFSET * 2, y + ID_Y_OFFSET * 2, mIdPaint);
+//        canvas.drawText("left eye: " + String.format("%.2f", face.getIsLeftEyeOpenProbability()), x - ID_X_OFFSET*2, y - ID_Y_OFFSET*2, mIdPaint);
+//
+//        // Draws a bounding box around the face.
+//        float xOffset = scaleX(face.getWidth() / 2.0f);
+//        float yOffset = scaleY(face.getHeight() / 2.0f);
+//        float left = x - xOffset;
+//        float top = y - yOffset;
+//        float right = x + xOffset;
+//        float bottom = y + yOffset;
+//        canvas.drawRect(left, top, right, bottom, mBoxPaint);
+//    }
+
+
     @Override
     public void draw(Canvas canvas) {
         Face face = mFace;
-        if(face == null) {
+        if (face == null) {
             canvas.drawColor(0, PorterDuff.Mode.CLEAR);
             isSmilingProbability = -1;
-            eyeRightOpenProbability= -1;
+            eyeRightOpenProbability = -1;
             eyeLeftOpenProbability = -1;
             return;
         }
 
         facePosition = new PointF(translateX(face.getPosition().x), translateY(face.getPosition().y));
+
+
         faceWidth = face.getWidth() * 4;
         faceHeight = face.getHeight() * 4;
-        faceCenter = new PointF(translateX(face.getPosition().x + faceWidth/8), translateY(face.getPosition().y + faceHeight/8));
+        faceCenter = new PointF(translateX(face.getPosition().x + faceWidth / 8), translateY(face.getPosition().y + faceHeight / 8));
         isSmilingProbability = face.getIsSmilingProbability();
         eyeRightOpenProbability = face.getIsRightEyeOpenProbability();
         eyeLeftOpenProbability = face.getIsLeftEyeOpenProbability();
         eulerY = face.getEulerY();
         eulerZ = face.getEulerZ();
         //DO NOT SET TO NULL THE NON EXISTENT LANDMARKS. USE OLDER ONES INSTEAD.
-        for(Landmark landmark : face.getLandmarks()) {
+        for (Landmark landmark : face.getLandmarks()) {
             switch (landmark.getType()) {
                 case Landmark.LEFT_EYE:
                     leftEyePos = new PointF(translateX(landmark.getPosition().x), translateY(landmark.getPosition().y));
@@ -155,31 +225,36 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         Paint mPaint = new Paint();
         mPaint.setColor(Color.WHITE);
         mPaint.setStrokeWidth(4);
-        if(faceCenter != null)
+        if (faceCenter != null)
             canvas.drawBitmap(marker, faceCenter.x, faceCenter.y, null);
-        if(noseBasePos != null)
+        if (noseBasePos != null)
             canvas.drawBitmap(marker, noseBasePos.x, noseBasePos.y, null);
-        if(leftEyePos != null)
+        if (leftEyePos != null)
             canvas.drawBitmap(marker, leftEyePos.x, leftEyePos.y, null);
-        if(rightEyePos != null)
+        if (rightEyePos != null)
             canvas.drawBitmap(marker, rightEyePos.x, rightEyePos.y, null);
-        if(mouthBase != null)
+        if (mouthBase != null)
             canvas.drawBitmap(marker, mouthBase.x, mouthBase.y, null);
-        if(leftMouthCorner != null)
+        if (leftMouthCorner != null)
             canvas.drawBitmap(marker, leftMouthCorner.x, leftMouthCorner.y, null);
-        if(rightMouthCorner != null)
+        if (rightMouthCorner != null)
             canvas.drawBitmap(marker, rightMouthCorner.x, rightMouthCorner.y, null);
-        if(leftEar != null)
+        if (leftEar != null)
             canvas.drawBitmap(marker, leftEar.x, leftEar.y, null);
-        if(rightEar != null)
+        if (rightEar != null)
             canvas.drawBitmap(marker, rightEar.x, rightEar.y, null);
-        if(leftEarTip != null)
+        if (leftEarTip != null)
             canvas.drawBitmap(marker, leftEarTip.x, leftEarTip.y, null);
-        if(rightEarTip != null)
+        if (rightEarTip != null)
             canvas.drawBitmap(marker, rightEarTip.x, rightEarTip.y, null);
-        if(leftCheek != null)
+        if (leftCheek != null)
             canvas.drawBitmap(marker, leftCheek.x, leftCheek.y, null);
-        if(rightCheek != null)
+        if (rightCheek != null)
             canvas.drawBitmap(marker, rightCheek.x, rightCheek.y, null);
+
+
+
+//        if (facePosition != null)
+//            canvas.drawBitmap(marker, face.getPosition().x, face.getPosition().y, null);
     }
 }

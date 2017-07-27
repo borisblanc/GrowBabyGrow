@@ -56,6 +56,8 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import static android.hardware.camera2.CameraMetadata.CONTROL_VIDEO_STABILIZATION_MODE_ON;
+
 /**
  * Camera2Source: Created by Ezequiel Adrian Minniti. Buenos Aires.
  *
@@ -912,6 +914,10 @@ public class Camera2Source {
                                 if(mFlashSupported) {
                                     mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, mFlashMode);
                                 }
+                                //should stabilize if possible
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CONTROL_VIDEO_STABILIZATION_MODE_ON);
+
+
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
@@ -1125,7 +1131,7 @@ public class Camera2Source {
                             .setId(mPendingFrameId)
                             .setTimestampMillis(mPendingTimeMillis)
                             //.setRotation(getDetectorOrientation(mSensorOrientation))
-                            .setRotation(Frame.ROTATION_0) //set frame upright so we can detect without custom detector for now
+                            .setRotation(Frame.ROTATION_0) //set frame upright so we can detect with custom detector other way breaks all detection  not sure why
                             .build();
 
                     // We need to clear mPendingFrameData to ensure that this buffer isn't
