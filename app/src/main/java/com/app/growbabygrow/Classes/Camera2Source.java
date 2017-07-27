@@ -813,7 +813,7 @@ public class Camera2Source {
      */
     private static Size chooseVideoSize(Size[] choices) {
         for (Size size : choices) {
-            if (size.getWidth() == size.getHeight() * 16 / 9)// && size.getWidth() <= 1080)
+            if (size.getWidth() == size.getHeight() * 16 / 9 && size.getHeight() <= 1080) //switch for landscape
             {
                 return size;
             }

@@ -136,11 +136,12 @@ public class CaptureActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         if (usingFrontCamera) {
                             stopCameraSource();
-                            createCameraSource(Camera2Source.CAMERA_FACING_FRONT);
-                            usingFrontCamera = false;
-                        } else {
-                            stopCameraSource();
                             createCameraSource(Camera2Source.CAMERA_FACING_BACK);
+                            usingFrontCamera = false;
+                        }
+                        else {
+                            stopCameraSource();
+                            createCameraSource(Camera2Source.CAMERA_FACING_FRONT);
                             usingFrontCamera = true;
                         }
                     }
@@ -261,7 +262,7 @@ public class CaptureActivity extends AppCompatActivity {
         if(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                 useCamera2 = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
-                createCameraSource(Camera2Source.CAMERA_FACING_FRONT);
+                createCameraSource(usingFrontCamera ? Camera2Source.CAMERA_FACING_FRONT : Camera2Source.CAMERA_FACING_BACK);
                 //ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 0);
             }
             else {
@@ -288,12 +289,10 @@ public class CaptureActivity extends AppCompatActivity {
 
             if (previewFaceDetector.isOperational()) {
                 //previewFaceDetector.setProcessor(new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
+                faceDetector.setProcessor(new LargestFaceFocusingProcessor.Builder(previewFaceDetector, new GraphicFaceTracker(mGraphicOverlay)).build());
 
-                faceDetector.setProcessor(
-                        new LargestFaceFocusingProcessor.Builder(previewFaceDetector, new GraphicFaceTracker(mGraphicOverlay))
-                                .build());
-
-            } else {
+            }
+            else {
                 Toast.makeText(context, "FACE DETECTION NOT AVAILABLE", Toast.LENGTH_SHORT).show();
             }
 
