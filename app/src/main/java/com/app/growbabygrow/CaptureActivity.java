@@ -4,6 +4,7 @@ package com.app.growbabygrow;
 
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -46,8 +47,9 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
+public class CaptureActivity extends AppCompatActivity {
+    private static final String TAG = "CaptureActivity";
+
     private Context context;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private static final int REQUEST_STORAGE_PERMISSION = 201;
@@ -249,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else {
             if(googleApiAvailability.isUserResolvableError(resultCode)) {
-                googleApiAvailability.getErrorDialog(MainActivity.this, resultCode, 2404).show();
+                googleApiAvailability.getErrorDialog(CaptureActivity.this, resultCode, 2404).show();
             }
         }
         return false;
@@ -419,7 +421,7 @@ public class MainActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestPermissionThenOpenCamera();
             } else {
-                Toast.makeText(MainActivity.this, "CAMERA PERMISSION REQUIRED", Toast.LENGTH_LONG).show();
+                Toast.makeText(CaptureActivity.this, "CAMERA PERMISSION REQUIRED", Toast.LENGTH_LONG).show();
                 finish();
             }
         }
@@ -427,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
             if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestPermissionThenOpenCamera();
             } else {
-                Toast.makeText(MainActivity.this, "STORAGE PERMISSION REQUIRED", Toast.LENGTH_LONG).show();
+                Toast.makeText(CaptureActivity.this, "STORAGE PERMISSION REQUIRED", Toast.LENGTH_LONG).show();
             }
         }
     }
