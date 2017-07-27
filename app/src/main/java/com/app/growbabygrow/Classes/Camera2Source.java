@@ -53,6 +53,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -85,7 +87,7 @@ public class Camera2Source {
     private int mFocusMode = CAMERA_AF_AUTO;
 
     private static final String TAG = "Camera2Source";
-    private static final double maxRatioTolerance = 0.2;
+    private static final double maxRatioTolerance = 0.1;
     private Context mContext;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
@@ -560,40 +562,41 @@ public class Camera2Source {
 
 
 
-//    private Size getBestAspectPictureSize(android.util.Size[] supportedPictureSizes) {
-//        float targetRatio = Utils.getScreenRatio(mContext);
-//        Size bestSize = null;
-//        TreeMap<Double, List> diffs = new TreeMap<>();
-//
-//        for (android.util.Size size : supportedPictureSizes) {
-//            float ratio = (float)size.getWidth() / size.getHeight();
-//            double diff = Math.abs(ratio - targetRatio);
-//            if (diff < maxRatioTolerance){
-//                if (diffs.keySet().contains(diff)){
-//                    //add the value to the list
-//                    diffs.get(diff).add(size);
-//                } else {
-//                    List newList = new ArrayList<>();
-//                    newList.add(size);
-//                    diffs.put(diff, newList);
-//                }
-//            }
-//        }
-//
-//        //diffs now contains all of the usable sizes
-//        //now let's see which one has the least amount of
-//        for (Map.Entry entry: diffs.entrySet()){
-//            List<android.util.Size> entries = (List)entry.getValue();
-//            for (android.util.Size s: entries) {
-//                if(bestSize == null) {
-//                    bestSize = new Size(s.getWidth(), s.getHeight());
-//                } else if(bestSize.getWidth() < s.getWidth() || bestSize.getHeight() < s.getHeight()) {
-//                    bestSize = new Size(s.getWidth(), s.getHeight());
-//                }
-//            }
-//        }
-//        return bestSize;
-//    }
+    private Size getBestAspectPictureSize(android.util.Size[] supportedPictureSizes) {
+        float targetRatio = Utils.getScreenRatio(mContext);
+        Size bestSize = null;
+        TreeMap<Double, List> diffs = new TreeMap<>();
+
+        for (android.util.Size size : supportedPictureSizes) {
+            //float ratio = (float)size.getWidth() / size.getHeight();
+            float ratio = (float) size.getHeight()/ size.getWidth(); //flipped for landscape
+            double diff = Math.abs(ratio - targetRatio);
+            if (diff < maxRatioTolerance){
+                if (diffs.keySet().contains(diff)){
+                    //add the value to the list
+                    diffs.get(diff).add(size);
+                } else {
+                    List newList = new ArrayList<>();
+                    newList.add(size);
+                    diffs.put(diff, newList);
+                }
+            }
+        }
+
+        //diffs now contains all of the usable sizes
+        //now let's see which one has the least amount of
+        for (Map.Entry entry: diffs.entrySet()){
+            List<android.util.Size> entries = (List)entry.getValue();
+            for (android.util.Size s: entries) {
+                if(bestSize == null) {
+                    bestSize = new Size(s.getWidth(), s.getHeight());
+                } else if(bestSize.getWidth() < s.getWidth() || bestSize.getHeight() < s.getHeight()) {
+                    bestSize = new Size(s.getWidth(), s.getHeight());
+                }
+            }
+        }
+        return bestSize;
+    }
 
     /**
      * Given {@code choices} of {@code Size}s supported by a camera, choose the smallest one that
@@ -765,11 +768,9 @@ public class Camera2Source {
             Size[] outputSizesMediaRecorder = Utils.sizeToSize(map.getOutputSizes(MediaRecorder.class));
 
             // For still image captures, we use the largest available size.
-            //hardcode until i can figure this out
-            Size hardcodesize = new Size(_width, _height);
-            //Size largest = hardcodesize;//getBestAspectPictureSize(map.getOutputSizes(SurfaceTexture.class));
+            Size largest = getBestAspectPictureSize(map.getOutputSizes(SurfaceTexture.class));
 
-            mPreviewSize = chooseOptimalSize(outputSizes, rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth, maxPreviewHeight, hardcodesize);
+            mPreviewSize = chooseOptimalSize(outputSizes, rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth, maxPreviewHeight, largest);
 
             mVideoSize = chooseVideoSize(outputSizesMediaRecorder);
 
@@ -1131,7 +1132,7 @@ public class Camera2Source {
                             .setId(mPendingFrameId)
                             .setTimestampMillis(mPendingTimeMillis)
                             //.setRotation(getDetectorOrientation(mSensorOrientation))
-                            .setRotation(Frame.ROTATION_0) //set frame upright so we can detect with custom detector other way breaks all detection  not sure why
+                            .setRotation(Frame.ROTATION_0) //set frame upright so we can detect with custom detector other way breaks all detection has to do with landscape setting for my app?
                             .build();
 
                     // We need to clear mPendingFrameData to ensure that this buffer isn't

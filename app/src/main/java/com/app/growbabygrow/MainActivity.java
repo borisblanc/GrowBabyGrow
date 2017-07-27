@@ -181,6 +181,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void CreateTrimmedVideo(FrameData.Tuple<Long,Long> bestfacetimestamps) throws IOException
     {
+        if (bestfacetimestamps == null)
+            return;
+
         Toast.makeText(this, "Starting Trim Video", Toast.LENGTH_SHORT).show();
         VideoUtils.genTrimVideoUsingMuxer(RecordedVideoOutputFileFolder().getPath(), TrimmedVideoOutputFileFolder().getPath(), bestfacetimestamps.x, bestfacetimestamps.y, false, true);
 
