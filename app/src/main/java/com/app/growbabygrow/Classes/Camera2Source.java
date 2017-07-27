@@ -767,12 +767,9 @@ public class Camera2Source {
             Size[] outputSizes = Utils.sizeToSize(map.getOutputSizes(SurfaceTexture.class));
             Size[] outputSizesMediaRecorder = Utils.sizeToSize(map.getOutputSizes(MediaRecorder.class));
 
-            // For still image captures, we use the largest available size.
-            Size largest = getBestAspectPictureSize(map.getOutputSizes(SurfaceTexture.class));
-
-            mPreviewSize = chooseOptimalSize(outputSizes, rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth, maxPreviewHeight, largest);
-
             mVideoSize = chooseVideoSize(outputSizesMediaRecorder);
+            //MAX_PREVIEW_WIDTH and MAX_PREVIEW_Height limit this according to the comments above about camera2 limitations so will leave alone for now.
+            mPreviewSize = chooseOptimalSize(outputSizes, rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth, maxPreviewHeight, mVideoSize);
 
             // We fit the aspect ratio of TextureView to the size of preview we picked.
             int orientation = mDisplayOrientation;
