@@ -1,17 +1,17 @@
 <resources>
     <string name="app_name">GrowBabyGrow</string>
-    <string name="add_new_project">Begin Baby Grow…</string>
+    <string name="add_new_project">New Baby Grow…</string>
     <string name="take_picture">PICTURE</string>
     <string name="switch_camera">SWITCH</string>
     <string name="record">Record</string>
     <string name="stop">Stop</string>
-    <string name="preference_file_key1">com.app.growbabygrow.pfile1</string>
-    <string name="preference_file_key2">com.app.growbabygrow.pfile2</string>
-    <string name="saved_name">saved_name</string>
-    <string name="saved_period">saved_period</string>
-    <string name="save_project_settings">Save Baby Grow…</string>
-    <string name="go_capture_start">Start Baby Grow…</string>
 
+    <string name="save_project_settings">Save Baby Grow…</string>
+    <string name="go_capture_start">Grow Baby Grow!!</string>
+
+
+
+    <!--array for spinner-->
     <string-array name="Time_periods">
         <item>Select video schedule..</item>
         <item>Twice Weekly</item>
@@ -19,5 +19,15 @@
         <item>Bi-weekly</item>
         <item>Monthly</item>
     </string-array>
+
+
+    <!-- preference file values -->
+    <string name="p_file1_key">com.app.growbabygrow.pfile1</string>
+    <string name="p_file1_saved_name">saved_name</string>
+    <string name="p_file1_saved_period">saved_period</string>
+    <string name="p_file1_saved_main_mp4pathname">saved_main_mp4pathname</string>
+    <string name="p_file1_saved_main_mp4meta">saved_main_mp4meta</string>
+
+    <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
 
 </resources>
