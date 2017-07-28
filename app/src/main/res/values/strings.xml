@@ -10,7 +10,6 @@
     <string name="go_capture_start">Grow Baby Grow!!</string>
 
 
-
     <!--array for spinner-->
     <string-array name="Time_periods">
         <item>Select video schedule..</item>
@@ -28,6 +27,10 @@
     <string name="p_file1_saved_main_mp4pathname">saved_main_mp4pathname</string>
     <string name="p_file1_saved_main_mp4meta">saved_main_mp4meta</string>
 
+    <string name="p_file1_saved_orig_mp4pathname">saved_orig_mp4pathname</string>
+    <string name="p_file1_saved_trim_mp4pathname">saved_trim_mp4pathname</string>
+
     <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
+    <string name="title_activity_video_edit">VideoEditActivity</string>
 
 </resources>

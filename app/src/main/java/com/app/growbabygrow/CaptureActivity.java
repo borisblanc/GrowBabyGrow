@@ -4,12 +4,11 @@ package com.app.growbabygrow;
 
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -22,7 +21,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.app.growbabygrow.R;
 import com.app.growbabygrow.Classes.Camera2Source;
 import com.app.growbabygrow.Classes.CameraSource;
 import com.app.growbabygrow.Classes.CameraSourcePreview;
@@ -82,30 +80,15 @@ public class CaptureActivity extends AppCompatActivity {
 
     public Button recButton;
 
-
     private int _fps = 30;
 
     private int _vidlengthseconds = 3;
 
-    private File VideoFileDir;
+    private SharedPreferences sharedpreferences;
 
-    private final String RecordedVideoFileName = "orig_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant during session
-    private File RecordedVideoOutputFileFolder()
-    {
-        return new File(VideoFileDir, RecordedVideoFileName);
-    }
-
-    private final String trimVideoFileName = "trim_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant during session
-    private File TrimmedVideoOutputFileFolder()
-    {
-        return new File(VideoFileDir, trimVideoFileName);
-    }
-
-    private final String mergeVideoFileName = "merged_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant during session
-    private File MergedVideoOutputFileFolder()
-    {
-        return new File(VideoFileDir, mergeVideoFileName);
-    }
+    private String MainMergedVideoOutputFilepath;
+    private String TrimmedVideoOutputFilepath;
+    private String OriginalVideoOutputFilepath;
 
 
     @Override
@@ -115,10 +98,13 @@ public class CaptureActivity extends AppCompatActivity {
 
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
             //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE); lock this in manifest instead
-            setContentView(R.layout.activity_main);
+            setContentView(R.layout.captureactivity_main);
             context = getApplicationContext();
 
-            VideoFileDir = context.getExternalFilesDir(null);
+            sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
+            MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
+            TrimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim_mp4pathname), null);
+            OriginalVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_orig_mp4pathname), null);
 
             recButton = (Button) findViewById(R.id.btn_record);
             Button switchButton = (Button) findViewById(R.id.btn_switch);
@@ -188,10 +174,10 @@ public class CaptureActivity extends AppCompatActivity {
             return;
 
         Toast.makeText(this, "Starting Trim Video", Toast.LENGTH_SHORT).show();
-        VideoUtils.genTrimVideoUsingMuxer(RecordedVideoOutputFileFolder().getPath(), TrimmedVideoOutputFileFolder().getPath(), bestfacetimestamps.x, bestfacetimestamps.y, false, true);
+        VideoUtils.genTrimVideoUsingMuxer(OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath, bestfacetimestamps.x, bestfacetimestamps.y, false, true);
 
         Toast.makeText(this, "Starting Merge Video", Toast.LENGTH_SHORT).show();
-        VideoUtils.mergeVideos(MergedVideoOutputFileFolder().getAbsolutePath(), RecordedVideoOutputFileFolder().getAbsolutePath(),TrimmedVideoOutputFileFolder().getAbsolutePath());
+        VideoUtils.mergeVideos(MainMergedVideoOutputFilepath, OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath);
 
         Toast.makeText(this, "All Done!!", Toast.LENGTH_SHORT).show();
     }
@@ -297,7 +283,7 @@ public class CaptureActivity extends AppCompatActivity {
             }
 
             if (useCamera2) {
-                mCamera2Source = new Camera2Source.Builder(context, faceDetector, RecordedVideoOutputFileFolder().getAbsolutePath())
+                mCamera2Source = new Camera2Source.Builder(context, faceDetector, OriginalVideoOutputFilepath)
                         .setFocusMode(Camera2Source.CAMERA_AF_AUTO)
                         .setFlashMode(Camera2Source.CAMERA_FLASH_AUTO)
                         .setFacing(facing) //Camera2Source.CAMERA_FACING_FRONT = 1 or CAMERA_FACING_BACK = 0
@@ -462,12 +448,7 @@ public class CaptureActivity extends AppCompatActivity {
         }
     }
 
-//    private void testextractframes() throws Throwable {
-//        File _filesdir = android.os.Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-//        String filename = "VID_20170714_133159.mp4";
-//        ExtractMpegFramesTest test = new ExtractMpegFramesTest();
-//        test.testExtractMpegFrames(_filesdir, filename);
-//    }
+
 
 }
 

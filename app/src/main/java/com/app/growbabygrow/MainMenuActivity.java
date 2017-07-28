@@ -16,6 +16,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.util.Calendar;
+
+import static android.R.attr.name;
 import static com.app.growbabygrow.R.id.fab;
 
 
@@ -33,11 +37,39 @@ public class MainMenuActivity extends AppCompatActivity {
 
     private SharedPreferences sharedpreferences;
 
+    private File baseVideoFileDir;
+
+    private String Name;
+    private String Period;
+
+    private final String RecordedVideoFileName = "orig_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant during session
+    private File OriginalVideoOutputFilePath()
+    {
+        return new File(baseVideoFileDir, RecordedVideoFileName);
+    }
+
+    private final String trimVideoFileName = "trim_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant during session
+    private File TrimmedVideoOutputFilePath()
+    {
+        return new File(baseVideoFileDir, trimVideoFileName);
+    }
+
+    //private final String mergeVideoFileName = "main_merged_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant always since it is the base of whole project
+    private File MainMergedVideoOutputFilePath(String filename)
+    {
+        //simple non unique hash
+        Integer hash = Math.abs(filename.hashCode());
+        return new File(baseVideoFileDir, "main_merge_" + hash + ".mp4");
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
         context = getApplicationContext();
+        baseVideoFileDir = context.getExternalFilesDir(null);
+
         txtname = (EditText) findViewById(R.id.editTextName);
         timeperiods = (Spinner) findViewById(R.id.spinnerTime);
         fabnewproj = (FloatingActionButton) findViewById(fab);
@@ -46,10 +78,10 @@ public class MainMenuActivity extends AppCompatActivity {
 
         //Default first project will always use this constant R.string.preference_file_key1
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
-        String name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
-        String period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
+        Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
+        Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
 
-        if (name == null) {//no projects exist
+        if (Name == null) {//no projects exist
             ShowBabyGrowNew();
             savedexists = false;
             startbabygrow = false;
@@ -57,7 +89,7 @@ public class MainMenuActivity extends AppCompatActivity {
         else {
             savedexists = true;
             startbabygrow = true;
-            ShowBabyGrowReady(name, period);
+            ShowBabyGrowReady(Name, Period);
         }
 
         fabnewproj.setOnClickListener(new View.OnClickListener() {
@@ -72,13 +104,16 @@ public class MainMenuActivity extends AppCompatActivity {
                         if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule..")) {
                             try
                             {
+                                Name = txtname.getText().toString();
+                                Period = timeperiods.getSelectedItem().toString();
+
                                 SharedPreferences.Editor editor = sharedpreferences.edit();
-                                editor.putString(getString(R.string.p_file1_saved_name), txtname.getText().toString());
-                                editor.putString(getString(R.string.p_file1_saved_period), timeperiods.getSelectedItem().toString());
+                                editor.putString(getString(R.string.p_file1_saved_name), Name);
+                                editor.putString(getString(R.string.p_file1_saved_period), Period);
                                 editor.apply();
 
                                 startbabygrow = true;
-                                ShowBabyGrowReady(txtname.getText().toString(), timeperiods.getSelectedItem().toString());
+                                ShowBabyGrowReady(Name, Period);
 
                             } catch (Exception ex) {
                                 Log.d(TAG, ex.getMessage());
@@ -91,7 +126,21 @@ public class MainMenuActivity extends AppCompatActivity {
                         }
 
                     }
-                } else {
+                }
+                else
+                {
+                    SharedPreferences.Editor editor = sharedpreferences.edit();
+
+                    if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main file does not exist create new name and save
+                    {
+                        editor.putString(getString(R.string.p_file1_saved_main_mp4pathname), MainMergedVideoOutputFilePath(Name + Period).getAbsolutePath());
+                    }
+
+                    //always create these because they are always new per session and temp?
+                    editor.putString(getString(R.string.p_file1_saved_orig_mp4pathname), OriginalVideoOutputFilePath().getAbsolutePath());
+                    editor.putString(getString(R.string.p_file1_saved_trim_mp4pathname), TrimmedVideoOutputFilePath().getAbsolutePath());
+                    editor.apply();
+
                     Intent intent = new Intent(MainMenuActivity.this, CaptureActivity.class);
                     startActivity(intent);
                 }
@@ -121,6 +170,8 @@ public class MainMenuActivity extends AppCompatActivity {
 
 
     }
+
+
 
     private void ShowBabyGrowNew()
     {
