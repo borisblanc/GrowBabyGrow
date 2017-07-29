@@ -61,9 +61,9 @@ public class MainMenuActivity extends AppCompatActivity {
         return new File(baseVideoFileDir, "orig_" + GetHash() + ".mp4");
     }
 
-    private File TrimmedVideoOutputFilePath()
+    private File TrimmedVideoOutputFilePath(int number)
     {
-        String trimVideoFileName = "trim_" + GetHash() + ".mp4";
+        String trimVideoFileName = "trim_" + number + "_" + GetHash() + ".mp4";
         return new File(baseVideoFileDir, trimVideoFileName);
     }
 
@@ -137,21 +137,19 @@ public class MainMenuActivity extends AppCompatActivity {
                 }
                 else
                 {
-                    SharedPreferences.Editor editor = sharedpreferences.edit();
 
-                    if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main merge video file does not exist create new name and save for all files
+                    if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main merge video file does not exist create new names and save for all files
                     {
+                        SharedPreferences.Editor editor = sharedpreferences.edit();
                         editor.putString(getString(R.string.p_file1_saved_main_mp4pathname), MainMergedVideoOutputFilePath().getAbsolutePath());
 
                         editor.putString(getString(R.string.p_file1_saved_orig_mp4pathname), OriginalVideoOutputFilePath().getAbsolutePath());
 
-                        editor.putString(getString(R.string.p_file1_saved_trim1_mp4pathname), TrimmedVideoOutputFilePath().getAbsolutePath());
-                        editor.putString(getString(R.string.p_file1_saved_trim2_mp4pathname), TrimmedVideoOutputFilePath().getAbsolutePath());
-                        editor.putString(getString(R.string.p_file1_saved_trim3_mp4pathname), TrimmedVideoOutputFilePath().getAbsolutePath());
+                        editor.putString(getString(R.string.p_file1_saved_trim1_mp4pathname), TrimmedVideoOutputFilePath(1).getAbsolutePath());
+                        editor.putString(getString(R.string.p_file1_saved_trim2_mp4pathname), TrimmedVideoOutputFilePath(2).getAbsolutePath());
+                        editor.putString(getString(R.string.p_file1_saved_trim3_mp4pathname), TrimmedVideoOutputFilePath(3).getAbsolutePath());
+                        editor.apply();
                     }
-
-
-                    editor.apply();
 
                     Intent intent = new Intent(MainMenuActivity.this, CaptureActivity.class);
                     startActivity(intent);

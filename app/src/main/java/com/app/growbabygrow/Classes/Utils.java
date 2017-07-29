@@ -226,6 +226,38 @@ public class Utils {
     }
 
 
+    public static FrameData.FaceData getMaxFace(ArrayList<FrameData.FaceData> list)
+    {
+        FrameData.FaceData max = new FrameData.FaceData(Long.valueOf(0) ,0);
+        int size = list.size();
+        for(int i = 0; i < size; i++)
+        {
+            FrameData.FaceData current = list.get(i);
+
+            if(current._score > max._score){
+                max = current;
+            }
+        }
+        return max;
+    }
+
+    public static FrameData.FaceData getMaxFace(ArrayList<FrameData.FaceData> list, ArrayList<FrameData.FaceData> exceptions)
+    {
+        FrameData.FaceData max = new FrameData.FaceData(Long.valueOf(0) ,0);
+        int size = list.size();
+        for(int i = 0; i < size; i++)
+        {
+            FrameData.FaceData current = list.get(i);
+
+            if (exceptions.contains(current)) //if in exceptions then skip, can't be best face
+                continue;
+
+            if(current._score > max._score){
+                max = current;
+            }
+        }
+        return max;
+    }
 
 
 }

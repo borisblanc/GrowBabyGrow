@@ -5,6 +5,7 @@ package com.app.growbabygrow;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.camera2.CameraDevice;
@@ -47,6 +48,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static android.R.attr.x;
 
 public class CaptureActivity extends AppCompatActivity {
     private static final String TAG = "CaptureActivity";
@@ -92,7 +95,7 @@ public class CaptureActivity extends AppCompatActivity {
     private SharedPreferences sharedpreferences;
 
 
-    private FaceSession FS;
+    private FaceSession fs_current;
 
 
 
@@ -108,18 +111,16 @@ public class CaptureActivity extends AppCompatActivity {
 
             sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
 
-            FS = new FaceSession();
-            FS.MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
-            FS.OriginalVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_orig_mp4pathname), null);
+            fs_current = new FaceSession();
+            fs_current.MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
+            fs_current.OriginalVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_orig_mp4pathname), null);
 
-            FaceSessionProperty fsp1 = FS.GetNewProp();
+            FaceSessionProperty fsp1 = fs_current.GetNewProp();
             fsp1._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
-            FaceSessionProperty fsp2 = FS.GetNewProp();
+            FaceSessionProperty fsp2 = fs_current.GetNewProp();
             fsp2._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
-            FaceSessionProperty fsp3 = FS.GetNewProp();
+            FaceSessionProperty fsp3 = fs_current.GetNewProp();
             fsp3._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
-
-
 
             recButton = (Button) findViewById(R.id.btn_record);
             Button switchButton = (Button) findViewById(R.id.btn_switch);
@@ -158,15 +159,24 @@ public class CaptureActivity extends AppCompatActivity {
                             recButton.setText(R.string.record);
                             requestPermissionThenOpenCamera();
 
-                            //run all faceprocessing
-                            Toast.makeText(context, "Starting Face Processing", Toast.LENGTH_SHORT).show();
-                            FaceSession FS = RunFaceProcessing();
+                            try {
+                                //run all faceprocessing
+                                Toast.makeText(context, "Starting Face Processing", Toast.LENGTH_SHORT).show();
+                                RunFaceProcessing(fs_current);
 
-                            Toast.makeText(context, "Starting Trim Video", Toast.LENGTH_SHORT).show();
-                            //trim all preview videos
-                            for(FaceSessionProperty fsp : FS._props)
+                                //trim all preview videos
+                                Toast.makeText(context, "Starting Trim Video", Toast.LENGTH_SHORT).show();
+                                for (FaceSessionProperty fsp : fs_current._props) {
+                                    CreateTrimmedVideo(fsp._previewbestfacedata, fs_current.OriginalVideoOutputFilepath, fsp._trimmedVideoOutputFilepath);
+                                }
+
+                                //move control to edit activity
+                                TransfertoVideoEdit();
+                            }
+                            catch(IllegalArgumentException ex)
                             {
-                                CreateTrimmedVideo(fsp._previewbestfacedata, FS.OriginalVideoOutputFilepath, fsp._trimmedVideoOutputFilepath);
+                                Toast.makeText(context, ex.getMessage(), Toast.LENGTH_SHORT).show();
+                                fs_current._faces.clear(); //remove all faces and try again
                             }
 
                         }
@@ -188,30 +198,42 @@ public class CaptureActivity extends AppCompatActivity {
 
     }
 
-
-    private FaceSession RunFaceProcessing()
+    private void TransfertoVideoEdit()
     {
-        FaceSessionProperty previousfsp = new FaceSessionProperty();
+        Intent intent = new Intent(CaptureActivity.this, VideoEditActivity.class);
+        startActivity(intent);
+    }
+
+    private void RunFaceProcessing(FaceSession FS)
+    {
+        FaceSessionProperty FirstFSP = new FaceSessionProperty();
+        ArrayList<FrameData.FaceData> previous_exceptions = new ArrayList<>(); //for holding previous exceptions to choose best face for subsequent previews
+        FrameData.FaceData previous_bestface = new FrameData.FaceData(Long.valueOf(0), 0);
+
+        if ((GetCoreFrames() * FS._props.size()) > FS._faces.size()) //if frames captured is less than coreframes * number of previews then don't bother, need more try again!
+            throw new IllegalArgumentException("Not enough frames supplied. Try Recording Again!!");
+
         for(FaceSessionProperty fsp : FS._props)
         {
-            if (fsp == null) { //can't do anything without first prop session
-                Log.d("RunFaceProcessing","Noting to process!!!");
-                return null;
-            }
 
-            if (FS._props.indexOf(fsp) == 0 ) //first facesession process like this
+            if (FS._props.indexOf(fsp) == 0 ) //first facesession process like this and save for others to process off
             {
                 Processfaces(FS._faces, fsp); //preview 1 processing only but gets data for subsequent previews
-                previousfsp = fsp;
+                FirstFSP = fsp;
+                previous_bestface = FirstFSP._previewbestface;
             }
             else //preview processing based on previous preview
             {
-                fsp._previewfinalscores = ArrayMinusException(previousfsp._previewfinalscores, previousfsp._previewbestface);
-                fsp._previewbestfacedata = BestFacedata(previousfsp._previewfinalscores, fsp._previewbestface); //this will also set current best face for next preview
+                fsp._previewfinalscores = ArrayMinusException(FirstFSP._previewfinalscores, previous_bestface); //_previewfinalscores for previews other than FirstFSP are just exceptions, best face must be from previous
+
+                previous_exceptions.addAll(fsp._previewfinalscores); //running total of all exceptions
+
+                fsp._previewbestface = BestFace(FirstFSP._previewfinalscores, previous_exceptions); //needs original list and exceptions to determine best face
+                fsp._previewbestfacedata = BestFacedata(FirstFSP._previewfinalscores, fsp._previewbestface);
+                previous_bestface = fsp._previewbestface;
             }
         }
 
-        return FS;
     }
 
 
@@ -234,11 +256,10 @@ public class CaptureActivity extends AppCompatActivity {
     private void Processfaces(ArrayList<FrameData> _faces, FaceSessionProperty P)
     {
         if (_faces == null || _faces.size() < GetFrameTotal()) {
-            Toast.makeText(context, "Not enough frames captured to process video for trim", Toast.LENGTH_SHORT).show();
-            return;
+            throw new IllegalArgumentException("Not enough frames supplied. Try Recording Again!!");
         }
 
-        int coreframeslength = _fps * 2; //core sample of frames will be two seconds of video might in future vary depending on user settings
+        int coreframeslength = GetCoreFrames(); //core sample of frames will be two seconds of video might in future vary depending on user settings
         int computelimit = _faces.size() - GetFrameTotal(); //this will keep walking average calcs only happening within range
 
         for(FrameData facedata : _faces )
@@ -264,28 +285,39 @@ public class CaptureActivity extends AppCompatActivity {
             }
         }
 
-        P._previewbestface = Collections.max(P._previewfinalscores, new FrameData.compScore());
+        P._previewbestface = Utils.getMaxFace(P._previewfinalscores);
 
         FrameData.FaceData bestLastface = P._previewfinalscores.get(P._previewfinalscores.indexOf(P._previewbestface) + GetFrameTotal());
 
         P._previewbestfacedata = new FrameData.Tuple<>(P._previewbestface._timeStamp, bestLastface._timeStamp);
     }
 
+    //return list of exceptions that will be used to make sure these are not chosen in other previews
     private ArrayList<FrameData.FaceData> ArrayMinusException(ArrayList<FrameData.FaceData> finalscores, FrameData.FaceData _faceexception)
     {
-        int offset = _fps; //frame offset for each additional previews so we get something different, make it equal to fps which is one second of video
-        ArrayList<FrameData.FaceData> final_scores_noexceptions = new ArrayList<> (finalscores);
-        int exception1index = finalscores.indexOf(_faceexception);
-        final_scores_noexceptions.subList(exception1index, offset).clear();
-        return final_scores_noexceptions;
+        int offset = GetCoreFrames(); //frame offset for each additional previews so we get something different, make it equal to fps * 2 which is two seconds of video
+        ArrayList<FrameData.FaceData> final_scores_allexceptions = new ArrayList<> (finalscores);
+
+        int exceptionindex = finalscores.indexOf(_faceexception);
+
+        int margin = (exceptionindex - (offset/2));
+        if (margin < 0)
+            return new ArrayList<>(final_scores_allexceptions.subList(exceptionindex - ((offset/2) + margin) , exceptionindex + ((offset/2) - margin))); //negative margin add in to shirt over so we don't get out of bounds
+        else
+            return new ArrayList<>(final_scores_allexceptions.subList(exceptionindex - (offset/2), exceptionindex + (offset/2)));
+    }
+
+    private FrameData.FaceData BestFace(ArrayList<FrameData.FaceData> finalscores, ArrayList<FrameData.FaceData> exceptions)
+    {
+        if (exceptions.size() == 0)
+            return Utils.getMaxFace(finalscores);
+        else
+            return Utils.getMaxFace(finalscores, exceptions);
     }
 
     private FrameData.Tuple<Long,Long> BestFacedata(ArrayList<FrameData.FaceData> finalscores, FrameData.FaceData bestface)
     {
-        bestface = Collections.max(finalscores, new FrameData.compScore());
-
         FrameData.FaceData bestLastface = finalscores.get(finalscores.indexOf(bestface) + GetFrameTotal());
-
         return new FrameData.Tuple<>(bestface._timeStamp, bestLastface._timeStamp);
     }
 
@@ -295,7 +327,10 @@ public class CaptureActivity extends AppCompatActivity {
         return _fps * _vidlengthseconds; //total frames will always be frames per second * number of seconds
     }
 
-
+    private int GetCoreFrames() //used for frames processing and exceptions processing
+    {
+        return _fps * 2;
+    }
 
     private boolean checkGooglePlayAvailability() {
         GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
@@ -336,7 +371,7 @@ public class CaptureActivity extends AppCompatActivity {
                     .setTrackingEnabled(true)
                     .build();
 
-            CustomFaceDetector faceDetector = new CustomFaceDetector(previewFaceDetector, FS._faces);
+            CustomFaceDetector faceDetector = new CustomFaceDetector(previewFaceDetector, fs_current._faces);
 
             if (previewFaceDetector.isOperational()) {
                 //previewFaceDetector.setProcessor(new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory()).build());
@@ -348,7 +383,7 @@ public class CaptureActivity extends AppCompatActivity {
             }
 
             if (useCamera2) {
-                mCamera2Source = new Camera2Source.Builder(context, faceDetector, FS.OriginalVideoOutputFilepath)
+                mCamera2Source = new Camera2Source.Builder(context, faceDetector, fs_current.OriginalVideoOutputFilepath)
                         .setFocusMode(Camera2Source.CAMERA_AF_AUTO)
                         .setFlashMode(Camera2Source.CAMERA_FLASH_AUTO)
                         .setFacing(facing) //Camera2Source.CAMERA_FACING_FRONT = 1 or CAMERA_FACING_BACK = 0
@@ -528,7 +563,7 @@ public class CaptureActivity extends AppCompatActivity {
 
         public FaceSessionProperty GetNewProp() {
             FaceSessionProperty fsp = new FaceSessionProperty();
-            _props.add(new FaceSessionProperty());
+            _props.add(fsp);
             return fsp;
         }
     }
