@@ -36,6 +36,16 @@ public class VideoUtils {
 //            genVideoUsingMuxer(filePath, dstFileInfo.mFile.getPath(), -1.0, -1.0, false, true);
 //    }
 
+    public static void TrimVideo(String srcPath, String dstPath, Long startMs, Long endMs, boolean useAudio, boolean useVideo)
+    {
+        String TAG = ".TrimVideo";
+        try {
+            genTrimVideoUsingMuxer(srcPath,  dstPath,  startMs,  endMs,  useAudio, useVideo);
+        } catch (IOException e) {
+            Log.d(LOGTAG + TAG, e.getMessage());
+        }
+    }
+
 
     /**
      * @param srcPath  the path of source video file.

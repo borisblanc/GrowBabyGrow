@@ -28,7 +28,9 @@
     <string name="p_file1_saved_main_mp4meta">saved_main_mp4meta</string>
 
     <string name="p_file1_saved_orig_mp4pathname">saved_orig_mp4pathname</string>
-    <string name="p_file1_saved_trim_mp4pathname">saved_trim_mp4pathname</string>
+    <string name="p_file1_saved_trim1_mp4pathname">saved_trim1_mp4pathname</string>
+    <string name="p_file1_saved_trim2_mp4pathname">saved_trim2_mp4pathname</string>
+    <string name="p_file1_saved_trim3_mp4pathname">saved_trim3_mp4pathname</string>
 
     <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
     <string name="title_activity_video_edit">VideoEditActivity</string>

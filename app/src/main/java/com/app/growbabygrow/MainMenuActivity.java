@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import static android.R.attr.name;
@@ -41,26 +42,33 @@ public class MainMenuActivity extends AppCompatActivity {
 
     private String Name;
     private String Period;
+    public ArrayList<String> TrimmedVideoOutputFilepaths;
 
-    private final String RecordedVideoFileName = "orig_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant during session
-    private File OriginalVideoOutputFilePath()
+
+    private Integer GetHash()
     {
-        return new File(baseVideoFileDir, RecordedVideoFileName);
+        return Math.abs((Name + Period).hashCode());
     }
 
-    private final String trimVideoFileName = "trim_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant during session
+    private File MainMergedVideoOutputFilePath()
+    {
+        //simple non unique hash
+        return new File(baseVideoFileDir, "main_merge_" + GetHash() + ".mp4");
+    }
+
+    private File OriginalVideoOutputFilePath()
+    {
+        return new File(baseVideoFileDir, "orig_" + GetHash() + ".mp4");
+    }
+
     private File TrimmedVideoOutputFilePath()
     {
+        String trimVideoFileName = "trim_" + GetHash() + ".mp4";
         return new File(baseVideoFileDir, trimVideoFileName);
     }
 
-    //private final String mergeVideoFileName = "main_merged_" + Calendar.getInstance().getTimeInMillis() + ".mp4"; //this must stay constant always since it is the base of whole project
-    private File MainMergedVideoOutputFilePath(String filename)
-    {
-        //simple non unique hash
-        Integer hash = Math.abs(filename.hashCode());
-        return new File(baseVideoFileDir, "main_merge_" + hash + ".mp4");
-    }
+
+
 
 
     @Override
@@ -131,14 +139,18 @@ public class MainMenuActivity extends AppCompatActivity {
                 {
                     SharedPreferences.Editor editor = sharedpreferences.edit();
 
-                    if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main file does not exist create new name and save
+                    if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main merge video file does not exist create new name and save for all files
                     {
-                        editor.putString(getString(R.string.p_file1_saved_main_mp4pathname), MainMergedVideoOutputFilePath(Name + Period).getAbsolutePath());
+                        editor.putString(getString(R.string.p_file1_saved_main_mp4pathname), MainMergedVideoOutputFilePath().getAbsolutePath());
+
+                        editor.putString(getString(R.string.p_file1_saved_orig_mp4pathname), OriginalVideoOutputFilePath().getAbsolutePath());
+
+                        editor.putString(getString(R.string.p_file1_saved_trim1_mp4pathname), TrimmedVideoOutputFilePath().getAbsolutePath());
+                        editor.putString(getString(R.string.p_file1_saved_trim2_mp4pathname), TrimmedVideoOutputFilePath().getAbsolutePath());
+                        editor.putString(getString(R.string.p_file1_saved_trim3_mp4pathname), TrimmedVideoOutputFilePath().getAbsolutePath());
                     }
 
-                    //always create these because they are always new per session and temp?
-                    editor.putString(getString(R.string.p_file1_saved_orig_mp4pathname), OriginalVideoOutputFilePath().getAbsolutePath());
-                    editor.putString(getString(R.string.p_file1_saved_trim_mp4pathname), TrimmedVideoOutputFilePath().getAbsolutePath());
+
                     editor.apply();
 
                     Intent intent = new Intent(MainMenuActivity.this, CaptureActivity.class);
