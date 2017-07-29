@@ -160,16 +160,16 @@ public class CaptureActivity extends AppCompatActivity {
                             requestPermissionThenOpenCamera();
 
                             try {
-                                //run all faceprocessing
-                                Toast.makeText(context, "Starting Face Processing", Toast.LENGTH_SHORT).show();
+
                                 RunFaceProcessing(fs_current);
 
                                 //trim all preview videos
-                                Toast.makeText(context, "Starting Trim Video", Toast.LENGTH_SHORT).show();
+                                //Toast.makeText(context, "Starting Trim Video", Toast.LENGTH_SHORT).show();
                                 for (FaceSessionProperty fsp : fs_current._props) {
                                     CreateTrimmedVideo(fsp._previewbestfacedata, fs_current.OriginalVideoOutputFilepath, fsp._trimmedVideoOutputFilepath);
                                 }
 
+                                Toast.makeText(context, "Smiles Captured & Created!", Toast.LENGTH_SHORT).show();
                                 //move control to edit activity
                                 TransfertoVideoEdit();
                             }
@@ -178,7 +178,6 @@ public class CaptureActivity extends AppCompatActivity {
                                 Toast.makeText(context, ex.getMessage(), Toast.LENGTH_SHORT).show();
                                 fs_current._faces.clear(); //remove all faces and try again
                             }
-
                         }
                         else {
                             stopCameraSource(); //call this to release everything or all the shit breaks
@@ -190,7 +189,6 @@ public class CaptureActivity extends AppCompatActivity {
                 });
 
 
-                //mPreview.setOnTouchListener(CameraPreviewTouchListener);
             }
         } catch (Throwable e) {
             Log.d(TAG,e.getMessage());
@@ -244,12 +242,6 @@ public class CaptureActivity extends AppCompatActivity {
             return;
 
         VideoUtils.TrimVideo(OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath, bestfacetimestamps.x, bestfacetimestamps.y, false, true);
-
-
-//        Toast.makeText(this, "Starting Merge Video", Toast.LENGTH_SHORT).show();
-//        VideoUtils.mergeVideos(MainMergedVideoOutputFilepath, OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath);
-//
-//        Toast.makeText(this, "All Done!!", Toast.LENGTH_SHORT).show();
     }
 
     //process all of first preview (data & results) and subsequent data only for all other previews

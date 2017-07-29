@@ -259,5 +259,13 @@ public class Utils {
         return max;
     }
 
+    public static boolean RenameFile(File dir, String fromname, String toname)
+    {
+        File from = new File(dir, fromname);
+        File to = new File(dir, toname);
+
+        return from.exists() && from.renameTo(to);
+    }
+
 
 }

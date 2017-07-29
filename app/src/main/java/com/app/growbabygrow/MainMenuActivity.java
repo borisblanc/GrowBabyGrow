@@ -15,12 +15,8 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Calendar;
-
-import static android.R.attr.name;
 import static com.app.growbabygrow.R.id.fab;
 
 
@@ -44,7 +40,6 @@ public class MainMenuActivity extends AppCompatActivity {
     private String Period;
     public ArrayList<String> TrimmedVideoOutputFilepaths;
 
-
     private Integer GetHash()
     {
         return Math.abs((Name + Period).hashCode());
@@ -66,9 +61,6 @@ public class MainMenuActivity extends AppCompatActivity {
         String trimVideoFileName = "trim_" + number + "_" + GetHash() + ".mp4";
         return new File(baseVideoFileDir, trimVideoFileName);
     }
-
-
-
 
 
     @Override
