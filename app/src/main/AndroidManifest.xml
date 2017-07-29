@@ -43,7 +43,13 @@
         <activity
             android:name=".VideoEditActivity"
             android:label="@string/title_activity_video_edit"
-            android:theme="@style/AppTheme"></activity>
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme" />
+
+        <activity android:name=".VideoViewActivity"
+            android:screenOrientation="landscape" />
+
+
     </application>
 
 </manifest>
