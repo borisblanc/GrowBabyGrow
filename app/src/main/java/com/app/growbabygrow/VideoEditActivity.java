@@ -14,6 +14,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -28,21 +29,28 @@ import com.app.growbabygrow.Classes.VideoUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 import static android.R.attr.width;
 import static com.app.growbabygrow.R.attr.height;
+import static org.jcodec.containers.mkv.MKVType.Tag;
 
 
 public class VideoEditActivity extends AppCompatActivity {
 
     private Context context;
     private SharedPreferences sharedpreferences;
+    private String TAG = "VideoEditActivity";
 
     private String MainMergedVideoOutputFilepath;
     private String OriginalVideoOutputFilepath;
     private String TrimmedVideoOutputFilepath1;
     private String TrimmedVideoOutputFilepath2;
     private String TrimmedVideoOutputFilepath3;
+    private String IntroVideoOutputFilePath;
+    private String babyName;
+    private String period;
 
     private ImageView main_imageview;
     private ImageView prev1_imageview;
@@ -62,7 +70,6 @@ public class VideoEditActivity extends AppCompatActivity {
 
     private File MainMergedVideoOutputFile()
     {
-        //simple non unique hash
         return new File(MainMergedVideoOutputFilepath);
     }
 
@@ -99,6 +106,7 @@ public class VideoEditActivity extends AppCompatActivity {
         TrimmedVideoOutputFilepath1 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
         TrimmedVideoOutputFilepath2 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
         TrimmedVideoOutputFilepath3 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
+        IntroVideoOutputFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_intro_mp4pathname), null);
 
         Radio_prev1.setOnClickListener(new View.OnClickListener() {
            @Override
@@ -151,7 +159,7 @@ public class VideoEditActivity extends AppCompatActivity {
                                     Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
                                     HidePreviewsShowGoodbye();
                                 }
-                                else //first time when no mainfile exists
+                                else //first time when no movie yet rename selected trim to main and add merge in intro movie
                                 {
                                     main_imageview.setVisibility(View.VISIBLE);
                                     main_title.setVisibility(View.VISIBLE);
@@ -161,7 +169,29 @@ public class VideoEditActivity extends AppCompatActivity {
                                     int i = SelectedTrimmedVideoOutputFilepath.lastIndexOf('/');
                                     String fromname =  SelectedTrimmedVideoOutputFilepath.substring(i+ 1, SelectedTrimmedVideoOutputFilepath.length());
                                     Utils.RenameFile(savedir, fromname, toname);
+
+                                    Toast.makeText(context, "Starting First Baby Grow!", Toast.LENGTH_SHORT).show();
+//                                    final File Introvid = new File(IntroVideoOutputFilePath);
+//                                    if (!Introvid.exists())
+//                                    {
+//                                        Thread th = new Thread(new Runnable() {
+//                                            public void run() {
+//                                                CreateIntro_movie(Introvid, 1920,1080);
+//                                            }
+//                                        });
+//                                        th.start();
+//                                        try {
+//                                            th.join(); //wait for it to finish
+//                                        } catch (InterruptedException e) {
+//                                            Log.d(TAG,e.getMessage(),e);
+//                                        }
+//
+//                                    }
+//
+//                                    VideoUtils.mergeVideos(MainMergedVideoOutputFilepath, IntroVideoOutputFilePath, MainMergedVideoOutputFilepath);
+
                                     InitVideoButton(MainMergedVideoOutputFilepath, main_imageview);
+                                    Toast.makeText(context, "First Baby Grow Created!", Toast.LENGTH_SHORT).show();
                                     HidePreviewsShowGoodbye();
                                 }
 
@@ -206,14 +236,7 @@ public class VideoEditActivity extends AppCompatActivity {
         exitapp = true;
     }
 
-//    private void ShiftButton(TextView txtfab)
-//    {
-//        txt_fab.setWidth(200);
-//        FrameLayout fl = new FrameLayout(context);
-//        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(width, height);
-//        params.setMargins(0,0,32,16);
-//        fl.addView(txtfab,params);
-//    }
+
 
     private void SetVideoButtons()
     {
@@ -255,6 +278,48 @@ public class VideoEditActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+
+    private void CreateIntro_movie(File vidfilepath, int width, int height)
+    {
+        try {
+            ArrayList<Bitmap> b = new ArrayList<>();
+
+            String baby_name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
+            String period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
+            String intro1 = baby_name + "'s" + " Baby Grow";
+
+            //draw bitmaps from resource
+            b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, intro1, width, height, 102));
+            b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, GetIntroPeriod(period), width, height, 102));
+//            Utils.testSavebitmap(b.get(0), new File(MainMergedVideoOutputFile().getParent(),"ass.bmp").getAbsolutePath());
+//            Utils.testSavebitmap(b.get(1), new File(MainMergedVideoOutputFile().getParent(),"ass2.bmp").getAbsolutePath());
+
+            VideoUtils.CreatevideoFromBitmaps(vidfilepath, b, 30);
+        }
+        catch (Exception e)
+        {
+            Log.d(TAG,e.getMessage(),e);
+        }
+    }
+
+    private String GetIntroPeriod(String period)
+    {
+        switch (period)
+        {
+            case "Twice Weekly":
+                return "Every Few Days...";
+            case "Weekly":
+                return "Week by Week...";
+            case "Bi-weekly":
+                return "Every Couple Weeks...";
+            case "Monthly":
+                return "Month by Month...";
+            default:
+                return "Week by Week...";
+        }
+
     }
 
     private void ExitApp()

@@ -81,9 +81,6 @@ public class CaptureActivity extends AppCompatActivity {
     private boolean useCamera2 = false;
 
 
-
-
-
     private boolean trackRecord = false; //determines if regular preview is opened or we start track record also
 
     public Button recButton;

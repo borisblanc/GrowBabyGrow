@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -15,8 +17,19 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.app.growbabygrow.Classes.EncodeAndMuxTest;
+import com.app.growbabygrow.Classes.Utils;
+import com.app.growbabygrow.Classes.VideoUtils;
+import com.app.growbabygrow.Classes.exampleconcat;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+
+import static android.R.attr.bitmap;
+import static android.R.attr.width;
 import static com.app.growbabygrow.R.id.fab;
 
 
@@ -62,6 +75,11 @@ public class MainMenuActivity extends AppCompatActivity {
         return new File(baseVideoFileDir, trimVideoFileName);
     }
 
+    private File IntroVideoOutputFilePath()
+    {
+        return new File(baseVideoFileDir, "intro_" + GetHash() + ".mp4");
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +87,9 @@ public class MainMenuActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main_menu);
         context = getApplicationContext();
         baseVideoFileDir = context.getExternalFilesDir(null);
+
+
+
 
         txtname = (EditText) findViewById(R.id.editTextName);
         timeperiods = (Spinner) findViewById(R.id.spinnerTime);
@@ -134,12 +155,11 @@ public class MainMenuActivity extends AppCompatActivity {
                     {
                         SharedPreferences.Editor editor = sharedpreferences.edit();
                         editor.putString(getString(R.string.p_file1_saved_main_mp4pathname), MainMergedVideoOutputFilePath().getAbsolutePath());
-
                         editor.putString(getString(R.string.p_file1_saved_orig_mp4pathname), OriginalVideoOutputFilePath().getAbsolutePath());
-
                         editor.putString(getString(R.string.p_file1_saved_trim1_mp4pathname), TrimmedVideoOutputFilePath(1).getAbsolutePath());
                         editor.putString(getString(R.string.p_file1_saved_trim2_mp4pathname), TrimmedVideoOutputFilePath(2).getAbsolutePath());
                         editor.putString(getString(R.string.p_file1_saved_trim3_mp4pathname), TrimmedVideoOutputFilePath(3).getAbsolutePath());
+                        editor.putString(getString(R.string.p_file1_saved_intro_mp4pathname), IntroVideoOutputFilePath().getAbsolutePath());
                         editor.apply();
                     }
 
@@ -172,6 +192,7 @@ public class MainMenuActivity extends AppCompatActivity {
 
 
     }
+
 
 
 

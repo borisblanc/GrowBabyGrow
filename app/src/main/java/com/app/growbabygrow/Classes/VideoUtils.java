@@ -1,11 +1,20 @@
 package com.app.growbabygrow.Classes;
 
 
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
+import android.os.Environment;
 import android.util.Log;
 
 import com.coremedia.iso.boxes.Container;
@@ -15,13 +24,21 @@ import com.googlecode.mp4parser.authoring.builder.DefaultMp4Builder;
 import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator;
 import com.googlecode.mp4parser.authoring.tracks.AppendTrack;
 
+import org.jcodec.api.android.SequenceEncoder;
+import org.jcodec.common.model.ColorSpace;
+import org.jcodec.common.model.Picture;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+
+import static android.R.attr.bitmap;
 
 public class VideoUtils {
 
@@ -187,8 +204,92 @@ public class VideoUtils {
             out.writeContainer(fc);
 
             fc.close();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             Log.d(LOGTAG, "Merge Error " + e.getMessage());
+        }
+
+    }
+
+    public static Bitmap drawTextToBitmap(Context gContext, int gResId, String gText, int width, int height, int textsize)
+    {
+        Resources resources = gContext.getResources();
+        //float scale = resources.getDisplayMetrics().density;
+        Bitmap bitmap = BitmapFactory.decodeResource(resources, gResId);
+
+        android.graphics.Bitmap.Config bitmapConfig = bitmap.getConfig();
+        // set default bitmap config if none
+        if(bitmapConfig == null) {
+            bitmapConfig = android.graphics.Bitmap.Config.ARGB_8888;
+        }
+        // resource bitmaps are imutable,
+        // so we need to convert it to mutable one
+        bitmap = bitmap.copy(bitmapConfig, true);
+
+        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
+
+        Canvas canvas = new Canvas(bitmap);
+        // new antialised Paint
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        // text color - #3D3D3D
+        paint.setColor(Color.WHITE);
+        // text size in pixels
+        paint.setTextSize(textsize);
+        // text shadow
+        //paint.setShadowLayer(1f, 0f, 1f, Color.WHITE);
+
+        // draw text to the Canvas center
+        Rect bounds = new Rect();
+        paint.getTextBounds(gText, 0, gText.length(), bounds);
+        int x = (bitmap.getWidth() - bounds.width())/2;
+        int y = (bitmap.getHeight() + bounds.height())/2;
+
+        canvas.drawText(gText, x, y, paint);
+
+        return bitmap;
+    }
+
+    public static void CreatevideoFromBitmaps(File fullpath, ArrayList<Bitmap> bitmaps, int numofframes) {
+        try {
+            SequenceEncoder encoder = new SequenceEncoder(fullpath);
+            for(Bitmap bmap: bitmaps)
+            {
+                //Picture pic = fromBitmap(bmap);
+                for (int i = 1; i <= numofframes; i++) {
+                    //encoder.encodeNativeFrame(pic);
+                    encoder.encodeImage(bmap);
+                }
+
+                bmap.recycle();
+            }
+            encoder.finish();
+
+        } catch (IOException e) {
+            Log.d(LOGTAG, "CreatevideoFromBitmap Error " + e.getMessage());
+        }
+    }
+
+
+    // convert from Bitmap to Picture (jcodec native structure)
+    private static Picture fromBitmap(Bitmap src) {
+        Picture dst = Picture.create(src.getWidth(), src.getHeight(), ColorSpace.RGB);
+        fromBitmap(src, dst);
+        return dst;
+    }
+
+    private static void fromBitmap(Bitmap src, Picture dst) {
+        int[] dstData = dst.getPlaneData(0);
+        int[] packed = new int[src.getWidth() * src.getHeight()];
+
+        src.getPixels(packed, 0, src.getWidth(), 0, 0, src.getWidth(), src.getHeight());
+
+        for (int i = 0, srcOff = 0, dstOff = 0; i < src.getHeight(); i++) {
+            for (int j = 0; j < src.getWidth(); j++, srcOff++, dstOff += 3) {
+                int rgb = packed[srcOff];
+                dstData[dstOff] = (rgb >> 16) & 0xff;
+                dstData[dstOff + 1] = (rgb >> 8) & 0xff;
+                dstData[dstOff + 2] = rgb & 0xff;
+            }
         }
     }
 

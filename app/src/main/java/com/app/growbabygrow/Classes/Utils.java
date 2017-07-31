@@ -120,18 +120,19 @@ public class Utils {
 
     }
 
-    public static void testSavebitmap(Bitmap bitmap){
-        File _filesdir = android.os.Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        String createfilepath = new File(_filesdir, Calendar.getInstance().getTimeInMillis() + ".png").getAbsolutePath();
+    public static void testSavebitmap(Bitmap bitmap, String fullfilepath)
+    {
+//        File _filesdir = android.os.Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+//        String createfilepath = new File(_filesdir, Calendar.getInstance().getTimeInMillis() + ".png").getAbsolutePath();
 
         BufferedOutputStream bos = null;
         try {
 
             //Bitmap bitmap = BitmapFactory.decodeByteArray(jpegArray, 0, jpegArray.length);
 
-            bos = new BufferedOutputStream(new FileOutputStream(createfilepath));
+            bos = new BufferedOutputStream(new FileOutputStream(fullfilepath));
 
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, bos);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
             bitmap.recycle();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
