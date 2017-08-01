@@ -9,13 +9,15 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
-import android.os.Environment;
+
 import android.util.Log;
+import android.util.SparseIntArray;
 
 import com.coremedia.iso.boxes.Container;
 import com.googlecode.mp4parser.authoring.Movie;
@@ -38,7 +40,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import static android.R.attr.bitmap;
+import static android.util.Log.VERBOSE;
+
 
 public class VideoUtils {
 
@@ -154,8 +157,8 @@ public class VideoUtils {
         muxer.release();
     }
 
-
-    public static void mergeVideos(String outputfilepath, String FirstVideoPath, String SecondVideoPath) {
+    //works good for similar videos only, Must have same fps, resolution and codec, might not need it if replacement below is fast enough (MuxMergeVideos)
+    public static void Mp4ParserMergeVideos(String outputfilepath, String FirstVideoPath, String SecondVideoPath) {
 
         Movie[] clips = new Movie[2];
         try {
@@ -211,6 +214,135 @@ public class VideoUtils {
 
     }
 
+    //this one works better than Mp4ParserMergeVideos for some different video types, but they still need to have same resolution might not be as fast though
+    public static boolean MuxMergeVideos(File dst, File... sources) {
+
+        int MAX_SAMPLE_SIZE = 1000000; //not sure best value for this yet
+        int APPEND_DELAY = 0; //not sure best value for this yet
+
+        if ((sources == null) || (sources.length == 0)) {
+            return false;
+        }
+
+        boolean result;
+        MediaExtractor extractor = null;
+        MediaMuxer muxer = null;
+        try {
+            // Set up MediaMuxer for the destination.
+            muxer = new MediaMuxer(dst.getPath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+
+            // Copy the samples from MediaExtractor to MediaMuxer.
+            boolean sawEOS = false;
+            int bufferSize = MAX_SAMPLE_SIZE; //MAX_SAMPLE_SIZE;
+            int frameCount = 0;
+            int offset = 100;
+
+            ByteBuffer dstBuf = ByteBuffer.allocate(bufferSize);
+            MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
+
+            long timeOffsetUs = 0;
+            int dstTrackIndex = -1;
+
+            for (int fileIndex = 0; fileIndex < sources.length; fileIndex++) {
+                int numberOfSamplesInSource = getNumberOfSamples(sources[fileIndex]);
+//                if (VERBOSE) {
+//                    Log.d(TAG, String.format("Source file: %s", sources[fileIndex].getPath()));
+//                }
+
+                // Set up MediaExtractor to read from the source.
+                extractor = new MediaExtractor();
+                extractor.setDataSource(sources[fileIndex].getPath());
+
+                // Set up the tracks.
+                SparseIntArray indexMap = new SparseIntArray(extractor.getTrackCount());
+                for (int i = 0; i < extractor.getTrackCount(); i++) {
+                    extractor.selectTrack(i);
+                    MediaFormat format = extractor.getTrackFormat(i);
+                    if (dstTrackIndex < 0) {
+                        dstTrackIndex = muxer.addTrack(format);
+                        muxer.start();
+                    }
+                    indexMap.put(i, dstTrackIndex);
+                }
+
+                long lastPresentationTimeUs = 0;
+                int currentSample = 0;
+                sawEOS = false;
+
+                while (!sawEOS) {
+                    bufferInfo.offset = offset;
+                    bufferInfo.size = extractor.readSampleData(dstBuf, offset);
+
+                    if (bufferInfo.size < 0) {
+                        sawEOS = true;
+                        bufferInfo.size = 0;
+                        timeOffsetUs += (lastPresentationTimeUs + APPEND_DELAY);
+                    }
+                    else {
+                        lastPresentationTimeUs = extractor.getSampleTime();
+                        bufferInfo.presentationTimeUs = extractor.getSampleTime() + timeOffsetUs;
+                        bufferInfo.flags = extractor.getSampleFlags();
+                        int trackIndex = extractor.getSampleTrackIndex();
+
+                        if ((currentSample < numberOfSamplesInSource) || (fileIndex == sources.length - 1)) {
+                            muxer.writeSampleData(indexMap.get(trackIndex), dstBuf, bufferInfo);
+                        }
+                        extractor.advance();
+
+                        frameCount++;
+                        currentSample++;
+//                        if (VERBOSE) {
+//                            Log.d(TAG, "Frame (" + frameCount + ") " +
+//                                    "PresentationTimeUs:" + bufferInfo.presentationTimeUs +
+//                                    " Flags:" + bufferInfo.flags +
+//                                    " TrackIndex:" + trackIndex +
+//                                    " Size(KB) " + bufferInfo.size / 1024);
+//                        }
+                    }
+                }
+                extractor.release();
+                extractor = null;
+            }
+
+            result = true;
+        }
+        catch (IOException e) {
+            result = false;
+        }
+        finally {
+            if (extractor != null) {
+                extractor.release();
+            }
+            if (muxer != null) {
+                muxer.stop();
+                muxer.release();
+            }
+        }
+        return result;
+    }
+
+
+    public static int getNumberOfSamples(File src) {
+        MediaExtractor extractor = new MediaExtractor();
+        int result;
+        try {
+            extractor.setDataSource(src.getPath());
+            extractor.selectTrack(0);
+
+            result = 0;
+            while (extractor.advance()) {
+                result ++;
+            }
+        }
+        catch(IOException e) {
+            result = -1;
+        }
+        finally {
+            extractor.release();
+        }
+        return result;
+    }
+
     public static Bitmap drawTextToBitmap(Context gContext, int gResId, String gText, int width, int height, int textsize)
     {
         Resources resources = gContext.getResources();
@@ -249,6 +381,7 @@ public class VideoUtils {
         return bitmap;
     }
 
+    //uses jcodec might need to find way to do this with phones codecs instead
     public static void CreatevideoFromBitmaps(File fullpath, ArrayList<Bitmap> bitmaps, int numofframes) {
         try {
             SequenceEncoder encoder = new SequenceEncoder(fullpath);
@@ -292,6 +425,8 @@ public class VideoUtils {
             }
         }
     }
+
+
 
 
 }

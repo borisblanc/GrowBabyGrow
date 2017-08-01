@@ -24,6 +24,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.app.growbabygrow.Classes.Bigflake.ExtractDecodeEditEncodeMuxTest;
 import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
 
@@ -155,7 +156,8 @@ public class VideoEditActivity extends AppCompatActivity {
 
                                 if (MainMergedVideoOutputFile().exists()) {
 
-                                    VideoUtils.mergeVideos(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, SelectedTrimmedVideoOutputFilepath);
+                                    //this merge works fine for 'similar' vids
+                                    VideoUtils.Mp4ParserMergeVideos(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, SelectedTrimmedVideoOutputFilepath);
                                     Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
                                     HidePreviewsShowGoodbye();
                                 }
@@ -171,24 +173,38 @@ public class VideoEditActivity extends AppCompatActivity {
                                     Utils.RenameFile(savedir, fromname, toname);
 
                                     Toast.makeText(context, "Starting First Baby Grow!", Toast.LENGTH_SHORT).show();
-//                                    final File Introvid = new File(IntroVideoOutputFilePath);
-//                                    if (!Introvid.exists())
-//                                    {
-//                                        Thread th = new Thread(new Runnable() {
-//                                            public void run() {
-//                                                CreateIntro_movie(Introvid, 1920,1080);
-//                                            }
-//                                        });
-//                                        th.start();
-//                                        try {
-//                                            th.join(); //wait for it to finish
-//                                        } catch (InterruptedException e) {
-//                                            Log.d(TAG,e.getMessage(),e);
-//                                        }
-//
-//                                    }
-//
-//                                    VideoUtils.mergeVideos(MainMergedVideoOutputFilepath, IntroVideoOutputFilePath, MainMergedVideoOutputFilepath);
+
+                                    //step 1 create intro video on new thread, uses jcodec
+                                    final File Introvid = new File(IntroVideoOutputFilePath);
+                                    if (!Introvid.exists())
+                                    {
+                                        Thread th = new Thread(new Runnable() {
+                                            public void run() {
+                                                CreateIntro_movie(Introvid, 1920,1080);
+                                            }
+                                        });
+                                        th.start();
+                                        try {
+                                            th.join(); //wait for it to finish
+                                        } catch (InterruptedException e) {
+                                            Log.d(TAG,e.getMessage(),e);
+                                        }
+
+                                    }
+
+                                    //step 2 need to extract decode (might need to remove edit part) encode and mux using phones codec for next step, wait for this to finish
+                                    ExtractDecodeEditEncodeMuxTest test  = new ExtractDecodeEditEncodeMuxTest();
+                                    try {
+                                        test.testExtractDecodeEditEncodeMux720p(context);
+                                    } catch (Throwable throwable) {
+                                        throwable.printStackTrace();
+                                    }
+
+                                    //step three use new merge, should work if same resolution
+                                    VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath) , new File(IntroVideoOutputFilePath), new File(MainMergedVideoOutputFilepath));
+
+                                    //old merge won't work here
+                                    //VideoUtils.mergeVideos(MainMergedVideoOutputFilepath, IntroVideoOutputFilePath, MainMergedVideoOutputFilepath);
 
                                     InitVideoButton(MainMergedVideoOutputFilepath, main_imageview);
                                     Toast.makeText(context, "First Baby Grow Created!", Toast.LENGTH_SHORT).show();

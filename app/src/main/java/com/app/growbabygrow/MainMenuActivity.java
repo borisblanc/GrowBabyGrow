@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -18,18 +17,11 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.app.growbabygrow.Classes.EncodeAndMuxTest;
-import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
-import com.app.growbabygrow.Classes.exampleconcat;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 
-import static android.R.attr.bitmap;
-import static android.R.attr.width;
 import static com.app.growbabygrow.R.id.fab;
 
 
@@ -87,10 +79,6 @@ public class MainMenuActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main_menu);
         context = getApplicationContext();
         baseVideoFileDir = context.getExternalFilesDir(null);
-
-
-
-
         txtname = (EditText) findViewById(R.id.editTextName);
         timeperiods = (Spinner) findViewById(R.id.spinnerTime);
         fabnewproj = (FloatingActionButton) findViewById(fab);
@@ -101,6 +89,7 @@ public class MainMenuActivity extends AppCompatActivity {
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
         Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
         Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
+
 
         if (Name == null) {//no projects exist
             ShowBabyGrowNew();
@@ -194,7 +183,46 @@ public class MainMenuActivity extends AppCompatActivity {
     }
 
 
+    private void CreateIntro_movie(File vidfilepath, int width, int height)
+    {
+        try {
+            ArrayList<Bitmap> b = new ArrayList<>();
 
+            String baby_name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
+            String period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
+            String intro1 = baby_name + "'s" + " Baby Grow";
+
+            //draw bitmaps from resource
+            b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, intro1, width, height, 102));
+            b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, GetIntroPeriod(period), width, height, 102));
+//            Utils.testSavebitmap(b.get(0), new File(MainMergedVideoOutputFile().getParent(),"ass.bmp").getAbsolutePath());
+//            Utils.testSavebitmap(b.get(1), new File(MainMergedVideoOutputFile().getParent(),"ass2.bmp").getAbsolutePath());
+
+            VideoUtils.CreatevideoFromBitmaps(vidfilepath, b, 30);
+        }
+        catch (Exception e)
+        {
+            Log.d(TAG,e.getMessage(),e);
+        }
+    }
+
+    private String GetIntroPeriod(String period)
+    {
+        switch (period)
+        {
+            case "Twice Weekly":
+                return "Every Few Days...";
+            case "Weekly":
+                return "Week by Week...";
+            case "Bi-weekly":
+                return "Every Couple Weeks...";
+            case "Monthly":
+                return "Month by Month...";
+            default:
+                return "Week by Week...";
+        }
+
+    }
 
     private void ShowBabyGrowNew()
     {
