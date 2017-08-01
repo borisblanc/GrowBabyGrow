@@ -17,7 +17,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -29,13 +28,9 @@ import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
 
-import static android.R.attr.width;
-import static com.app.growbabygrow.R.attr.height;
-import static org.jcodec.containers.mkv.MKVType.Tag;
+import java.util.ArrayList;
+
 
 
 public class VideoEditActivity extends AppCompatActivity {
@@ -166,49 +161,49 @@ public class VideoEditActivity extends AppCompatActivity {
                                     main_imageview.setVisibility(View.VISIBLE);
                                     main_title.setVisibility(View.VISIBLE);
 
-                                    File savedir = new File(MainMergedVideoOutputFile().getParent());
-                                    String toname = MainMergedVideoOutputFile().getName();
-                                    int i = SelectedTrimmedVideoOutputFilepath.lastIndexOf('/');
-                                    String fromname =  SelectedTrimmedVideoOutputFilepath.substring(i+ 1, SelectedTrimmedVideoOutputFilepath.length());
-                                    Utils.RenameFile(savedir, fromname, toname);
+//                                    File savedir = new File(MainMergedVideoOutputFile().getParent());
+//                                    String toname = MainMergedVideoOutputFile().getName();
+//                                    int i = SelectedTrimmedVideoOutputFilepath.lastIndexOf('/');
+//                                    String fromname = SelectedTrimmedVideoOutputFilepath.substring(i + 1, SelectedTrimmedVideoOutputFilepath.length());
+//                                    Utils.RenameFile(savedir, fromname, toname);
 
                                     Toast.makeText(context, "Starting First Baby Grow!", Toast.LENGTH_SHORT).show();
 
+
                                     //step 1 create intro video on new thread, uses jcodec
                                     final File Introvid = new File(IntroVideoOutputFilePath);
-                                    if (!Introvid.exists())
-                                    {
+                                    if (!Introvid.exists()) {
                                         Thread th = new Thread(new Runnable() {
                                             public void run() {
-                                                CreateIntro_movie(Introvid, 1920,1080);
+                                                CreateIntro_movie(Introvid, 1920, 1080); //todo find way to bring in recorded resolution here for the others vids so we can keep it consistent
                                             }
                                         });
                                         th.start();
                                         try {
                                             th.join(); //wait for it to finish
                                         } catch (InterruptedException e) {
-                                            Log.d(TAG,e.getMessage(),e);
+                                            Log.d(TAG, e.getMessage(), e);
                                         }
 
                                     }
 
                                     //step 2 need to extract decode (might need to remove edit part) encode and mux using phones codec for next step, wait for this to finish
-                                    ExtractDecodeEditEncodeMuxTest test  = new ExtractDecodeEditEncodeMuxTest();
+                                    File tempintrofile = new File(new File(MainMergedVideoOutputFile().getParent()), "Temp.mp4");
+
+                                    ExtractDecodeEditEncodeMuxTest test = new ExtractDecodeEditEncodeMuxTest();
                                     try {
-                                        test.testExtractDecodeEditEncodeMux720p(context);
+                                        test.ExtractDecodeEditEncodeMux(IntroVideoOutputFilePath, tempintrofile.getAbsolutePath(), 1920, 1080,SelectedTrimmedVideoOutputFilepath, MainMergedVideoOutputFilepath);
+                                        //todo add resolution params and make step 3 wait for this to finish BUT be careful if putting in new thread because of the looper shit
                                     } catch (Throwable throwable) {
-                                        throwable.printStackTrace();
+                                        Log.d(TAG, throwable.getMessage(), throwable);
                                     }
 
-                                    //step three use new merge, should work if same resolution
-                                    VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath) , new File(IntroVideoOutputFilePath), new File(MainMergedVideoOutputFilepath));
-
-                                    //old merge won't work here
-                                    //VideoUtils.mergeVideos(MainMergedVideoOutputFilepath, IntroVideoOutputFilePath, MainMergedVideoOutputFilepath);
-
+                                    //step three use new merge, should work if same resolution moved to inside ExtractDecodeEditEncodeMux as per comments
+                                    //VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), tempintrofile, new File(MainMergedVideoOutputFilepath));
                                     InitVideoButton(MainMergedVideoOutputFilepath, main_imageview);
                                     Toast.makeText(context, "First Baby Grow Created!", Toast.LENGTH_SHORT).show();
                                     HidePreviewsShowGoodbye();
+
                                 }
 
                             }})

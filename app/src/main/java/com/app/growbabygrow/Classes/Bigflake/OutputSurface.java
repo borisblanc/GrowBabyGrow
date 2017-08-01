@@ -193,7 +193,7 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
      * data is available.
      */
     public void awaitNewImage() {
-        final int TIMEOUT_MS = 500;
+        final int TIMEOUT_MS = 0; //500;//temp fix to stop callback on main thread from timing out, it will return on notify eventually revisit later
         synchronized (mFrameSyncObject) {
             while (!mFrameAvailable) {
                 try {

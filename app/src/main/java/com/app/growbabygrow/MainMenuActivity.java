@@ -183,6 +183,7 @@ public class MainMenuActivity extends AppCompatActivity {
     }
 
 
+    //maybe do this in beginning if we know we will need it later so we don't have to wait?
     private void CreateIntro_movie(File vidfilepath, int width, int height)
     {
         try {

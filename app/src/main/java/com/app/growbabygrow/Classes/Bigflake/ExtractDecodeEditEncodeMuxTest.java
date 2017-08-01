@@ -16,6 +16,7 @@ import android.test.AndroidTestCase;
 import android.util.Log;
 import android.view.Surface;
 
+import com.app.growbabygrow.Classes.VideoUtils;
 import com.app.growbabygrow.R;
 
 import java.io.File;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static android.R.attr.compatibleWidthLimitDp;
 import static android.R.attr.path;
 
 /**
@@ -46,7 +48,7 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
     /** How long to wait for the next buffer to become available. */
     private static final int TIMEOUT_USEC = 10000;
     /** Where to output the test files. */
-    private static File OUTPUT_FILENAME_DIR;
+
     // parameters for the video encoder
     private static final String OUTPUT_VIDEO_MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
     private static final int OUTPUT_VIDEO_BIT_RATE = 2000000; // 2Mbps
@@ -62,7 +64,10 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
             MediaCodecInfo.CodecProfileLevel.AACObjectHE;
     private static final int OUTPUT_AUDIO_SAMPLE_RATE_HZ = 44100; // Must match the input stream.
 
-    private Context _context;
+    private static String _inputFilePath;
+    private static String _outputFilePath;
+    private static String _selectTrimOutputPath;
+    private static String _mergeOutputPath;
     /**
      * Used for editing the frames.
      *
@@ -87,41 +92,52 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
     /** The raw resource used as the input file. */
     //private int mSourceResId;
     /** The destination file for the encoded output. */
-    private String mOutputFile;
-    public void testExtractDecodeEditEncodeMuxQCIF() throws Throwable {
-        setSize(176, 144);
-        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-        setCopyVideo();
-        TestWrapper.runTest(this);
-    }
-    public void testExtractDecodeEditEncodeMuxQVGA() throws Throwable {
-        setSize(320, 240);
-        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-        setCopyVideo();
-        TestWrapper.runTest(this);
-    }
-    public void testExtractDecodeEditEncodeMux720p(Context context) throws Throwable {
+   // private String mOutputFile;
 
-        OUTPUT_FILENAME_DIR = context.getExternalFilesDir(null);
-        _context = context;
-        setSize(1920, 1080);
-        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-        setCopyVideo();
+    public void ExtractDecodeEditEncodeMux(String InputFilepath, String OutputFilepath, int width, int height, String SelectTrimOutput, String MergeOutput)throws Throwable
+    {
+        _inputFilePath = InputFilepath;
+        _outputFilePath = OutputFilepath;
+        _mergeOutputPath = MergeOutput;
+        _selectTrimOutputPath = SelectTrimOutput;
+        setSize(width, height);
+        setCopyVideo(); //vid only for now
         TestWrapper.runTest(this);
     }
-    public void testExtractDecodeEditEncodeMuxAudio() throws Throwable {
-        setSize(1280, 720);
-        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-        setCopyAudio();
-        TestWrapper.runTest(this);
-    }
-    public void testExtractDecodeEditEncodeMuxAudioVideo() throws Throwable {
-        setSize(1280, 720);
-        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-        setCopyAudio();
-        setCopyVideo();
-        TestWrapper.runTest(this);
-    }
+//    public void testExtractDecodeEditEncodeMuxQCIF() throws Throwable {
+//        setSize(176, 144);
+//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
+//        setCopyVideo();
+//        TestWrapper.runTest(this);
+//    }
+//    public void testExtractDecodeEditEncodeMuxQVGA() throws Throwable {
+//        setSize(320, 240);
+//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
+//        setCopyVideo();
+//        TestWrapper.runTest(this);
+//    }
+//    public void testExtractDecodeEditEncodeMux720p(Context context) throws Throwable {
+//
+//        OUTPUT_FILENAME_DIR = context.getExternalFilesDir(null);
+//        _context = context;
+//        setSize(1920, 1080);
+//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
+//        setCopyVideo();
+//        TestWrapper.runTest(this);
+//    }
+//    public void testExtractDecodeEditEncodeMuxAudio() throws Throwable {
+//        setSize(1280, 720);
+//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
+//        setCopyAudio();
+//        TestWrapper.runTest(this);
+//    }
+//    public void testExtractDecodeEditEncodeMuxAudioVideo() throws Throwable {
+//        setSize(1280, 720);
+//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
+//        setCopyAudio();
+//        setCopyVideo();
+//        TestWrapper.runTest(this);
+//    }
     /** Wraps testExtractDecodeEditEncodeMux() */
     private static class TestWrapper implements Runnable {
         private Throwable mThrowable;
@@ -133,6 +149,8 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
         public void run() {
             try {
                 mTest.extractDecodeEditEncodeMux();
+                //have to do this here because we want to process output away from main thread after muxing is complete
+                VideoUtils.MuxMergeVideos(new File(_mergeOutputPath), new File(_outputFilePath), new File(_selectTrimOutputPath));
             } catch (Throwable th) {
                 mThrowable = th;
             }
@@ -141,13 +159,16 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
          * Entry point.
          */
         public static void runTest(ExtractDecodeEditEncodeMuxTest test) throws Throwable {
-            test.setOutputFile();
+
             TestWrapper wrapper = new TestWrapper(test);
             Thread th = new Thread(wrapper, "codec test");
             th.start();
 
             //MUST COMMENT THIS OUT OR IT WON'T FUCKING WORK BECAUSE OF THIS SHIT
             //https://stackoverflow.com/questions/22457623/surfacetextures-onframeavailable-method-always-called-too-late?noredirect=1&lq=1
+            //join will make main UI thread wait till this worker thread is done and this thread will never happen
+            //because awaitNewImage on this worker is waiting for (infinite timeout) onFrameAvailable to notify it and it is being run on main thread
+            //this circular dependency sucks but I can't fix it now because I don't know how to create a separate thread with a looper for  onFrameAvailable
             //th.join();
 
             if (wrapper.mThrowable != null) {
@@ -188,31 +209,31 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
 //     *
 //     * <p>Must be called after {@link #setSize(int, int)} and {@link #setSource(int)}.
 //     */
-    private void setOutputFile() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(OUTPUT_FILENAME_DIR.getAbsolutePath());
-        sb.append("/cts-media-");
-        sb.append(getClass().getSimpleName());
-        //assertTrue("should have called setSource() first", mSourceResId != -1);
-        sb.append('-');
-        sb.append(123);
-        if (mCopyVideo) {
-            assertTrue("should have called setSize() first", mWidth != -1);
-            assertTrue("should have called setSize() first", mHeight != -1);
-            sb.append('-');
-            sb.append("video");
-            sb.append('-');
-            sb.append(mWidth);
-            sb.append('x');
-            sb.append(mHeight);
-        }
-        if (mCopyAudio) {
-            sb.append('-');
-            sb.append("audio");
-        }
-        sb.append(".mp4");
-        mOutputFile = sb.toString();
-    }
+//    private void setOutputFile() {
+//        StringBuilder sb = new StringBuilder();
+//        sb.append(OUTPUT_FILENAME_DIR.getAbsolutePath());
+//        sb.append("/cts-media-");
+//        sb.append(getClass().getSimpleName());
+//        //assertTrue("should have called setSource() first", mSourceResId != -1);
+//        sb.append('-');
+//        sb.append(123);
+//        if (mCopyVideo) {
+//            assertTrue("should have called setSize() first", mWidth != -1);
+//            assertTrue("should have called setSize() first", mHeight != -1);
+//            sb.append('-');
+//            sb.append("video");
+//            sb.append('-');
+//            sb.append(mWidth);
+//            sb.append('x');
+//            sb.append(mHeight);
+//        }
+//        if (mCopyAudio) {
+//            sb.append('-');
+//            sb.append("audio");
+//        }
+//        sb.append(".mp4");
+//        mOutputFile = sb.toString();
+//    }
     /**
      * Tests encoding and subsequently decoding video from frames generated into a buffer.
      * <p>
@@ -417,13 +438,8 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
 //     */
     private MediaExtractor createExtractor() throws IOException {
         MediaExtractor extractor;
-        //AssetFileDescriptor srcFd = _context.getResources().openRawResourceFd(mSourceResId);
-        //Uri uri = Uri.parse("android.resource://com.your.package/raw/video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz.mp4");
-
-
         extractor = new MediaExtractor();
-        //extractor.setDataSource(new File(OUTPUT_FILENAME_DIR, "intro_265439951.mp4").getAbsolutePath());
-        extractor.setDataSource(new File(OUTPUT_FILENAME_DIR, "intro_265439951.mp4").getAbsolutePath());
+        extractor.setDataSource(_inputFilePath);
         return extractor;
     }
     /**
@@ -508,7 +524,7 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
      * <p>The muxer is not started as it needs to be started only after all streams have been added.
      */
     private MediaMuxer createMuxer() throws IOException {
-        return new MediaMuxer(mOutputFile, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+        return new MediaMuxer(_outputFilePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
     }
     private int getAndSelectVideoTrackIndex(MediaExtractor extractor) {
         for (int index = 0; index < extractor.getTrackCount(); ++index) {
