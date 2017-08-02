@@ -214,7 +214,7 @@ public class Camera2Source {
     /**
      * The {@link android.util.Size} of video recording.
      */
-    private Size mVideoSize;
+    public Size mVideoSize;
 
     /**
      * MediaRecorder

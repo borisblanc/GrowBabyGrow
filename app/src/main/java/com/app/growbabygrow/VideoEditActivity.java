@@ -31,6 +31,7 @@ import java.io.File;
 
 import java.util.ArrayList;
 
+import static android.R.attr.width;
 
 
 public class VideoEditActivity extends AppCompatActivity {
@@ -47,6 +48,10 @@ public class VideoEditActivity extends AppCompatActivity {
     private String IntroVideoOutputFilePath;
     private String babyName;
     private String period;
+    private boolean isnewsession;
+    private boolean ispreviewready = false;
+    private int fixed_width;
+    private int fixed_height;
 
     private ImageView main_imageview;
     private ImageView prev1_imageview;
@@ -61,6 +66,7 @@ public class VideoEditActivity extends AppCompatActivity {
     private RadioButton Radio_prev2;
     private RadioButton Radio_prev3;
     private RadioGroup Radio_Group_prev;
+    private View progressOverlay;
 
     private Boolean exitapp = false;
 
@@ -91,6 +97,7 @@ public class VideoEditActivity extends AppCompatActivity {
         Radio_prev2 = (RadioButton) findViewById(R.id.radioButtonprev2);
         Radio_prev3 = (RadioButton) findViewById(R.id.radioButtonprev3);
         Radio_Group_prev = (RadioGroup) findViewById(R.id.radioGroupPrev);
+        progressOverlay  = findViewById(R.id.progress_overlay);
 
         fab.setVisibility(View.INVISIBLE);
         txt_fab.setVisibility(View.INVISIBLE);
@@ -103,6 +110,15 @@ public class VideoEditActivity extends AppCompatActivity {
         TrimmedVideoOutputFilepath2 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
         TrimmedVideoOutputFilepath3 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
         IntroVideoOutputFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_intro_mp4pathname), null);
+        isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
+        fixed_width = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_width), 0);
+        fixed_height = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_height), 0);
+
+
+        //if new session lets get a head start and begin async intro video creation while user pics preview
+        if (isnewsession) {
+            CreatePreview(fixed_width, fixed_height);
+        }
 
         Radio_prev1.setOnClickListener(new View.OnClickListener() {
            @Override
@@ -141,79 +157,106 @@ public class VideoEditActivity extends AppCompatActivity {
                 if (exitapp)
                     ExitApp();
 
-                new AlertDialog.Builder(VideoEditActivity.this)
-                        .setTitle("Merge Baby Grow?")
-                        .setMessage("Are you sure you want use this Video in your Baby Grow?")
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                if (!isnewsession) {
+                    new AlertDialog.Builder(VideoEditActivity.this)
+                            .setTitle("Merge Baby Grow?")
+                            .setMessage("Are you sure you want merge this Video into your Baby Grow?")
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
-                            public void onClick(DialogInterface dialog, int whichButton) {
-
-                                if (MainMergedVideoOutputFile().exists()) {
-
+                                public void onClick(DialogInterface dialog, int whichButton) {
                                     //this merge works fine for 'similar' vids
-                                    VideoUtils.Mp4ParserMergeVideos(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, SelectedTrimmedVideoOutputFilepath);
+                                    //VideoUtils.Mp4ParserMergeVideos(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, SelectedTrimmedVideoOutputFilepath);
+                                    VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
+
                                     Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
                                     HidePreviewsShowGoodbye();
                                 }
-                                else //first time when no movie yet rename selected trim to main and add merge in intro movie
-                                {
-                                    main_imageview.setVisibility(View.VISIBLE);
-                                    main_title.setVisibility(View.VISIBLE);
+                            })
+                            .setNegativeButton(android.R.string.no, null).show();
 
-//                                    File savedir = new File(MainMergedVideoOutputFile().getParent());
-//                                    String toname = MainMergedVideoOutputFile().getName();
-//                                    int i = SelectedTrimmedVideoOutputFilepath.lastIndexOf('/');
-//                                    String fromname = SelectedTrimmedVideoOutputFilepath.substring(i + 1, SelectedTrimmedVideoOutputFilepath.length());
-//                                    Utils.RenameFile(savedir, fromname, toname);
+                }
+                else //first time when no movie yet rename selected trim to main and add merge in intro movie
+                {
 
-                                    Toast.makeText(context, "Starting First Baby Grow!", Toast.LENGTH_SHORT).show();
+                    //need to block UI thread and show loading overlay if preview isn't ready yet and poll until it is
+                    if (!ispreviewready) {
+                        Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_SHORT).show();
+                        Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
+
+                    }
 
 
-                                    //step 1 create intro video on new thread, uses jcodec
-                                    final File Introvid = new File(IntroVideoOutputFilePath);
-                                    if (!Introvid.exists()) {
-                                        Thread th = new Thread(new Runnable() {
-                                            public void run() {
-                                                CreateIntro_movie(Introvid, 1920, 1080); //todo find way to bring in recorded resolution here for the others vids so we can keep it consistent
-                                            }
-                                        });
-                                        th.start();
-                                        try {
-                                            th.join(); //wait for it to finish
-                                        } catch (InterruptedException e) {
-                                            Log.d(TAG, e.getMessage(), e);
-                                        }
-
-                                    }
-
-                                    //step 2 need to extract decode (might need to remove edit part) encode and mux using phones codec for next step, wait for this to finish
-                                    File tempintrofile = new File(new File(MainMergedVideoOutputFile().getParent()), "Temp.mp4");
-
-                                    ExtractDecodeEditEncodeMuxTest test = new ExtractDecodeEditEncodeMuxTest();
-                                    try {
-                                        test.ExtractDecodeEditEncodeMux(IntroVideoOutputFilePath, tempintrofile.getAbsolutePath(), 1920, 1080,SelectedTrimmedVideoOutputFilepath, MainMergedVideoOutputFilepath);
-                                        //todo add resolution params and make step 3 wait for this to finish BUT be careful if putting in new thread because of the looper shit
-                                    } catch (Throwable throwable) {
-                                        Log.d(TAG, throwable.getMessage(), throwable);
-                                    }
-
-                                    //step three use new merge, should work if same resolution moved to inside ExtractDecodeEditEncodeMux as per comments
-                                    //VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), tempintrofile, new File(MainMergedVideoOutputFilepath));
-                                    InitVideoButton(MainMergedVideoOutputFilepath, main_imageview);
-                                    Toast.makeText(context, "First Baby Grow Created!", Toast.LENGTH_SHORT).show();
-                                    HidePreviewsShowGoodbye();
-
+                    Thread th = new Thread(new Runnable() {
+                        public void run() {
+                            //block background worker until intro vid is ready
+                            while (!ispreviewready) {
+                                try {
+                                    Thread.sleep(1000);
                                 }
+                                catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            //step 2 & 3 inside, need to extract decode (might need to remove edit part) encode and mux using phones codec and then MuxMerge
+                            //todo looper warning here, setting timeout to infinity for it to work but in future will need to create looper thread for
+                            File tempintrofile = new File(new File(MainMergedVideoOutputFile().getParent()), "Temp.mp4");
 
-                            }})
-                        .setNegativeButton(android.R.string.no, null).show();
+                            ExtractDecodeEditEncodeMuxTest test = new ExtractDecodeEditEncodeMuxTest();
+                            try {
+                                test.ExtractDecodeEditEncodeMux(IntroVideoOutputFilePath, tempintrofile.getAbsolutePath(), fixed_width, fixed_height, SelectedTrimmedVideoOutputFilepath, MainMergedVideoOutputFilepath);
 
+                                runOnUiThread(new Runnable() { //run this shit on UI thread
+                                    @Override
+                                    public void run() {
+                                        //Don't do anything that blocks here or ExtractDecodeEditEncodeMux will never finish
+                                        Utils.animateView(progressOverlay, View.GONE, 0, 200); //stop overlay busy animation
+                                        main_imageview.setVisibility(View.VISIBLE);
+                                        main_title.setVisibility(View.VISIBLE);
+                                        InitVideoButton(MainMergedVideoOutputFilepath, main_imageview); //need to run after MuxMergeVideos inside of ExtractDecodeEditEncodeMux or find way to refresh video button image?
+                                        Toast.makeText(context, "First Baby Grow Created!", Toast.LENGTH_SHORT).show();
+                                        HidePreviewsShowGoodbye();
+                                    }
+                                });
+
+                            } catch (Throwable throwable) {
+                                Log.d(TAG, throwable.getMessage(), throwable);
+                            }
+                        }
+                    });
+                    th.start();
+
+
+                    SetNotIsnew(); //important or else will never resume core functions
+                }
             }
         });
 
     }
 
+
+    private void CreatePreview(final int width, final int height)
+    {
+        //step 1 create intro video on new thread, uses jcodec
+        final File Introvid = new File(IntroVideoOutputFilePath);
+        if (!Introvid.exists()) {
+            Thread th = new Thread(new Runnable() {
+                public void run() {
+                    CreateIntro_movie(Introvid, width, height);
+                    ispreviewready = true; //check this later to see if ready
+                }
+            });
+            th.start();
+
+            //this will stop it from being async as it will block main thread until its done
+//            try {
+//                th.join(); //wait for it to finish
+//            } catch (InterruptedException e) {
+//                Log.d(TAG, e.getMessage(), e);
+//            }
+
+        }
+    }
 
     private void HidePreviewsShowGoodbye()
     {
@@ -244,14 +287,22 @@ public class VideoEditActivity extends AppCompatActivity {
         }
 
         fab.setImageResource(android.R.drawable.ic_menu_revert);
+
         exitapp = true;
+    }
+
+    private void SetNotIsnew()
+    {
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putBoolean(getString(R.string.p_file1_is_new), false); //set isnew to false so next time we don't do intro again
+        editor.apply();
     }
 
 
 
     private void SetVideoButtons()
     {
-        if (MainMergedVideoOutputFile().exists()) //will not exist first time around
+        if (isnewsession) //will not exist first time around
         {
             InitVideoButton(MainMergedVideoOutputFilepath, main_imageview);
         }
@@ -277,10 +328,11 @@ public class VideoEditActivity extends AppCompatActivity {
 
     }
 
-    private void InitVideoButton(final String vidfilepath, ImageView vidbutton )
+    private void InitVideoButton(final String vidfilepath, ImageView vidbutton)
     {
         Bitmap mainthumb = ThumbnailUtils.createVideoThumbnail(vidfilepath, MediaStore.Video.Thumbnails.MINI_KIND);
         vidbutton.setImageBitmap(mainthumb);
+        //vidbutton.postInvalidate(); //force redraw not working
         vidbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

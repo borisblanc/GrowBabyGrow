@@ -44,6 +44,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private String Name;
     private String Period;
     public ArrayList<String> TrimmedVideoOutputFilepaths;
+    private View progressOverlay;
 
     private Integer GetHash()
     {
@@ -95,6 +96,7 @@ public class MainMenuActivity extends AppCompatActivity {
             ShowBabyGrowNew();
             savedexists = false;
             startbabygrow = false;
+
         }
         else {
             savedexists = true;
@@ -118,6 +120,9 @@ public class MainMenuActivity extends AppCompatActivity {
                                 Period = timeperiods.getSelectedItem().toString();
 
                                 SharedPreferences.Editor editor = sharedpreferences.edit();
+                                //set isnew flag so we can create intro movie later this will be set to false after intro video is created and merged in videoedit
+                                editor.putBoolean(getString(R.string.p_file1_is_new), true);
+
                                 editor.putString(getString(R.string.p_file1_saved_name), Name);
                                 editor.putString(getString(R.string.p_file1_saved_period), Period);
                                 editor.apply();
@@ -183,47 +188,6 @@ public class MainMenuActivity extends AppCompatActivity {
     }
 
 
-    //maybe do this in beginning if we know we will need it later so we don't have to wait?
-    private void CreateIntro_movie(File vidfilepath, int width, int height)
-    {
-        try {
-            ArrayList<Bitmap> b = new ArrayList<>();
-
-            String baby_name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
-            String period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
-            String intro1 = baby_name + "'s" + " Baby Grow";
-
-            //draw bitmaps from resource
-            b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, intro1, width, height, 102));
-            b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, GetIntroPeriod(period), width, height, 102));
-//            Utils.testSavebitmap(b.get(0), new File(MainMergedVideoOutputFile().getParent(),"ass.bmp").getAbsolutePath());
-//            Utils.testSavebitmap(b.get(1), new File(MainMergedVideoOutputFile().getParent(),"ass2.bmp").getAbsolutePath());
-
-            VideoUtils.CreatevideoFromBitmaps(vidfilepath, b, 30);
-        }
-        catch (Exception e)
-        {
-            Log.d(TAG,e.getMessage(),e);
-        }
-    }
-
-    private String GetIntroPeriod(String period)
-    {
-        switch (period)
-        {
-            case "Twice Weekly":
-                return "Every Few Days...";
-            case "Weekly":
-                return "Week by Week...";
-            case "Bi-weekly":
-                return "Every Couple Weeks...";
-            case "Monthly":
-                return "Month by Month...";
-            default:
-                return "Week by Week...";
-        }
-
-    }
 
     private void ShowBabyGrowNew()
     {

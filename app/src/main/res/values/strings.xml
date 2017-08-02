@@ -6,6 +6,7 @@
     <string name="record">Record</string>
     <string name="stop">Stop</string>
     <string name="player_video_file_path">FilePath</string>
+    <string name="title_activity_video_edit">VideoEditActivity</string>
 
     <string name="save_project_settings">Save Baby Grow…</string>
     <string name="go_capture_start">Grow Baby Grow!!</string>
@@ -23,10 +24,13 @@
 
     <!-- preference file values -->
     <string name="p_file1_key">com.app.growbabygrow.pfile1</string>
+    <string name="p_file1_is_new">is_new</string>
     <string name="p_file1_saved_name">saved_name</string>
     <string name="p_file1_saved_period">saved_period</string>
     <string name="p_file1_saved_main_mp4pathname">saved_main_mp4pathname</string>
     <string name="p_file1_saved_main_mp4meta">saved_main_mp4meta</string>
+    <string name="p_file1_saved_main_mp4_fixed_width">saved_main_mp4_width</string>
+    <string name="p_file1_saved_main_mp4_fixed_height">saved_main_mp4_height</string>
 
     <string name="p_file1_saved_orig_mp4pathname">saved_orig_mp4pathname</string>
     <string name="p_file1_saved_trim1_mp4pathname">saved_trim1_mp4pathname</string>
@@ -35,6 +39,6 @@
     <string name="p_file1_saved_intro_mp4pathname">saved_intro_mp4pathname</string>
 
     <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
-    <string name="title_activity_video_edit">VideoEditActivity</string>
+
 
 </resources>

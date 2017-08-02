@@ -48,4 +48,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:srcCompat="@android:drawable/ic_menu_delete" />
 
+
+
 </android.support.constraint.ConstraintLayout>

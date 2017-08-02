@@ -484,7 +484,7 @@ public class ExtractMpegFramesTest extends AndroidTestCase {
          * with the EGLContext that contains the GL texture object used by SurfaceTexture.)
          */
         public void awaitNewImage() {
-            final int TIMEOUT_MS = 2500;
+            final int TIMEOUT_MS = 0; //for now leave as infinite timeout and don't block main thread and it should be ok, later will fix by having onFrameAvailable happen on something other than main with a looper
 
             synchronized (mFrameSyncObject) {
                 while (!mFrameAvailable) {

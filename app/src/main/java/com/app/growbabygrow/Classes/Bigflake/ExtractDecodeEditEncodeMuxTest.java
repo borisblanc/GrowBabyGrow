@@ -89,10 +89,7 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
     private int mWidth = -1;
     /** Height of the output frames. */
     private int mHeight = -1;
-    /** The raw resource used as the input file. */
-    //private int mSourceResId;
-    /** The destination file for the encoded output. */
-   // private String mOutputFile;
+
 
     public void ExtractDecodeEditEncodeMux(String InputFilepath, String OutputFilepath, int width, int height, String SelectTrimOutput, String MergeOutput)throws Throwable
     {
@@ -104,40 +101,7 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
         setCopyVideo(); //vid only for now
         TestWrapper.runTest(this);
     }
-//    public void testExtractDecodeEditEncodeMuxQCIF() throws Throwable {
-//        setSize(176, 144);
-//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyVideo();
-//        TestWrapper.runTest(this);
-//    }
-//    public void testExtractDecodeEditEncodeMuxQVGA() throws Throwable {
-//        setSize(320, 240);
-//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyVideo();
-//        TestWrapper.runTest(this);
-//    }
-//    public void testExtractDecodeEditEncodeMux720p(Context context) throws Throwable {
-//
-//        OUTPUT_FILENAME_DIR = context.getExternalFilesDir(null);
-//        _context = context;
-//        setSize(1920, 1080);
-//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyVideo();
-//        TestWrapper.runTest(this);
-//    }
-//    public void testExtractDecodeEditEncodeMuxAudio() throws Throwable {
-//        setSize(1280, 720);
-//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyAudio();
-//        TestWrapper.runTest(this);
-//    }
-//    public void testExtractDecodeEditEncodeMuxAudioVideo() throws Throwable {
-//        setSize(1280, 720);
-//        //setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyAudio();
-//        setCopyVideo();
-//        TestWrapper.runTest(this);
-//    }
+
     /** Wraps testExtractDecodeEditEncodeMux() */
     private static class TestWrapper implements Runnable {
         private Throwable mThrowable;
@@ -149,8 +113,10 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
         public void run() {
             try {
                 mTest.extractDecodeEditEncodeMux();
-                //have to do this here because we want to process output away from main thread after muxing is complete
+                //have to do this here because we want to process output away from main thread after muxing is complete,
+                //need to create a separate thread with a looper for  onFrameAvailable and refactor all this at a later date
                 VideoUtils.MuxMergeVideos(new File(_mergeOutputPath), new File(_outputFilePath), new File(_selectTrimOutputPath));
+
             } catch (Throwable th) {
                 mThrowable = th;
             }
@@ -164,7 +130,7 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
             Thread th = new Thread(wrapper, "codec test");
             th.start();
 
-            //MUST COMMENT THIS OUT OR IT WON'T FUCKING WORK BECAUSE OF THIS SHIT
+            //MUST COMMENT th.join() THIS OUT OR IT WON'T FUCKING WORK BECAUSE OF THIS SHIT
             //https://stackoverflow.com/questions/22457623/surfacetextures-onframeavailable-method-always-called-too-late?noredirect=1&lq=1
             //join will make main UI thread wait till this worker thread is done and this thread will never happen
             //because awaitNewImage on this worker is waiting for (infinite timeout) onFrameAvailable to notify it and it is being run on main thread

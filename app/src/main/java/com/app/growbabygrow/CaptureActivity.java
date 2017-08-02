@@ -1,14 +1,10 @@
 package com.app.growbabygrow;
 
-
-
-
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.hardware.camera2.CameraDevice;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -27,29 +23,25 @@ import com.app.growbabygrow.Classes.Camera2Source;
 import com.app.growbabygrow.Classes.CameraSource;
 import com.app.growbabygrow.Classes.CameraSourcePreview;
 import com.app.growbabygrow.Classes.CustomFaceDetector;
-
 import com.app.growbabygrow.Classes.FaceGraphic;
 import com.app.growbabygrow.Classes.FrameData;
 import com.app.growbabygrow.Classes.GraphicOverlay;
-import com.app.growbabygrow.Classes.VideoUtils;
 import com.app.growbabygrow.Classes.Utils;
+import com.app.growbabygrow.Classes.VideoUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static android.R.attr.x;
+import static java.lang.reflect.Array.getInt;
+import static org.jcodec.containers.mkv.MKVType.Name;
 
 public class CaptureActivity extends AppCompatActivity {
     private static final String TAG = "CaptureActivity";
@@ -151,10 +143,14 @@ public class CaptureActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         if (mCamera2Source.mTrackRecord) {
+
                             stopCameraSource(); //call this to release everything or all the shit breaks
                             trackRecord = false;
                             recButton.setText(R.string.record);
-                            requestPermissionThenOpenCamera();
+                            requestPermissionThenOpenCamera(); //back to preview mode
+
+                            //this will have to stay constant throughout Grow baby session SO i will have to stop them from switching cameras eventually (just lock down using of back camera)
+                            VerifySaveLockedDownVidSize(mCamera2Source.mVideoSize);
 
                             try {
 
@@ -191,6 +187,28 @@ public class CaptureActivity extends AppCompatActivity {
             Log.d(TAG,e.getMessage());
         }
 
+    }
+
+    //function will check to see if new session then save resolution if not new then check to make sure resolution is same else throw exception.
+    private void VerifySaveLockedDownVidSize(Size recordedsize)
+    {
+        boolean isnew = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
+
+        if (isnew)
+        {
+            SharedPreferences.Editor editor = sharedpreferences.edit();
+            editor.putInt(getString(R.string.p_file1_saved_main_mp4_fixed_width), recordedsize.getWidth());
+            editor.putInt(getString(R.string.p_file1_saved_main_mp4_fixed_height), recordedsize.getHeight());
+            editor.apply();
+        }
+        else
+        {
+            int width = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_width), 0);
+            int height = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_height), 0);
+
+            if (width != recordedsize.getWidth() || height != recordedsize.getHeight())
+                throw new IllegalStateException("Resolution of video for saved project has changed! This is a problem!");
+        }
     }
 
     private void TransfertoVideoEdit()
