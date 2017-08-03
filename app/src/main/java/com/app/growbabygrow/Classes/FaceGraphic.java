@@ -26,6 +26,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
     private Bitmap marker;
 
     private Bitmap smiley;
+    private Bitmap cool;
 
     private BitmapFactory.Options opt;
     private Resources resources;
@@ -77,8 +78,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
     private volatile Face mFace;
 
-    private int numberofsmiles = 0;
-    private int numberofgoodfaces = 0;
+    private float numberofsmiles = 0;
+    private float numberofgoodfaces = 0;
 
 //    public FaceGraphic(GraphicOverlay overlay, Context context) {
 //        super(overlay);
@@ -113,6 +114,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         resources = context.getResources();
 
         smiley = BitmapFactory.decodeResource(resources, R.drawable.smile2, opt);
+        cool = BitmapFactory.decodeResource(resources, R.drawable.cool, opt);
     }
 
     public void setId(int id) {
@@ -147,19 +149,31 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
     @Override
     public void draw(Canvas canvas) {
         Face face = mFace;
-        if (face == null) {
+
+
+
+        if (face == null) //if null don't bother any face tracking draws
             return;
-        }
 
-        if (face.getIsSmilingProbability() > .7)
-            numberofsmiles +=1;
 
-        if (Utils.GetImageUsability(face) > .7)
-            numberofgoodfaces+=1;
 
         // Draws a circle at the position of the detected face, with the face's track id below.
         float x = translateX(face.getPosition().x + face.getWidth() / 2);
         float y = translateY(face.getPosition().y + face.getHeight() / 2);
+
+        if (face.getIsSmilingProbability() > .7)
+            numberofsmiles += .2;
+
+        if (Utils.GetImageUsability(face) > .7)
+            numberofgoodfaces+= .2;
+
+
+
+        canvas.drawBitmap(cool, 10, canvas.getHeight() - 70, null); //bottom left
+        canvas.drawText("Cool Looks: " + Math.round(numberofgoodfaces), 100, canvas.getHeight() - 20, mIdPaint);
+
+        canvas.drawBitmap(smiley, 10, canvas.getHeight() - 150, null); //bottom right on top of above
+        canvas.drawText("Smiles: " + Math.round(numberofsmiles), 100, canvas.getHeight() - 100, mIdPaint);
 
         //canvas.drawCircle(x, y, FACE_POSITION_RADIUS, mFacePositionPaint);
         //canvas.drawText("id: " + faceId, x + ID_X_OFFSET, y + ID_Y_OFFSET, mIdPaint);
@@ -168,12 +182,11 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 //        canvas.drawText("right eye: " + String.format("%.2f", face.getIsRightEyeOpenProbability()), x + ID_X_OFFSET * 2, y + ID_Y_OFFSET * 2, mIdPaint);
 //        canvas.drawText("left eye: " + String.format("%.2f", face.getIsLeftEyeOpenProbability()), x - ID_X_OFFSET*2, y - ID_Y_OFFSET*2, mIdPaint);
 
-        canvas.drawText("Number of smiles: " + numberofsmiles, x - ID_X_OFFSET * 3, y - ID_Y_OFFSET *3 , mIdPaint);
-        canvas.drawText("Number of good looks: " + numberofgoodfaces, x + ID_X_OFFSET * 3, y + ID_Y_OFFSET *3 , mIdPaint);
+//        canvas.drawText("Number of smiles: " + numberofsmiles, x - ID_X_OFFSET * 3, y - ID_Y_OFFSET *3 , mIdPaint);
+//        canvas.drawText("Number of good looks: " + numberofgoodfaces, x + ID_X_OFFSET * 3, y + ID_Y_OFFSET *3 , mIdPaint);
 
-        canvas.drawBitmap(smiley, canvas.getWidth() /2, 0, null);
-
-
+//        canvas.drawBitmap(smiley, canvas.getWidth() /2, 0, null);
+//        canvas.drawText("Smiles: " + numberofsmiles, (canvas.getWidth() /2) + 100, 50 , mIdPaint);
 
 
         // Draws a bounding box around the face.

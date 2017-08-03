@@ -426,7 +426,6 @@ public class CaptureActivity extends AppCompatActivity {
     private void startCameraSource() {
         if(useCamera2) {
             if(mCamera2Source != null) {
-                cameraVersion.setText("Camera 2");
                 try {mPreview.start(mCamera2Source, mGraphicOverlay, trackRecord);
                 } catch (IOException e) {
                     Log.e(TAG, "Unable to start camera source 2.", e);
@@ -436,7 +435,6 @@ public class CaptureActivity extends AppCompatActivity {
             }
         } else {
             if (mCameraSource != null) {
-                cameraVersion.setText("Camera 1");
                 try {mPreview.start(mCameraSource, mGraphicOverlay);
                 } catch (IOException e) {
                     Log.e(TAG, "Unable to start camera source.", e);
@@ -552,6 +550,15 @@ public class CaptureActivity extends AppCompatActivity {
         if(previewFaceDetector != null) {
             previewFaceDetector.release();
         }
+    }
+
+    @Override
+    public void onBackPressed(){
+        if (trackRecord)
+            Toast.makeText(context, "Please press stop on record First!", Toast.LENGTH_SHORT).show();
+        else
+            super.onBackPressed();
+
     }
 
 

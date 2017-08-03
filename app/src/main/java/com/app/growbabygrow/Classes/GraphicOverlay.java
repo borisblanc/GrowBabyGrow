@@ -170,6 +170,7 @@ public class GraphicOverlay extends View {
             for (Graphic graphic : mGraphics) {
                 graphic.draw(canvas);
             }
+
         }
     }
 }
