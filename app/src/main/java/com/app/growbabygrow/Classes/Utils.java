@@ -136,7 +136,7 @@ public class Utils {
             bos = new BufferedOutputStream(new FileOutputStream(fullfilepath));
 
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
-            bitmap.recycle();
+            //bitmap.recycle();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

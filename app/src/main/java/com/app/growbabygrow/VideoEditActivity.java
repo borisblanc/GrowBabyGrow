@@ -31,6 +31,7 @@ import java.io.File;
 
 import java.util.ArrayList;
 
+import static android.R.attr.bitmap;
 import static android.R.attr.width;
 
 
@@ -213,7 +214,7 @@ public class VideoEditActivity extends AppCompatActivity {
                                         Utils.animateView(progressOverlay, View.GONE, 0, 200); //stop overlay busy animation
                                         main_imageview.setVisibility(View.VISIBLE);
                                         main_title.setVisibility(View.VISIBLE);
-                                        InitVideoButton(MainMergedVideoOutputFilepath, main_imageview); //need to run after MuxMergeVideos inside of ExtractDecodeEditEncodeMux or find way to refresh video button image?
+                                        InitVideoButton(IntroVideoOutputFilePath, MainMergedVideoOutputFilepath, main_imageview); //make sure to use existing video for thumbnail not newly created MainMergedVideoOutputFilepath or it will not detect it
                                         Toast.makeText(context, "First Baby Grow Created!", Toast.LENGTH_SHORT).show();
                                         HidePreviewsShowGoodbye();
                                     }
@@ -302,9 +303,9 @@ public class VideoEditActivity extends AppCompatActivity {
 
     private void SetVideoButtons()
     {
-        if (isnewsession) //will not exist first time around
+        if (!isnewsession) //will not exist first time around
         {
-            InitVideoButton(MainMergedVideoOutputFilepath, main_imageview);
+            InitVideoButton(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, main_imageview);
         }
         else
         {
@@ -312,9 +313,9 @@ public class VideoEditActivity extends AppCompatActivity {
             main_title.setVisibility(View.INVISIBLE);
         }
 
-        InitVideoButton(TrimmedVideoOutputFilepath1, prev1_imageview);
-        InitVideoButton(TrimmedVideoOutputFilepath2, prev2_imageview);
-        InitVideoButton(TrimmedVideoOutputFilepath3, prev3_imageview);
+        InitVideoButton(TrimmedVideoOutputFilepath1, TrimmedVideoOutputFilepath1, prev1_imageview);
+        InitVideoButton(TrimmedVideoOutputFilepath2, TrimmedVideoOutputFilepath2, prev2_imageview);
+        InitVideoButton(TrimmedVideoOutputFilepath3, TrimmedVideoOutputFilepath3, prev3_imageview);
 
 
         orig_view_btn.setOnClickListener(new View.OnClickListener() {
@@ -328,16 +329,16 @@ public class VideoEditActivity extends AppCompatActivity {
 
     }
 
-    private void InitVideoButton(final String vidfilepath, ImageView vidbutton)
+    private void InitVideoButton(String vidfilepath_forimage, final String vidfilepath_forplay, ImageView vidbutton)
     {
-        Bitmap mainthumb = ThumbnailUtils.createVideoThumbnail(vidfilepath, MediaStore.Video.Thumbnails.MINI_KIND);
+        Bitmap mainthumb = ThumbnailUtils.createVideoThumbnail(vidfilepath_forimage, MediaStore.Video.Thumbnails.MINI_KIND);
         vidbutton.setImageBitmap(mainthumb);
-        //vidbutton.postInvalidate(); //force redraw not working
+
         vidbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(VideoEditActivity.this, VideoViewActivity.class);
-                intent.putExtra(getString(R.string.player_video_file_path), vidfilepath);
+                intent.putExtra(getString(R.string.player_video_file_path), vidfilepath_forplay);
                 startActivity(intent);
             }
         });

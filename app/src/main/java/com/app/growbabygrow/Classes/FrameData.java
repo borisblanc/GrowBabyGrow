@@ -27,15 +27,6 @@ public class FrameData {
 
     }
 
-//    public static class compScore implements Comparator<FaceData> {
-//        public int compare(FaceData a, FaceData b) {
-//            if (a._score > b._score)
-//                return 1; // highest value first
-//            if (a._score == b._score)
-//                return 0;
-//            return -1;
-//        }
-//    }
 
     public static class Tuple<X, Y> {
         public final X x;

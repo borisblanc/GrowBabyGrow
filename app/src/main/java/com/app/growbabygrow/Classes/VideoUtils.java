@@ -387,9 +387,7 @@ public class VideoUtils {
             SequenceEncoder encoder = new SequenceEncoder(fullpath);
             for(Bitmap bmap: bitmaps)
             {
-                //Picture pic = fromBitmap(bmap);
                 for (int i = 1; i <= numofframes; i++) {
-                    //encoder.encodeNativeFrame(pic);
                     encoder.encodeImage(bmap);
                 }
 
@@ -403,28 +401,7 @@ public class VideoUtils {
     }
 
 
-    // convert from Bitmap to Picture (jcodec native structure)
-    private static Picture fromBitmap(Bitmap src) {
-        Picture dst = Picture.create(src.getWidth(), src.getHeight(), ColorSpace.RGB);
-        fromBitmap(src, dst);
-        return dst;
-    }
 
-    private static void fromBitmap(Bitmap src, Picture dst) {
-        int[] dstData = dst.getPlaneData(0);
-        int[] packed = new int[src.getWidth() * src.getHeight()];
-
-        src.getPixels(packed, 0, src.getWidth(), 0, 0, src.getWidth(), src.getHeight());
-
-        for (int i = 0, srcOff = 0, dstOff = 0; i < src.getHeight(); i++) {
-            for (int j = 0; j < src.getWidth(); j++, srcOff++, dstOff += 3) {
-                int rgb = packed[srcOff];
-                dstData[dstOff] = (rgb >> 16) & 0xff;
-                dstData[dstOff + 1] = (rgb >> 8) & 0xff;
-                dstData[dstOff + 2] = rgb & 0xff;
-            }
-        }
-    }
 
 
 

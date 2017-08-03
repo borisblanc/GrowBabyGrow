@@ -115,7 +115,6 @@ public class CaptureActivity extends AppCompatActivity {
             Button switchButton = (Button) findViewById(R.id.btn_switch);
             mPreview = (CameraSourcePreview) findViewById(R.id.preview);
             mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
-            cameraVersion = (TextView) findViewById(R.id.cameraVersion);
             ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
 
             if (checkGooglePlayAvailability()) {
