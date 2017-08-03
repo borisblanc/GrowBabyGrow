@@ -65,14 +65,14 @@ public class EncoderMuxer
 
     //  allocate one of these up front so we don't need to do it every time
 
-    private ArrayList<Bitmap> _ByteBuffers;
+    private ArrayList<byte[]> _ByteBuffers;
 
 //    private static MediaCodecCapabilities _SelectedCodecColor;
 //
   // private static ImageFormat _CameraColorFormat = ImageFormat.NV21; //ImageFormatType NV21 or YV12 should be the image formats all Android cameras save under ?nv21 should always work i think?
 
 
-    public EncoderMuxer(int width, int height, int bitRate, int framerate, String oFilePath, ArrayList<Bitmap> byteBuffers)
+    public EncoderMuxer(int width, int height, int bitRate, int framerate, String oFilePath, ArrayList<byte[]> byteBuffers)
     {
         _Width = width;
         _Height = height;
@@ -246,7 +246,7 @@ public class EncoderMuxer
                         {
 
                             ByteBuffer inputBuf = encoderInputBuffers[inputBufIndex];
-                            Bitmap b = _ByteBuffers.get(frameIndex);
+                            Bitmap b = Utils.GetBitmap(_ByteBuffers.get(frameIndex), _Width, _Height);
                             int chunkSize = 0;
 
                             if (b == null)
@@ -280,7 +280,7 @@ public class EncoderMuxer
                                 encodeYUV420SP(yuv, argb, b.getWidth(), b.getHeight());
                                 //YuvImage yuvimage = new YuvImage(yuv, ImageFormat.NV21, _Width, _Height, null);
                                 //swapNV21_NV12(yuv, _Width, _Height);
-                                byte[] fuck = swapYV12toI420(yuv, b.getWidth(), b.getHeight());
+                                //byte[] fuck = swapYV12toI420(yuv, b.getWidth(), b.getHeight());
 //                                byte [] yuv = new byte[_Width * _Height*3/2];
 //                                int [] argb = new int[_Width * _Height];
 //
@@ -295,9 +295,9 @@ public class EncoderMuxer
 //                                YuvImage yuv = new YuvImage(data, ImageFormat.NV21, 1920, 1280, null);
 
                                 //YuvImage yuv = new YuvImage(imagedata, ImageFormat.NV21,_Width , _Height, null);
-                                inputBuf.put(fuck);
+                                inputBuf.put(yuv);
 
-                                chunkSize = fuck.length;
+                                chunkSize = yuv.length;
                                 //imagedata.recycle();
                                 //yuv = null;
                                 //GC.Collect(); //essential to fix memory leak from new YuvImage allocation above

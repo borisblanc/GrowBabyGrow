@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -293,6 +294,29 @@ public class Utils {
                         view.setVisibility(toVisibility);
                     }
                 });
+    }
+
+    public static Bitmap GetBitmap(byte[] framebuff, int FrameWidth, int FrameHeight)
+    {
+        YuvImage yuvimage = new YuvImage(framebuff, ImageFormat.NV21, FrameWidth, FrameHeight, null);
+
+        Bitmap b;
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream ();
+
+        yuvimage.compressToJpeg(new Rect(0, 0, FrameWidth, FrameHeight), 100, baos); // Where 100 is the quality of the generated jpeg
+        byte[] jpegArray = baos.toByteArray();
+        b = BitmapFactory.decodeByteArray(jpegArray, 0, jpegArray.length);
+
+        return b;
+    }
+
+    public static YuvImage GetYUVImage(ByteBuffer framebuff, int FrameWidth, int FrameHeight)
+    {
+        byte[] barray = new byte[framebuff.remaining()];
+        framebuff.get(barray);
+
+        return new YuvImage(barray, ImageFormat.NV21, FrameWidth, FrameHeight, null);
     }
 
 }
