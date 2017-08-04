@@ -40,18 +40,18 @@ public class CustomFaceDetector extends Detector<Face> {
         _faces.add(new FrameData(timestamp, faces));
 
         //sample code for saving cropped bitmap
-//        if (testcount == 100)
-//        {
-//            Bitmap bitmap = Utils.GetBitmap(framebuff,frame.getMetadata().getWidth(),frame.getMetadata().getHeight() );
-//            for (int i = 0; i < faces.size(); i++) {          //can't use for-each loops for SparseArrays
-//                Face face = faces.valueAt(i);
-//                //get it's coordinates
-//                Bitmap faceBitmap = Bitmap.createBitmap(bitmap, (int) face.getPosition().x, (int) face.getPosition().y, (int) face.getWidth(), (int) face.getHeight());
-//                Utils.testSavebitmap(faceBitmap, "/storage/emulated/0/Android/data/com.app.growbabygrow/files/ass.bmp");
-//                //Do whatever you want with this cropped Bitmap
-//            }
-//
-//        }
+        if (testcount == 100)
+        {
+            Bitmap bitmap = Utils.GetBitmap(framebuff,frame.getMetadata().getWidth(),frame.getMetadata().getHeight() );
+            for (int i = 0; i < faces.size(); i++) {          //can't use for-each loops for SparseArrays
+                Face face = faces.valueAt(i);
+                //get it's coordinates
+                Bitmap faceBitmap = Bitmap.createBitmap(bitmap, (int) face.getPosition().x, (int) face.getPosition().y, (int) face.getWidth(), (int) face.getHeight());
+                Utils.testSavebitmap(bitmap, "/storage/emulated/0/Android/data/com.app.growbabygrow/files/ass.bmp");
+                //Do whatever you want with this cropped Bitmap
+            }
+
+        }
 
 
         testcount++;

@@ -100,19 +100,6 @@ public class MainMenuActivity extends AppCompatActivity {
         Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
         Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
 
-//        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ass);
-//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-//        byte[] bitmapdata = stream.toByteArray();
-//
-//        ArrayList<byte[]> stuff = new ArrayList<>();
-//        for (int i = 0; i < 30; i++)
-//        {
-//            stuff.add(bitmapdata);
-//        }
-//
-//        EncoderMuxer em = new EncoderMuxer(1920, 1080, 6000000, 30, new File(baseVideoFileDir, "assfuck.mp4").getAbsolutePath(), stuff);
-//        em.EncodeVideoToMp4();
 
 
         if (Name == null) {//no projects exist

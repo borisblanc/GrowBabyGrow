@@ -246,7 +246,7 @@ public class EncoderMuxer
                         {
 
                             ByteBuffer inputBuf = encoderInputBuffers[inputBufIndex];
-                            Bitmap b = Utils.GetBitmap(_ByteBuffers.get(frameIndex), _Width, _Height);
+                            Bitmap b = null;//Utils.GetBitmap(_ByteBuffers.get(frameIndex), _Width, _Height);
                             int chunkSize = 0;
 
                             if (b == null)
