@@ -164,42 +164,7 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
         mWidth = width;
         mHeight = height;
     }
-    /**
-     * Sets the raw resource used as the source video.
-     */
-//    private void setSource(int resId) {
-//        mSourceResId = resId;
-//    }
-//    /**
-//     * Sets the name of the output file based on the other parameters.
-//     *
-//     * <p>Must be called after {@link #setSize(int, int)} and {@link #setSource(int)}.
-//     */
-//    private void setOutputFile() {
-//        StringBuilder sb = new StringBuilder();
-//        sb.append(OUTPUT_FILENAME_DIR.getAbsolutePath());
-//        sb.append("/cts-media-");
-//        sb.append(getClass().getSimpleName());
-//        //assertTrue("should have called setSource() first", mSourceResId != -1);
-//        sb.append('-');
-//        sb.append(123);
-//        if (mCopyVideo) {
-//            assertTrue("should have called setSize() first", mWidth != -1);
-//            assertTrue("should have called setSize() first", mHeight != -1);
-//            sb.append('-');
-//            sb.append("video");
-//            sb.append('-');
-//            sb.append(mWidth);
-//            sb.append('x');
-//            sb.append(mHeight);
-//        }
-//        if (mCopyAudio) {
-//            sb.append('-');
-//            sb.append("audio");
-//        }
-//        sb.append(".mp4");
-//        mOutputFile = sb.toString();
-//    }
+
     /**
      * Tests encoding and subsequently decoding video from frames generated into a buffer.
      * <p>

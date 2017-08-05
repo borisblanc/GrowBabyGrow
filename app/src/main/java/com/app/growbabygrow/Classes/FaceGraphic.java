@@ -27,6 +27,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
     private Bitmap smiley;
     private Bitmap cool;
+    private Bitmap myface;
 
     private BitmapFactory.Options opt;
     private Resources resources;
@@ -118,6 +119,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         smiley = BitmapFactory.decodeResource(resources, R.drawable.smile2, opt);
         cool = BitmapFactory.decodeResource(resources, R.drawable.cool, opt);
         lastsessionface = Lastsessionface;
+        //Bitmap smallface = BitmapFactory.decodeFile("/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface.bmp");
+        //myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * 4, smallface.getHeight() * 4, false);
     }
 
     public void setId(int id) {
@@ -202,11 +205,11 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         float bottom = y + yOffset;
         canvas.drawRect(left, top, right, bottom, mBoxPaint);
 
-        if (lastsessionface != null) {
-            float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
-            float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
-            canvas.drawBitmap(smiley, oldx, oldy, null);
-        }
+//        if (lastsessionface != null) {
+//            float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
+//            float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
+//            canvas.drawBitmap(myface, oldx, oldy, null);
+//        }
 
     }
 
