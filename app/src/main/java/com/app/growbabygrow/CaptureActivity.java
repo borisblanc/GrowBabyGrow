@@ -78,7 +78,8 @@ public class CaptureActivity extends AppCompatActivity {
     private FaceSession fs_current;
     private Face lastsessionface;
     private boolean isnewsession;
-
+    public Button toggleoverlayButton;
+    private Boolean isoverlyshown = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +90,12 @@ public class CaptureActivity extends AppCompatActivity {
             //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE); lock this in manifest instead
             setContentView(R.layout.captureactivity_main);
             context = getApplicationContext();
+            recButton = (Button) findViewById(R.id.btn_record);
+            Button switchButton = (Button) findViewById(R.id.btn_switch);
+            mPreview = (CameraSourcePreview) findViewById(R.id.preview);
+            mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
+            ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
+            toggleoverlayButton = (Button) findViewById(R.id.btn_toggle_overlay);
 
             sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
 
@@ -116,11 +123,7 @@ public class CaptureActivity extends AppCompatActivity {
                 lastsessionface = gson.fromJson(json, Face.class);
             }
 
-            recButton = (Button) findViewById(R.id.btn_record);
-            Button switchButton = (Button) findViewById(R.id.btn_switch);
-            mPreview = (CameraSourcePreview) findViewById(R.id.preview);
-            mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
-            ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
+
 
             if (checkGooglePlayAvailability()) {
 
@@ -138,6 +141,21 @@ public class CaptureActivity extends AppCompatActivity {
                             stopCameraSource();
                             createCameraSource(Camera2Source.CAMERA_FACING_FRONT);
                             usingFrontCamera = true;
+                        }
+                    }
+                });
+
+                toggleoverlayButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (isoverlyshown) {
+
+                            isoverlyshown = false;
+                            mFaceGraphic.showoverlay = false;
+                        }
+                        else {
+                            isoverlyshown = true;
+                            mFaceGraphic.showoverlay = true;
                         }
                     }
                 });

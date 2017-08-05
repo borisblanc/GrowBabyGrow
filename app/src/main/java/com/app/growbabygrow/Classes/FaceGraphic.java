@@ -28,6 +28,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
     private Bitmap smiley;
     private Bitmap cool;
     private Bitmap myface;
+    public Boolean showoverlay = false;
 
     private BitmapFactory.Options opt;
     private Resources resources;
@@ -205,11 +206,11 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         float bottom = y + yOffset;
         canvas.drawRect(left, top, right, bottom, mBoxPaint);
 
-//        if (lastsessionface != null) {
-//            float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
-//            float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
-//            canvas.drawBitmap(myface, oldx, oldy, null);
-//        }
+        if (showoverlay && lastsessionface != null) {
+            float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
+            float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
+            canvas.drawBitmap(smiley, oldx, oldy, null);
+        }
 
     }
 

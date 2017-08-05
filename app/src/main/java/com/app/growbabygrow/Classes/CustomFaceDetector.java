@@ -46,19 +46,20 @@ public class CustomFaceDetector extends Detector<Face> {
         _faces.add(new FrameData(timestamp, faces));
 
 
-        if (!sampleTaken)
-        {
-            lock.lock();
-            sampleTaken = true;
-            final ByteBuffer framebuff = frame.getGrayscaleImageData().duplicate();
-            Thread th = new Thread(new Runnable() {
-                public void run() {
-                    SaveSampleFaceImage(framebuff, faces, frame);
-                }
-            });
-            th.start();
-            lock.unlock();
-        }
+        //disable for now
+//        if (!sampleTaken)
+//        {
+//            lock.lock();
+//            sampleTaken = true;
+//            final ByteBuffer framebuff = frame.getGrayscaleImageData().duplicate();
+//            Thread th = new Thread(new Runnable() {
+//                public void run() {
+//                    SaveSampleFaceImage(framebuff, faces, frame);
+//                }
+//            });
+//            th.start();
+//            lock.unlock();
+//        }
 
 
 
