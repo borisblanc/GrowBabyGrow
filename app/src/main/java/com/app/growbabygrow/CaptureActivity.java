@@ -35,13 +35,12 @@ import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.reflect.Array.getInt;
-import static org.jcodec.containers.mkv.MKVType.Name;
 
 public class CaptureActivity extends AppCompatActivity {
     private static final String TAG = "CaptureActivity";
@@ -71,21 +70,14 @@ public class CaptureActivity extends AppCompatActivity {
     // MUST BE CAREFUL USING THIS VARIABLE.
     // ANY ATTEMPT TO START CAMERA2 ON API < 21 WILL CRASH.
     private boolean useCamera2 = false;
-
-
     private boolean trackRecord = false; //determines if regular preview is opened or we start track record also
-
     public Button recButton;
-
     private int _fps = 30;
-
     private int _vidlengthseconds = 3;
-
     private SharedPreferences sharedpreferences;
-
-
     private FaceSession fs_current;
-
+    private Face lastsessionface;
+    private boolean isnewsession;
 
 
     @Override
@@ -106,10 +98,23 @@ public class CaptureActivity extends AppCompatActivity {
 
             FaceSessionProperty fsp1 = fs_current.GetNewProp();
             fsp1._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
+            fsp1._lastfacekey = getString(R.string.p_file1_saved_trim1_last_face);
+
             FaceSessionProperty fsp2 = fs_current.GetNewProp();
             fsp2._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
+            fsp2._lastfacekey = getString(R.string.p_file1_saved_trim2_last_face);
+
             FaceSessionProperty fsp3 = fs_current.GetNewProp();
             fsp3._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
+            fsp3._lastfacekey = getString(R.string.p_file1_saved_trim3_last_face);
+
+            isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
+
+            if (!isnewsession) {//if not new session try to track face from last session
+                Gson gson = new Gson();
+                String json = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face), "");
+                lastsessionface = gson.fromJson(json, Face.class);
+            }
 
             recButton = (Button) findViewById(R.id.btn_record);
             Button switchButton = (Button) findViewById(R.id.btn_switch);
@@ -159,6 +164,7 @@ public class CaptureActivity extends AppCompatActivity {
                                 //Toast.makeText(context, "Starting Trim Video", Toast.LENGTH_SHORT).show();
                                 for (FaceSessionProperty fsp : fs_current._props) {
                                     CreateTrimmedVideo(fsp._previewbestfacedata, fs_current.OriginalVideoOutputFilepath, fsp._trimmedVideoOutputFilepath);
+                                    FindSaveLastFace(fs_current._faces, fsp);
                                 }
 
                                 Toast.makeText(context, "Smiles Captured & Created!", Toast.LENGTH_SHORT).show();
@@ -255,7 +261,7 @@ public class CaptureActivity extends AppCompatActivity {
         if (bestfacetimestamps == null)
             return;
 
-        VideoUtils.TrimVideo(OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath, bestfacetimestamps.x, bestfacetimestamps.y, false, true);
+        VideoUtils.TrimVideo(OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath, bestfacetimestamps.firstTimeStamp, bestfacetimestamps.lastTimeStamp, false, true);
     }
 
     //process all of first preview (data & results) and subsequent data only for all other previews
@@ -325,6 +331,41 @@ public class CaptureActivity extends AppCompatActivity {
     {
         FrameData.FaceData bestLastface = finalscores.get(finalscores.indexOf(bestface) + GetFrameTotal());
         return new FrameData.Tuple<>(bestface._timeStamp, bestLastface._timeStamp);
+    }
+
+    private void FindSaveLastFace(ArrayList<FrameData> _allFaces, FaceSessionProperty fsp)
+    {
+        FrameData FirstFrame = null;
+        FrameData LastFrame = null;
+
+        for(FrameData frame : _allFaces)
+        {
+
+            if (frame._timeStamp == fsp._previewbestfacedata.firstTimeStamp)
+                FirstFrame = frame;
+
+            if (frame._timeStamp == fsp._previewbestfacedata.lastTimeStamp)
+                LastFrame = frame;
+
+        }
+
+        int firstframeindex = _allFaces.indexOf(FirstFrame);
+        int lastframeindex = _allFaces.indexOf(LastFrame);
+
+
+        Face LastFace = null;
+        for (int i = lastframeindex; i > firstframeindex; i--) //walk backwards from last timestamp and find last face then break
+        {
+            LastFace = Utils.GetFirstFace(_allFaces.get(i)._faces);
+            if (LastFace != null)
+                break;
+        }
+
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(LastFace);
+        editor.putString(fsp._lastfacekey, json);
+        editor.apply();
     }
 
 
@@ -461,7 +502,7 @@ public class CaptureActivity extends AppCompatActivity {
 
         GraphicFaceTracker(GraphicOverlay overlay) {
             mOverlay = overlay;
-            mFaceGraphic = new FaceGraphic(overlay, context);
+            mFaceGraphic = new FaceGraphic(overlay, context, lastsessionface);
         }
 
         /**
@@ -587,6 +628,7 @@ public class CaptureActivity extends AppCompatActivity {
         public FrameData.Tuple<Long,Long> _previewbestfacedata;
         public FrameData.FaceData _previewbestface;
         public String _trimmedVideoOutputFilepath;
+        public String _lastfacekey;
 
         public FaceSessionProperty()
         {

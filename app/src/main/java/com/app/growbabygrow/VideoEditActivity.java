@@ -26,6 +26,8 @@ import android.widget.Toast;
 import com.app.growbabygrow.Classes.Bigflake.ExtractDecodeEditEncodeMuxTest;
 import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
+import com.google.android.gms.vision.face.Face;
+import com.google.gson.Gson;
 
 import java.io.File;
 
@@ -44,8 +46,11 @@ public class VideoEditActivity extends AppCompatActivity {
     private String MainMergedVideoOutputFilepath;
     private String OriginalVideoOutputFilepath;
     private String TrimmedVideoOutputFilepath1;
+    private Face TrimmedVideo1face;
     private String TrimmedVideoOutputFilepath2;
+    private Face TrimmedVideo2face;
     private String TrimmedVideoOutputFilepath3;
+    private Face TrimmedVideo3face;
     private String IntroVideoOutputFilePath;
     private String babyName;
     private String period;
@@ -77,6 +82,7 @@ public class VideoEditActivity extends AppCompatActivity {
     }
 
     private String SelectedTrimmedVideoOutputFilepath;
+    private Face SelectedTrimmedVideoface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,17 +110,27 @@ public class VideoEditActivity extends AppCompatActivity {
         txt_fab.setVisibility(View.INVISIBLE);
 
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
+        Gson gson = new Gson();
 
         MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
         OriginalVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_orig_mp4pathname), null);
+
         TrimmedVideoOutputFilepath1 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
+        String json = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_last_face), "");
+        TrimmedVideo1face = gson.fromJson(json, Face.class);
+
         TrimmedVideoOutputFilepath2 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
+        json = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_last_face), "");
+        TrimmedVideo2face = gson.fromJson(json, Face.class);
+
         TrimmedVideoOutputFilepath3 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
+        json = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_last_face), "");
+        TrimmedVideo3face = gson.fromJson(json, Face.class);
+
         IntroVideoOutputFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_intro_mp4pathname), null);
         isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
         fixed_width = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_width), 0);
         fixed_height = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_height), 0);
-
 
         //if new session lets get a head start and begin async intro video creation while user pics preview
         if (isnewsession) {
@@ -127,6 +143,7 @@ public class VideoEditActivity extends AppCompatActivity {
                fab.setVisibility(View.VISIBLE);
                txt_fab.setVisibility(View.VISIBLE);
                SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath1;
+               SelectedTrimmedVideoface = TrimmedVideo1face;
            }
        });
 
@@ -136,6 +153,7 @@ public class VideoEditActivity extends AppCompatActivity {
                 fab.setVisibility(View.VISIBLE);
                 txt_fab.setVisibility(View.VISIBLE);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath2;
+                SelectedTrimmedVideoface = TrimmedVideo2face;
             }
         });
 
@@ -145,6 +163,7 @@ public class VideoEditActivity extends AppCompatActivity {
                 fab.setVisibility(View.VISIBLE);
                 txt_fab.setVisibility(View.VISIBLE);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath3;
+                SelectedTrimmedVideoface = TrimmedVideo3face;
             }
         });
 
@@ -172,6 +191,7 @@ public class VideoEditActivity extends AppCompatActivity {
 
                                     Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
                                     HidePreviewsShowGoodbye();
+                                    SetNextSessionInfo();
                                 }
                             })
                             .setNegativeButton(android.R.string.no, null).show();
@@ -179,12 +199,10 @@ public class VideoEditActivity extends AppCompatActivity {
                 }
                 else //first time when no movie yet rename selected trim to main and add merge in intro movie
                 {
-
                     //need to block UI thread and show loading overlay if preview isn't ready yet and poll until it is
                     if (!ispreviewready) {
                         Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_SHORT).show();
                         Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
-
                     }
 
 
@@ -228,7 +246,7 @@ public class VideoEditActivity extends AppCompatActivity {
                     th.start();
 
 
-                    SetNotIsnew(); //important or else will never resume core functions
+                    SetNextSessionInfo(); //important or else will never resume core functions
                 }
             }
         });
@@ -292,10 +310,17 @@ public class VideoEditActivity extends AppCompatActivity {
         exitapp = true;
     }
 
-    private void SetNotIsnew()
+    //set next weeks session
+    private void SetNextSessionInfo()
     {
         SharedPreferences.Editor editor = sharedpreferences.edit();
-        editor.putBoolean(getString(R.string.p_file1_is_new), false); //set isnew to false so next time we don't do intro again
+        Gson gson = new Gson();
+
+        if (isnewsession)
+            editor.putBoolean(getString(R.string.p_file1_is_new), false); //set isnew to false so next time we don't do intro again
+
+        String json = gson.toJson(SelectedTrimmedVideoface);
+        editor.putString(getString(R.string.p_file1_saved_selected_last_week_face), json);
         editor.apply();
     }
 

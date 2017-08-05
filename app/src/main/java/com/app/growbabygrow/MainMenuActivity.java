@@ -101,7 +101,6 @@ public class MainMenuActivity extends AppCompatActivity {
         Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
 
 
-
         if (Name == null) {//no projects exist
             ShowBabyGrowNew();
             savedexists = false;

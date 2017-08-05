@@ -81,6 +81,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
     private float numberofsmiles = 0;
     private float numberofgoodfaces = 0;
 
+    private Face lastsessionface;
+
 //    public FaceGraphic(GraphicOverlay overlay, Context context) {
 //        super(overlay);
 //        opt = new BitmapFactory.Options();
@@ -91,7 +93,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 //
 //    }
 
-    public FaceGraphic(GraphicOverlay overlay, Context context) {
+    public FaceGraphic(GraphicOverlay overlay, Context context, Face Lastsessionface) {
         super(overlay);
 
         mCurrentColorIndex = (mCurrentColorIndex + 1) % COLOR_CHOICES.length;
@@ -115,6 +117,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
         smiley = BitmapFactory.decodeResource(resources, R.drawable.smile2, opt);
         cool = BitmapFactory.decodeResource(resources, R.drawable.cool, opt);
+        lastsessionface = Lastsessionface;
     }
 
     public void setId(int id) {
@@ -161,6 +164,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         float x = translateX(face.getPosition().x + face.getWidth() / 2);
         float y = translateY(face.getPosition().y + face.getHeight() / 2);
 
+
         if (face.getIsSmilingProbability() > .7)
             numberofsmiles += .2;
 
@@ -197,6 +201,13 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         float right = x + xOffset;
         float bottom = y + yOffset;
         canvas.drawRect(left, top, right, bottom, mBoxPaint);
+
+        if (lastsessionface != null) {
+            float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
+            float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
+            canvas.drawBitmap(smiley, oldx, oldy, null);
+        }
+
     }
 
 

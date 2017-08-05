@@ -56,7 +56,9 @@ public class CustomFaceDetector extends Detector<Face> {
 //        }
 
 
-        testcount++;
+
+
+        //testcount++;
 
         return faces;
     }

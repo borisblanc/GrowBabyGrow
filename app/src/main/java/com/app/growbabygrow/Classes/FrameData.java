@@ -29,11 +29,11 @@ public class FrameData {
 
 
     public static class Tuple<X, Y> {
-        public final X x;
-        public final Y y;
+        public final X firstTimeStamp;
+        public final Y lastTimeStamp;
         public Tuple(X x, Y y) {
-            this.x = x;
-            this.y = y;
+            this.firstTimeStamp = x;
+            this.lastTimeStamp = y;
         }
     }
 

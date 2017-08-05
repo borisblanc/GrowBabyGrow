@@ -33,13 +33,19 @@
 
     <string name="p_file1_saved_orig_mp4pathname">saved_orig_mp4pathname</string>
     <string name="p_file1_saved_trim1_mp4pathname">saved_trim1_mp4pathname</string>
+    <string name="p_file1_saved_trim1_last_face">saved_trim1_last_face</string>
     <string name="p_file1_saved_trim2_mp4pathname">saved_trim2_mp4pathname</string>
+    <string name="p_file1_saved_trim2_last_face">saved_trim2_last_face</string>
     <string name="p_file1_saved_trim3_mp4pathname">saved_trim3_mp4pathname</string>
+    <string name="p_file1_saved_trim3_last_face">saved_trim3_last_face</string>
+    <string name="p_file1_saved_selected_last_week_face">saved_selected_last_week_face</string>
     <string name="p_file1_saved_intro_mp4pathname">saved_intro_mp4pathname</string>
 
 
 
     <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
+
+
 
 
 </resources>
