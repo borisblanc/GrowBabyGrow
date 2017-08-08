@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 
+import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -47,10 +48,13 @@ public class VideoEditActivity extends AppCompatActivity {
     private String OriginalVideoOutputFilepath;
     private String TrimmedVideoOutputFilepath1;
     private Face TrimmedVideo1face;
+    private Long TrimmedVideo1facets;
     private String TrimmedVideoOutputFilepath2;
     private Face TrimmedVideo2face;
+    private Long TrimmedVideo2facets;
     private String TrimmedVideoOutputFilepath3;
     private Face TrimmedVideo3face;
+    private Long TrimmedVideo3facets;
     private String IntroVideoOutputFilePath;
     private String babyName;
     private String period;
@@ -83,6 +87,7 @@ public class VideoEditActivity extends AppCompatActivity {
 
     private String SelectedTrimmedVideoOutputFilepath;
     private Face SelectedTrimmedVideoface;
+    private Long SelectedTrimmedVideofacets;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,14 +123,17 @@ public class VideoEditActivity extends AppCompatActivity {
         TrimmedVideoOutputFilepath1 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
         String json = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_last_face), "");
         TrimmedVideo1face = gson.fromJson(json, Face.class);
+        TrimmedVideo1facets = sharedpreferences.getLong(getString(R.string.p_file1_saved_trim1_last_face_ts), 0);
 
         TrimmedVideoOutputFilepath2 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
         json = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_last_face), "");
         TrimmedVideo2face = gson.fromJson(json, Face.class);
+        TrimmedVideo2facets = sharedpreferences.getLong(getString(R.string.p_file1_saved_trim2_last_face_ts), 0);
 
         TrimmedVideoOutputFilepath3 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
         json = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_last_face), "");
         TrimmedVideo3face = gson.fromJson(json, Face.class);
+        TrimmedVideo3facets = sharedpreferences.getLong(getString(R.string.p_file1_saved_trim3_last_face_ts), 0);
 
         IntroVideoOutputFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_intro_mp4pathname), null);
         isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
@@ -144,6 +152,7 @@ public class VideoEditActivity extends AppCompatActivity {
                txt_fab.setVisibility(View.VISIBLE);
                SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath1;
                SelectedTrimmedVideoface = TrimmedVideo1face;
+               SelectedTrimmedVideofacets = TrimmedVideo1facets;
            }
        });
 
@@ -154,6 +163,7 @@ public class VideoEditActivity extends AppCompatActivity {
                 txt_fab.setVisibility(View.VISIBLE);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath2;
                 SelectedTrimmedVideoface = TrimmedVideo2face;
+                SelectedTrimmedVideofacets = TrimmedVideo2facets;
             }
         });
 
@@ -164,6 +174,7 @@ public class VideoEditActivity extends AppCompatActivity {
                 txt_fab.setVisibility(View.VISIBLE);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath3;
                 SelectedTrimmedVideoface = TrimmedVideo3face;
+                SelectedTrimmedVideofacets = TrimmedVideo3facets;
             }
         });
 
@@ -187,6 +198,7 @@ public class VideoEditActivity extends AppCompatActivity {
                                 public void onClick(DialogInterface dialog, int whichButton) {
                                     //this merge works fine for 'similar' vids
                                     //VideoUtils.Mp4ParserMergeVideos(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, SelectedTrimmedVideoOutputFilepath);
+                                    ExtractEditSaveBitmapfromvideo(SelectedTrimmedVideoOutputFilepath, "/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface2.bmp", SelectedTrimmedVideofacets);
                                     VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
 
                                     Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
@@ -204,7 +216,7 @@ public class VideoEditActivity extends AppCompatActivity {
                         Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_SHORT).show();
                         Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
                     }
-
+                    ExtractEditSaveBitmapfromvideo(SelectedTrimmedVideoOutputFilepath, "/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface2.bmp", SelectedTrimmedVideofacets);
 
                     Thread th = new Thread(new Runnable() {
                         public void run() {
@@ -251,6 +263,16 @@ public class VideoEditActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    //do this on separate thread
+    private void ExtractEditSaveBitmapfromvideo(String inputvideopath, String Outputbitmappath, Long Timestampmilli)
+    {
+        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+
+        mediaMetadataRetriever.setDataSource(inputvideopath);
+        Bitmap bmFrame = mediaMetadataRetriever.getFrameAtTime(Timestampmilli * 1000); //convert unit to microsecond
+        Utils.testSavebitmap(bmFrame, Outputbitmappath);
     }
 
 
@@ -321,6 +343,7 @@ public class VideoEditActivity extends AppCompatActivity {
 
         String json = gson.toJson(SelectedTrimmedVideoface);
         editor.putString(getString(R.string.p_file1_saved_selected_last_week_face), json);
+        //editor.putLong(getString(R.string.p_file1_saved_selected_last_week_face_ts), SelectedTrimmedVideofacets);
         editor.apply();
     }
 

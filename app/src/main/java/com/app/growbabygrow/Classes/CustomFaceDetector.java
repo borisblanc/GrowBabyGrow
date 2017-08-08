@@ -4,10 +4,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.graphics.drawable.BitmapDrawable;
+import android.util.DisplayMetrics;
 import android.util.SparseArray;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
@@ -68,6 +71,7 @@ public class CustomFaceDetector extends Detector<Face> {
     }
 
 
+    //don't want to do this here do it in videoedit activity instead by extracting image by timestamp so i don't slow down face detection
     private void SaveSampleFaceImage(ByteBuffer framebuff, SparseArray<Face> faces, Frame frame)
     {
         Face face = Utils.GetFirstFace(faces);
@@ -84,15 +88,17 @@ public class CustomFaceDetector extends Detector<Face> {
                         (int) actualCropX < 0f ? (int) 0f : (int) actualCropX , (int) actualCropY < 0f ? (int) 0f : (int) actualCropY,
                         (int) face.getWidth(), (int) face.getHeight()); //crop
                 Bitmap Greyfacebitmap = Utils.toGrayscale(faceBitmap); //grey scale
-                Bitmap finalbitmap = Bitmap.createBitmap(Greyfacebitmap.getWidth(), Greyfacebitmap.getHeight(), Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(finalbitmap);
+                Bitmap mirroredbitmap = Bitmap.createBitmap(Greyfacebitmap.getWidth(), Greyfacebitmap.getHeight(), Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(mirroredbitmap);
                 Paint alphapaint = new Paint();
                 alphapaint.setAlpha(80); //transparency
                 canvas.drawBitmap(Greyfacebitmap, 0, 0, alphapaint);
+                Bitmap finalbitmap = flip(mirroredbitmap);
                 Utils.testSavebitmap(finalbitmap, "/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface2.bmp");
                 originalbitmap.recycle();
                 faceBitmap.recycle();
                 Greyfacebitmap.recycle();
+                mirroredbitmap.recycle();
                 finalbitmap.recycle();
             }
             catch(Exception e) //this is wonky right now
@@ -105,6 +111,15 @@ public class CustomFaceDetector extends Detector<Face> {
         {
             sampleTaken = false; //try again
         }
+    }
+
+    private Bitmap flip (Bitmap src)
+    {
+        Matrix m = new Matrix();
+        m.preScale(-1, 1);
+        Bitmap dst = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, false);
+        dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
+        return dst;
     }
 
     public boolean isOperational() {

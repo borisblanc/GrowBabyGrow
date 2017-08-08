@@ -120,8 +120,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         smiley = BitmapFactory.decodeResource(resources, R.drawable.smile2, opt);
         cool = BitmapFactory.decodeResource(resources, R.drawable.cool, opt);
         lastsessionface = Lastsessionface;
-        //Bitmap smallface = BitmapFactory.decodeFile("/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface.bmp");
-        //myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * 4, smallface.getHeight() * 4, false);
+        Bitmap smallface = BitmapFactory.decodeFile("/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface2.bmp");
+        myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * 2, smallface.getHeight() * 2, false);
     }
 
     public void setId(int id) {
@@ -209,7 +209,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         if (showoverlay && lastsessionface != null) {
             float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
             float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
-            canvas.drawBitmap(smiley, oldx, oldy, null);
+            canvas.drawCircle(oldx, oldy, FACE_POSITION_RADIUS, mFacePositionPaint); //this will show center of face from last week
+            canvas.drawBitmap(myface, oldx - (myface.getWidth()/ 2), oldy - (myface.getWidth()/2), null); //puts image in center of where it was last week
         }
 
     }

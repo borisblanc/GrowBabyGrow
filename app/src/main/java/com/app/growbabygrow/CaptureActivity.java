@@ -106,14 +106,17 @@ public class CaptureActivity extends AppCompatActivity {
             FaceSessionProperty fsp1 = fs_current.GetNewProp();
             fsp1._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
             fsp1._lastfacekey = getString(R.string.p_file1_saved_trim1_last_face);
+            fsp1._lastfacetskey = getString(R.string.p_file1_saved_trim1_last_face_ts);
 
             FaceSessionProperty fsp2 = fs_current.GetNewProp();
             fsp2._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
             fsp2._lastfacekey = getString(R.string.p_file1_saved_trim2_last_face);
+            fsp2._lastfacetskey = getString(R.string.p_file1_saved_trim2_last_face_ts);
 
             FaceSessionProperty fsp3 = fs_current.GetNewProp();
             fsp3._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
             fsp3._lastfacekey = getString(R.string.p_file1_saved_trim3_last_face);
+            fsp3._lastfacetskey = getString(R.string.p_file1_saved_trim3_last_face_ts);
 
             isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
 
@@ -372,9 +375,11 @@ public class CaptureActivity extends AppCompatActivity {
 
 
         Face LastFace = null;
+        Long LastFacets = null;
         for (int i = lastframeindex; i > firstframeindex; i--) //walk backwards from last timestamp and find last face then break
         {
             LastFace = Utils.GetFirstFace(_allFaces.get(i)._faces);
+            LastFacets = _allFaces.get(i)._timeStamp;
             if (LastFace != null)
                 break;
         }
@@ -383,6 +388,7 @@ public class CaptureActivity extends AppCompatActivity {
         Gson gson = new Gson();
         String json = gson.toJson(LastFace);
         editor.putString(fsp._lastfacekey, json);
+        editor.putLong(fsp._lastfacetskey, LastFacets);
         editor.apply();
     }
 
@@ -623,17 +629,17 @@ public class CaptureActivity extends AppCompatActivity {
 
     private class FaceSession
     {
-        public ArrayList<FrameData> _faces = new ArrayList<>();
-        public ArrayList<FaceSessionProperty> _props;
-        public String MainMergedVideoOutputFilepath;
-        public String OriginalVideoOutputFilepath;
+        private ArrayList<FrameData> _faces = new ArrayList<>();
+        private ArrayList<FaceSessionProperty> _props;
+        private String MainMergedVideoOutputFilepath;
+        private String OriginalVideoOutputFilepath;
 
-        public FaceSession ()
+        private FaceSession ()
         {
             _props = new ArrayList<>();
         }
 
-        public FaceSessionProperty GetNewProp() {
+        private FaceSessionProperty GetNewProp() {
             FaceSessionProperty fsp = new FaceSessionProperty();
             _props.add(fsp);
             return fsp;
@@ -642,13 +648,14 @@ public class CaptureActivity extends AppCompatActivity {
 
     private class FaceSessionProperty
     {
-        public ArrayList<FrameData.FaceData> _previewfinalscores;
-        public FrameData.Tuple<Long,Long> _previewbestfacedata;
-        public FrameData.FaceData _previewbestface;
-        public String _trimmedVideoOutputFilepath;
-        public String _lastfacekey;
+        private ArrayList<FrameData.FaceData> _previewfinalscores;
+        private FrameData.Tuple<Long,Long> _previewbestfacedata;
+        private FrameData.FaceData _previewbestface;
+        private String _trimmedVideoOutputFilepath;
+        private String _lastfacekey;
+        private String _lastfacetskey;
 
-        public FaceSessionProperty()
+        private FaceSessionProperty()
         {
             _previewfinalscores = new ArrayList<>();
         }
