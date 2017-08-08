@@ -52,8 +52,6 @@ public class MainMenuActivity extends AppCompatActivity {
 
     private String Name;
     private String Period;
-    public ArrayList<String> TrimmedVideoOutputFilepaths;
-    private View progressOverlay;
 
     private Integer GetHash()
     {
@@ -80,6 +78,11 @@ public class MainMenuActivity extends AppCompatActivity {
     private File IntroVideoOutputFilePath()
     {
         return new File(baseVideoFileDir, "intro_" + GetHash() + ".mp4");
+    }
+
+    private File OverlayBitmapFilePath()
+    {
+        return new File(baseVideoFileDir, "overlay_" + GetHash() + ".bmp");
     }
 
 
@@ -134,6 +137,7 @@ public class MainMenuActivity extends AppCompatActivity {
 
                                 editor.putString(getString(R.string.p_file1_saved_name), Name);
                                 editor.putString(getString(R.string.p_file1_saved_period), Period);
+                                editor.putString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), OverlayBitmapFilePath().getAbsolutePath());
                                 editor.apply();
 
                                 startbabygrow = true;

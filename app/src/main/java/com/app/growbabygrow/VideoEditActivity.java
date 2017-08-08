@@ -1,11 +1,15 @@
 package com.app.growbabygrow;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
 import android.os.Bundle;
@@ -15,7 +19,9 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -27,15 +33,21 @@ import android.widget.Toast;
 import com.app.growbabygrow.Classes.Bigflake.ExtractDecodeEditEncodeMuxTest;
 import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
+import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.FaceDetector;
 import com.google.gson.Gson;
 
 import java.io.File;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import static android.R.attr.bitmap;
 import static android.R.attr.width;
+import static android.R.transition.fade;
+import static com.app.growbabygrow.Classes.Utils.GetFirstFace;
+import static com.app.growbabygrow.Classes.Utils.scaleBitmap;
 
 
 public class VideoEditActivity extends AppCompatActivity {
@@ -88,6 +100,7 @@ public class VideoEditActivity extends AppCompatActivity {
     private String SelectedTrimmedVideoOutputFilepath;
     private Face SelectedTrimmedVideoface;
     private Long SelectedTrimmedVideofacets;
+    private String OverlayBitmapFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,6 +152,7 @@ public class VideoEditActivity extends AppCompatActivity {
         isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
         fixed_width = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_width), 0);
         fixed_height = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_height), 0);
+        OverlayBitmapFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), null);
 
         //if new session lets get a head start and begin async intro video creation while user pics preview
         if (isnewsession) {
@@ -198,15 +212,26 @@ public class VideoEditActivity extends AppCompatActivity {
                                 public void onClick(DialogInterface dialog, int whichButton) {
                                     //this merge works fine for 'similar' vids
                                     //VideoUtils.Mp4ParserMergeVideos(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, SelectedTrimmedVideoOutputFilepath);
-                                    ExtractEditSaveBitmapfromvideo(SelectedTrimmedVideoOutputFilepath, "/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface2.bmp", SelectedTrimmedVideofacets);
+
+                                    //face image for previous session overlay
+                                    Thread th = new Thread(new Runnable() {
+                                        public void run() {
+                                            ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
+                                            SetNextSessionface(SelectedTrimmedVideoface); //next session face
+                                        }
+                                    });
+                                    th.start();
+
                                     VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
 
                                     Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
                                     HidePreviewsShowGoodbye();
-                                    SetNextSessionInfo();
+
                                 }
                             })
                             .setNegativeButton(android.R.string.no, null).show();
+
+
 
                 }
                 else //first time when no movie yet rename selected trim to main and add merge in intro movie
@@ -216,7 +241,16 @@ public class VideoEditActivity extends AppCompatActivity {
                         Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_SHORT).show();
                         Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
                     }
-                    ExtractEditSaveBitmapfromvideo(SelectedTrimmedVideoOutputFilepath, "/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface2.bmp", SelectedTrimmedVideofacets);
+
+                    //face image for previous session overlay
+                    Thread thbitmap = new Thread(new Runnable() {
+                        public void run() {
+                            ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
+                            SetNextSessionface(SelectedTrimmedVideoface); //next session face
+                        }
+                    });
+                    thbitmap.start();
+
 
                     Thread th = new Thread(new Runnable() {
                         public void run() {
@@ -230,7 +264,8 @@ public class VideoEditActivity extends AppCompatActivity {
                                 }
                             }
                             //step 2 & 3 inside, need to extract decode (might need to remove edit part) encode and mux using phones codec and then MuxMerge
-                            //todo looper warning here, setting timeout to infinity for it to work but in future will need to create looper thread for
+                            //looper warning here, setting timeout to infinity for it to work but in future will need to create looper thread for
+                            //todo clean this file up after its used
                             File tempintrofile = new File(new File(MainMergedVideoOutputFile().getParent()), "Temp.mp4");
 
                             ExtractDecodeEditEncodeMuxTest test = new ExtractDecodeEditEncodeMuxTest();
@@ -257,8 +292,8 @@ public class VideoEditActivity extends AppCompatActivity {
                     });
                     th.start();
 
+                    SetNextSessionold(); //make next session not new anymore
 
-                    SetNextSessionInfo(); //important or else will never resume core functions
                 }
             }
         });
@@ -266,13 +301,96 @@ public class VideoEditActivity extends AppCompatActivity {
     }
 
     //do this on separate thread
-    private void ExtractEditSaveBitmapfromvideo(String inputvideopath, String Outputbitmappath, Long Timestampmilli)
+    private void ExtractEditSaveBitmap(String inputvideopath, String Savepath, Long Timestampmilli)
     {
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-
         mediaMetadataRetriever.setDataSource(inputvideopath);
-        Bitmap bmFrame = mediaMetadataRetriever.getFrameAtTime(Timestampmilli * 1000); //convert unit to microsecond
-        Utils.testSavebitmap(bmFrame, Outputbitmappath);
+        Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime(Timestampmilli * 1000); //convert unit to microsecond
+        SaveLastFaceImage(bitmap, Savepath);
+    }
+
+
+    private void SaveLastFaceImage(Bitmap origbitmap, String Savepath)
+    {
+        FaceDetector detector = new FaceDetector.Builder(context)
+                .setTrackingEnabled(true) //tracking enables false makes it much slow wtf?!?!
+                .setClassificationType(FaceDetector.NO_CLASSIFICATIONS)
+                .setProminentFaceOnly(true) // no diff
+                //.setLandmarkType(FaceDetector.NO_LANDMARKS) this will make it detect nothing
+                //.SetMinFaceSize((float)0.1) //small performance gain when removed
+                .setMode(FaceDetector.FAST_MODE) // tiny small performance gain
+                .build();
+
+
+        Bitmap scaledbmap = Utils.scaleBitmap(origbitmap, context.getResources().getInteger(R.integer.overlay_image_scale)); //face detector too slow without scaling
+        Frame newframe = new Frame.Builder().setBitmap(scaledbmap).build();
+
+        SparseArray faces = detector.detect(newframe); //takes longest
+
+        Face face = Utils.GetFirstFace(faces); //this face is only good for cropping image, can't use this for overlay because its not relative to preview dimensions just bitmap dimensions
+
+
+        try {
+            Bitmap cropped = crop(scaledbmap, face);
+            //Bitmap Greyfacebitmap = Utils.toGrayscale(faceBitmap); //grey scale
+            Bitmap newbitmap = Bitmap.createBitmap(cropped.getWidth(), cropped.getHeight(), Bitmap.Config.ARGB_8888);
+            fade(cropped, newbitmap);
+            Bitmap mirrored = flip(newbitmap);
+            Utils.testSavebitmap(mirrored, Savepath);
+        }
+        catch(Exception e) //this is wonky right now
+        {
+            e.printStackTrace();
+        }
+
+        detector.release();
+    }
+
+
+
+
+    private Bitmap crop (Bitmap src, Face face)
+    {
+        Bitmap cropped = null;
+        try {
+            int actualCropX = (int) face.getPosition().x < 0f ? (int) 0f : (int) face.getPosition().x;
+            int actualCropY = (int) face.getPosition().y < 0f ? (int) 0f : (int) face.getPosition().y;
+
+            //todo will need to experiment with different use cases of when face goes off screen for this.
+            if (src.getHeight() <= (actualCropY + face.getHeight())) //this happens when face is too low and cut off on bottom
+                actualCropY = (int) 0f;
+
+            cropped = Bitmap.createBitmap(src, actualCropX , actualCropY, (int) face.getWidth(), (int) face.getHeight()); //crop
+
+
+        }
+        catch(Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+        //src.recycle();
+        return cropped;
+    }
+
+
+    private Bitmap flip (Bitmap src)
+    {
+        Matrix m = new Matrix();
+        m.preScale(-1, 1);
+        Bitmap dst = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, false);
+        dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
+        //src.recycle();
+        return dst;
+    }
+
+    private void fade (Bitmap src, Bitmap dst)
+    {
+        Canvas canvas = new Canvas(dst);
+        Paint alphapaint = new Paint();
+        alphapaint.setAlpha(80); //transparency
+        canvas.drawBitmap(src, 0, 0, alphapaint);
+        src.recycle();
     }
 
 
@@ -333,20 +451,24 @@ public class VideoEditActivity extends AppCompatActivity {
     }
 
     //set next weeks session
-    private void SetNextSessionInfo()
+    private void SetNextSessionold()
+    {
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        if (isnewsession)
+            editor.putBoolean(getString(R.string.p_file1_is_new), false); //set isnew to false so next time we don't do intro again
+
+        editor.apply();
+    }
+
+    private void SetNextSessionface(Face face)
     {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         Gson gson = new Gson();
 
-        if (isnewsession)
-            editor.putBoolean(getString(R.string.p_file1_is_new), false); //set isnew to false so next time we don't do intro again
-
-        String json = gson.toJson(SelectedTrimmedVideoface);
+        String json = gson.toJson(face);
         editor.putString(getString(R.string.p_file1_saved_selected_last_week_face), json);
-        //editor.putLong(getString(R.string.p_file1_saved_selected_last_week_face_ts), SelectedTrimmedVideofacets);
         editor.apply();
     }
-
 
 
     private void SetVideoButtons()

@@ -42,6 +42,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import static android.R.attr.width;
+
 public class Utils {
 
     public static int dpToPx(int dp) {
@@ -341,6 +343,23 @@ public class Utils {
         paint.setColorFilter(f);
         c.drawBitmap(bmpOriginal, 0, 0, paint);
         return bmpGrayscale;
+    }
+
+    public static Bitmap scaleBitmap(Bitmap bitmap, int scalefactor) {
+        final int bitmapWidth = bitmap.getWidth();
+        final int bitmapHeight = bitmap.getHeight();
+        final int newwidth = bitmapWidth/ scalefactor;
+        final int newheight = bitmapHeight/ scalefactor;
+
+//        final float scale = Math.min((float) newwidth / (float) bitmapWidth, (float) newheight / (float) bitmapHeight);
+//
+//        final int scaledWidth = (int) (bitmapWidth * scale);
+//        final int scaledHeight = (int) (bitmapHeight * scale);
+
+        final Bitmap decoded = Bitmap.createScaledBitmap(bitmap, newwidth, newheight, true);
+        final Canvas canvas = new Canvas(decoded);
+
+        return decoded;
     }
 
 }

@@ -16,6 +16,8 @@ import com.app.growbabygrow.Classes.Utils;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.Landmark;
 
+import java.io.File;
+
 import static android.R.attr.x;
 
 /**
@@ -95,7 +97,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 //
 //    }
 
-    public FaceGraphic(GraphicOverlay overlay, Context context, Face Lastsessionface) {
+    public FaceGraphic(GraphicOverlay overlay, Context context, Face Lastsessionface, String OverlayBitmapFilePath) {
         super(overlay);
 
         mCurrentColorIndex = (mCurrentColorIndex + 1) % COLOR_CHOICES.length;
@@ -120,8 +122,14 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         smiley = BitmapFactory.decodeResource(resources, R.drawable.smile2, opt);
         cool = BitmapFactory.decodeResource(resources, R.drawable.cool, opt);
         lastsessionface = Lastsessionface;
-        Bitmap smallface = BitmapFactory.decodeFile("/storage/emulated/0/Android/data/com.app.growbabygrow/files/tempface2.bmp");
-        myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * 2, smallface.getHeight() * 2, false);
+
+        File overlaybitmap = new File(OverlayBitmapFilePath);
+        if (overlaybitmap.exists()) {
+
+            int bitmapscale = context.getResources().getInteger(R.integer.overlay_image_scale); //global constant for bitmap scale
+            Bitmap smallface = BitmapFactory.decodeFile(overlaybitmap.getAbsolutePath());
+            myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * bitmapscale, smallface.getHeight() * bitmapscale, false);
+        }
     }
 
     public void setId(int id) {
@@ -206,7 +214,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         float bottom = y + yOffset;
         canvas.drawRect(left, top, right, bottom, mBoxPaint);
 
-        if (showoverlay && lastsessionface != null) {
+        if (showoverlay && lastsessionface != null && myface != null) {
             float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
             float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
             canvas.drawCircle(oldx, oldy, FACE_POSITION_RADIUS, mFacePositionPaint); //this will show center of face from last week

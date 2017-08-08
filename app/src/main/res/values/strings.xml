@@ -45,8 +45,10 @@
     <string name="p_file1_saved_trim3_last_face">saved_trim3_last_face</string>
     <string name="p_file1_saved_trim3_last_face_ts">saved_trim3_last_face_ts</string>
 
+
     <string name="p_file1_saved_selected_last_week_face">saved_selected_last_week_face</string>
-    <string name="p_file1_saved_selected_last_week_face_ts">saved_selected_last_week_face_ts</string>
+    <string name="p_file1_saved_selected_last_week_face_bitmap_path">saved_selected_last_week_face_bitmap_path</string>
+    <string name="p_file1_saved_selected_last_week_face_scale">saved_selected_last_week_face_scale</string>
 
     <string name="p_file1_saved_intro_mp4pathname">saved_intro_mp4pathname</string>
 

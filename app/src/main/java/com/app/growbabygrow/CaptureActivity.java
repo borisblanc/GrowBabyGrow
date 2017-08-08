@@ -80,6 +80,7 @@ public class CaptureActivity extends AppCompatActivity {
     private boolean isnewsession;
     public Button toggleoverlayButton;
     private Boolean isoverlyshown = false;
+    private String OverlayBitmapFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +120,7 @@ public class CaptureActivity extends AppCompatActivity {
             fsp3._lastfacetskey = getString(R.string.p_file1_saved_trim3_last_face_ts);
 
             isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
+            OverlayBitmapFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), null);
 
             if (!isnewsession) {//if not new session try to track face from last session
                 Gson gson = new Gson();
@@ -387,7 +389,7 @@ public class CaptureActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         Gson gson = new Gson();
         String json = gson.toJson(LastFace);
-        editor.putString(fsp._lastfacekey, json);
+        editor.putString(fsp._lastfacekey, json); //must use these faces for overlay placement because they have correct preview dimensions
         editor.putLong(fsp._lastfacetskey, LastFacets);
         editor.apply();
     }
@@ -526,7 +528,7 @@ public class CaptureActivity extends AppCompatActivity {
 
         GraphicFaceTracker(GraphicOverlay overlay) {
             mOverlay = overlay;
-            mFaceGraphic = new FaceGraphic(overlay, context, lastsessionface);
+            mFaceGraphic = new FaceGraphic(overlay, context, lastsessionface, OverlayBitmapFilePath);
         }
 
         /**
