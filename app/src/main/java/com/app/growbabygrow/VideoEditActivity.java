@@ -83,6 +83,7 @@ public class VideoEditActivity extends AppCompatActivity {
     private TextView txt_fab;
     private TextView new_title;
     private Button orig_view_btn;
+    private Button retry_btn;
     private FloatingActionButton fab;
     private RadioButton Radio_prev1;
     private RadioButton Radio_prev2;
@@ -123,6 +124,7 @@ public class VideoEditActivity extends AppCompatActivity {
         Radio_prev3 = (RadioButton) findViewById(R.id.radioButtonprev3);
         Radio_Group_prev = (RadioGroup) findViewById(R.id.radioGroupPrev);
         progressOverlay  = findViewById(R.id.progress_overlay);
+        retry_btn = (Button) findViewById(R.id.buttonretry);
 
         fab.setVisibility(View.INVISIBLE);
         txt_fab.setVisibility(View.INVISIBLE);
@@ -189,6 +191,23 @@ public class VideoEditActivity extends AppCompatActivity {
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath3;
                 SelectedTrimmedVideoface = TrimmedVideo3face;
                 SelectedTrimmedVideofacets = TrimmedVideo3facets;
+            }
+        });
+
+        retry_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(VideoEditActivity.this, MainMenuActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        orig_view_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(VideoEditActivity.this, VideoViewActivity.class);
+                intent.putExtra(getString(R.string.player_video_file_path), OriginalVideoOutputFilepath);
+                startActivity(intent);
             }
         });
 
@@ -313,19 +332,18 @@ public class VideoEditActivity extends AppCompatActivity {
     private void SaveLastFaceImage(Bitmap origbitmap, String Savepath)
     {
         FaceDetector detector = new FaceDetector.Builder(context)
-                .setTrackingEnabled(true) //tracking enables false makes it much slow wtf?!?!
-                .setClassificationType(FaceDetector.NO_CLASSIFICATIONS)
-                .setProminentFaceOnly(true) // no diff
-                //.setLandmarkType(FaceDetector.NO_LANDMARKS) this will make it detect nothing
-                //.SetMinFaceSize((float)0.1) //small performance gain when removed
-                .setMode(FaceDetector.FAST_MODE) // tiny small performance gain
+                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                .setMode(FaceDetector.FAST_MODE)
+                .setProminentFaceOnly(true)
+                .setTrackingEnabled(true)
                 .build();
 
 
         Bitmap scaledbmap = Utils.scaleBitmap(origbitmap, context.getResources().getInteger(R.integer.overlay_image_scale)); //face detector too slow without scaling
         Frame newframe = new Frame.Builder().setBitmap(scaledbmap).build();
 
-        SparseArray faces = detector.detect(newframe); //takes longest
+        SparseArray faces = detector.detect(newframe); //todo sometimes no face is detected when face is off screen need to think of how to handle this
 
         Face face = Utils.GetFirstFace(faces); //this face is only good for cropping image, can't use this for overlay because its not relative to preview dimensions just bitmap dimensions
 
@@ -355,12 +373,17 @@ public class VideoEditActivity extends AppCompatActivity {
         try {
             int actualCropX = (int) face.getPosition().x < 0f ? (int) 0f : (int) face.getPosition().x;
             int actualCropY = (int) face.getPosition().y < 0f ? (int) 0f : (int) face.getPosition().y;
+            int facewidth = (int) face.getWidth();
+            int faceheight = (int) face.getHeight();
 
             //todo will need to experiment with different use cases of when face goes off screen for this.
-            if (src.getHeight() <= (actualCropY + face.getHeight())) //this happens when face is too low and cut off on bottom
+            if (src.getHeight() <= (actualCropY + faceheight)) //this happens when face is too low and cut off on bottom
                 actualCropY = (int) 0f;
 
-            cropped = Bitmap.createBitmap(src, actualCropX , actualCropY, (int) face.getWidth(), (int) face.getHeight()); //crop
+            if (src.getWidth() <= (actualCropX + facewidth)) //this happens when face is too off to the side and cut off on left
+                facewidth = src.getWidth() - actualCropX -1;
+
+            cropped = Bitmap.createBitmap(src, actualCropX , actualCropY, facewidth, faceheight); //crop
 
 
         }
@@ -407,13 +430,6 @@ public class VideoEditActivity extends AppCompatActivity {
             });
             th.start();
 
-            //this will stop it from being async as it will block main thread until its done
-//            try {
-//                th.join(); //wait for it to finish
-//            } catch (InterruptedException e) {
-//                Log.d(TAG, e.getMessage(), e);
-//            }
-
         }
     }
 
@@ -421,6 +437,7 @@ public class VideoEditActivity extends AppCompatActivity {
     {
         Radio_Group_prev.setVisibility(View.INVISIBLE);
         orig_view_btn.setVisibility(View.INVISIBLE);
+        retry_btn.setVisibility(View.INVISIBLE);
         new_title.setVisibility(View.INVISIBLE);
         prev1_imageview.setVisibility(View.INVISIBLE);
         prev2_imageview.setVisibility(View.INVISIBLE);
@@ -487,16 +504,6 @@ public class VideoEditActivity extends AppCompatActivity {
         InitVideoButton(TrimmedVideoOutputFilepath2, TrimmedVideoOutputFilepath2, prev2_imageview);
         InitVideoButton(TrimmedVideoOutputFilepath3, TrimmedVideoOutputFilepath3, prev3_imageview);
 
-
-        orig_view_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(VideoEditActivity.this, VideoViewActivity.class);
-                intent.putExtra(getString(R.string.player_video_file_path), OriginalVideoOutputFilepath);
-                startActivity(intent);
-            }
-        });
-
     }
 
     private void InitVideoButton(String vidfilepath_forimage, final String vidfilepath_forplay, ImageView vidbutton)
@@ -558,10 +565,17 @@ public class VideoEditActivity extends AppCompatActivity {
 
     private void ExitApp()
     {
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-        homeIntent.addCategory( Intent.CATEGORY_HOME );
-        homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(homeIntent);
+        Intent intent = new Intent(this, MainMenuActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("Exit me", true);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onBackPressed(){
+        Intent intent = new Intent(VideoEditActivity.this, MainMenuActivity.class);
+        startActivity(intent);
     }
 
 }

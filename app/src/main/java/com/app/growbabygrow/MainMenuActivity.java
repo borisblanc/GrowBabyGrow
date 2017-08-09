@@ -90,6 +90,12 @@ public class MainMenuActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
+
+        if(getIntent().getBooleanExtra("Exit me", false)){
+            finish();
+            return; // add this to prevent from doing unnecessary stuffs
+        }
+        
         context = getApplicationContext();
         baseVideoFileDir = context.getExternalFilesDir(null);
         txtname = (EditText) findViewById(R.id.editTextName);
