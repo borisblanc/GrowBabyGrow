@@ -28,7 +28,7 @@ import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.app.growbabygrow.Classes.FrameData;
+
 import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.Landmark;
@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import static android.R.attr.width;
+import static android.R.id.list;
 
 public class Utils {
 
@@ -177,7 +178,7 @@ public class Utils {
     {
         try
         {
-            FrameData.FaceLandMarks Facemarks = new FrameData.FaceLandMarks(face.getLandmarks());
+            Helpers.FaceLandMarks Facemarks = new Helpers.FaceLandMarks(face.getLandmarks());
 
 
             if (face != null && Math.abs(face.getEulerY()) <= 18 && Facemarks.HasRequiredLandmarks()) //forward facing
@@ -211,10 +212,10 @@ public class Utils {
 
 
 
-    public static double calculateAverage(ArrayList<FrameData.FaceData>  table) {
+    public static double calculateAverage(ArrayList<Helpers.FaceData>  table) {
         double sum = 0;
         if(!table.isEmpty()) {
-            for (FrameData.FaceData mark : table) {
+            for (Helpers.FaceData mark : table) {
                 sum += mark._score;
             }
             return sum / (double) table.size();
@@ -222,7 +223,7 @@ public class Utils {
         return sum;
     }
 
-    public static double stDev (ArrayList<FrameData.FaceData> table)
+    public static double stDev (ArrayList<Helpers.FaceData> table)
     {
         // Step 1:
         double mean = calculateAverage(table);
@@ -247,13 +248,13 @@ public class Utils {
     }
 
 
-    public static FrameData.FaceData getMaxFace(ArrayList<FrameData.FaceData> list)
+    public static Helpers.FaceData getMaxFace(ArrayList<Helpers.FaceData> list)
     {
-        FrameData.FaceData max = new FrameData.FaceData(Long.valueOf(0) ,0);
+        Helpers.FaceData max = new Helpers.FaceData(Long.valueOf(0) ,0);
         int size = list.size();
         for(int i = 0; i < size; i++)
         {
-            FrameData.FaceData current = list.get(i);
+            Helpers.FaceData current = list.get(i);
 
             if(current._score > max._score){
                 max = current;
@@ -262,13 +263,13 @@ public class Utils {
         return max;
     }
 
-    public static FrameData.FaceData getMaxFace(ArrayList<FrameData.FaceData> list, ArrayList<FrameData.FaceData> exceptions)
+    public static Helpers.FaceData getMaxFace(ArrayList<Helpers.FaceData> list, ArrayList<Helpers.FaceData> exceptions)
     {
-        FrameData.FaceData max = new FrameData.FaceData(Long.valueOf(0) ,0);
+        Helpers.FaceData max = new Helpers.FaceData(Long.valueOf(0) ,0);
         int size = list.size();
         for(int i = 0; i < size; i++)
         {
-            FrameData.FaceData current = list.get(i);
+            Helpers.FaceData current = list.get(i);
 
             if (exceptions.contains(current)) //if in exceptions then skip, can't be best face
                 continue;

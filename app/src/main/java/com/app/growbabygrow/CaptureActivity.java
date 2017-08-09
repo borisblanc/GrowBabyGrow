@@ -24,8 +24,8 @@ import com.app.growbabygrow.Classes.CameraSource;
 import com.app.growbabygrow.Classes.CameraSourcePreview;
 import com.app.growbabygrow.Classes.CustomFaceDetector;
 import com.app.growbabygrow.Classes.FaceGraphic;
-import com.app.growbabygrow.Classes.FrameData;
 import com.app.growbabygrow.Classes.GraphicOverlay;
+import com.app.growbabygrow.Classes.Helpers;
 import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
 import com.google.android.gms.common.ConnectionResult;
@@ -248,8 +248,8 @@ public class CaptureActivity extends AppCompatActivity {
     private void RunFaceProcessing(FaceSession FS)
     {
         FaceSessionProperty FirstFSP = new FaceSessionProperty();
-        ArrayList<FrameData.FaceData> previous_exceptions = new ArrayList<>(); //for holding previous exceptions to choose best face for subsequent previews
-        FrameData.FaceData previous_bestface = new FrameData.FaceData(Long.valueOf(0), 0);
+        ArrayList<Helpers.FaceData> previous_exceptions = new ArrayList<>(); //for holding previous exceptions to choose best face for subsequent previews
+        Helpers.FaceData previous_bestface = new Helpers.FaceData(Long.valueOf(0), 0);
 
         if ((GetCoreFrames() * FS._props.size()) > FS._faces.size()) //if frames captured is less than coreframes * number of previews then don't bother, need more try again!
             throw new IllegalArgumentException("Not enough frames supplied. Try Recording Again!!");
@@ -279,7 +279,7 @@ public class CaptureActivity extends AppCompatActivity {
 
 
 
-    private void CreateTrimmedVideo(FrameData.Tuple<Long,Long> bestfacetimestamps, String OriginalVideoOutputFilepath, String TrimmedVideoOutputFilepath)
+    private void CreateTrimmedVideo(Helpers.Tuple<Long,Long> bestfacetimestamps, String OriginalVideoOutputFilepath, String TrimmedVideoOutputFilepath)
     {
         if (bestfacetimestamps == null)
             return;
@@ -288,7 +288,7 @@ public class CaptureActivity extends AppCompatActivity {
     }
 
     //process all of first preview (data & results) and subsequent data only for all other previews
-    private void Processfaces(ArrayList<FrameData> _faces, FaceSessionProperty P)
+    private void Processfaces(ArrayList<Helpers.FrameData> _faces, FaceSessionProperty P)
     {
         if (_faces == null || _faces.size() < GetFrameTotal()) {
             throw new IllegalArgumentException("Not enough frames supplied. Try Recording Again!!");
@@ -297,41 +297,41 @@ public class CaptureActivity extends AppCompatActivity {
         int coreframeslength = GetCoreFrames(); //core sample of frames will be two seconds of video might in future vary depending on user settings
         int computelimit = _faces.size() - GetFrameTotal(); //this will keep walking average calcs only happening within range
 
-        for(FrameData facedata : _faces )
+        for(Helpers.FrameData facedata : _faces )
         {
             Long currenttimestamp = facedata._timeStamp;
             if (_faces.indexOf(facedata) < computelimit) //makes sense to compute because we will can use it
             {
-                List<FrameData> coreframes = _faces.subList(_faces.indexOf(facedata), _faces.indexOf(facedata) + coreframeslength);
-                ArrayList<FrameData.FaceData> corescores = new ArrayList<>();
-                for (FrameData face : coreframes)
+                List<Helpers.FrameData> coreframes = _faces.subList(_faces.indexOf(facedata), _faces.indexOf(facedata) + coreframeslength);
+                ArrayList<Helpers.FaceData> corescores = new ArrayList<>();
+                for (Helpers.FrameData face : coreframes)
                 {
-                    corescores.add(new FrameData.FaceData(face._timeStamp, Utils.GetImageUsability(Utils.GetFirstFace(face._faces)))); //todo improve this by moving all the face finding and scoring outside so its done only once per frame
+                    corescores.add(new Helpers.FaceData(face._timeStamp, Utils.GetImageUsability(Utils.GetFirstFace(face._faces)))); //todo improve this by moving all the face finding and scoring outside so its done only once per frame
                 }
 
                 double avg = Utils.calculateAverage(corescores);
                 double stDev = Utils.stDev(corescores);
 
-                P._previewfinalscores.add(new FrameData.FaceData(currenttimestamp, avg < stDev ? 0 :  avg  - stDev)); //avg - std dev should give those with best avg score and lowest deviation /no negatives
+                P._previewfinalscores.add(new Helpers.FaceData(currenttimestamp, avg < stDev ? 0 :  avg  - stDev)); //avg - std dev should give those with best avg score and lowest deviation /no negatives
             }
             else //can't use computations past this point so just need timestamps
             {
-                P._previewfinalscores.add(new FrameData.FaceData(currenttimestamp, 0 ));
+                P._previewfinalscores.add(new Helpers.FaceData(currenttimestamp, 0 ));
             }
         }
 
         P._previewbestface = Utils.getMaxFace(P._previewfinalscores);
 
-        FrameData.FaceData bestLastface = P._previewfinalscores.get(P._previewfinalscores.indexOf(P._previewbestface) + GetFrameTotal());
+        Helpers.FaceData bestLastface = P._previewfinalscores.get(P._previewfinalscores.indexOf(P._previewbestface) + GetFrameTotal());
 
-        P._previewbestfacedata = new FrameData.Tuple<>(P._previewbestface._timeStamp, bestLastface._timeStamp);
+        P._previewbestfacedata = new Helpers.Tuple<>(P._previewbestface._timeStamp, bestLastface._timeStamp);
     }
 
     //return list of exceptions that will be used to make sure these are not chosen in other previews
-    private ArrayList<FrameData.FaceData> ArrayMinusException(ArrayList<FrameData.FaceData> finalscores, FrameData.FaceData _faceexception)
+    private ArrayList<Helpers.FaceData> ArrayMinusException(ArrayList<Helpers.FaceData> finalscores, Helpers.FaceData _faceexception)
     {
         int offset = GetCoreFrames(); //frame offset for each additional previews so we get something different, make it equal to fps * 2 which is two seconds of video
-        ArrayList<FrameData.FaceData> final_scores_allexceptions = new ArrayList<> (finalscores);
+        ArrayList<Helpers.FaceData> final_scores_allexceptions = new ArrayList<> (finalscores);
 
         int exceptionindex = finalscores.indexOf(_faceexception);
 
@@ -342,7 +342,7 @@ public class CaptureActivity extends AppCompatActivity {
             return new ArrayList<>(final_scores_allexceptions.subList(exceptionindex - (offset/2), exceptionindex + (offset/2)));
     }
 
-    private FrameData.FaceData BestFace(ArrayList<FrameData.FaceData> finalscores, ArrayList<FrameData.FaceData> exceptions)
+    private Helpers.FaceData BestFace(ArrayList<Helpers.FaceData> finalscores, ArrayList<Helpers.FaceData> exceptions)
     {
         if (exceptions.size() == 0)
             return Utils.getMaxFace(finalscores);
@@ -350,18 +350,18 @@ public class CaptureActivity extends AppCompatActivity {
             return Utils.getMaxFace(finalscores, exceptions);
     }
 
-    private FrameData.Tuple<Long,Long> BestFacedata(ArrayList<FrameData.FaceData> finalscores, FrameData.FaceData bestface)
+    private Helpers.Tuple<Long,Long> BestFacedata(ArrayList<Helpers.FaceData> finalscores, Helpers.FaceData bestface)
     {
-        FrameData.FaceData bestLastface = finalscores.get(finalscores.indexOf(bestface) + GetFrameTotal());
-        return new FrameData.Tuple<>(bestface._timeStamp, bestLastface._timeStamp);
+        Helpers.FaceData bestLastface = finalscores.get(finalscores.indexOf(bestface) + GetFrameTotal());
+        return new Helpers.Tuple<>(bestface._timeStamp, bestLastface._timeStamp);
     }
 
-    private void FindSaveLastFace(ArrayList<FrameData> _allFaces, FaceSessionProperty fsp)
+    private void FindSaveLastFace(ArrayList<Helpers.FrameData> _allFaces, FaceSessionProperty fsp)
     {
-        FrameData FirstFrame = null;
-        FrameData LastFrame = null;
+        Helpers.FrameData FirstFrame = null;
+        Helpers.FrameData LastFrame = null;
 
-        for(FrameData frame : _allFaces)
+        for(Helpers.FrameData frame : _allFaces)
         {
 
             if (frame._timeStamp == fsp._previewbestfacedata.firstTimeStamp)
@@ -631,7 +631,7 @@ public class CaptureActivity extends AppCompatActivity {
 
     private class FaceSession
     {
-        private ArrayList<FrameData> _faces = new ArrayList<>();
+        private ArrayList<Helpers.FrameData> _faces = new ArrayList<>();
         private ArrayList<FaceSessionProperty> _props;
         private String MainMergedVideoOutputFilepath;
         private String OriginalVideoOutputFilepath;
@@ -650,9 +650,9 @@ public class CaptureActivity extends AppCompatActivity {
 
     private class FaceSessionProperty
     {
-        private ArrayList<FrameData.FaceData> _previewfinalscores;
-        private FrameData.Tuple<Long,Long> _previewbestfacedata;
-        private FrameData.FaceData _previewbestface;
+        private ArrayList<Helpers.FaceData> _previewfinalscores;
+        private Helpers.Tuple<Long,Long> _previewbestfacedata;
+        private Helpers.FaceData _previewbestface;
         private String _trimmedVideoOutputFilepath;
         private String _lastfacekey;
         private String _lastfacetskey;

@@ -13,10 +13,10 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class CustomFaceDetector extends Detector<Face> {
 
-    private ArrayList<FrameData> _faces = new ArrayList<>();
+    private ArrayList<Helpers.FrameData> _faces = new ArrayList<>();
     private Detector<Face> mDelegate;
 
-    public CustomFaceDetector(Detector<Face> delegate, ArrayList<FrameData> faces) {
+    public CustomFaceDetector(Detector<Face> delegate, ArrayList<Helpers.FrameData> faces) {
         mDelegate = delegate;
         _faces = faces;
     }
@@ -25,7 +25,7 @@ public class CustomFaceDetector extends Detector<Face> {
 
         Long timestamp = frame.getMetadata().getTimestampMillis();
         final SparseArray<Face> faces = mDelegate.detect(frame);
-        _faces.add(new FrameData(timestamp, faces));
+        _faces.add(new Helpers.FrameData(timestamp, faces));
 
         return faces;
     }
