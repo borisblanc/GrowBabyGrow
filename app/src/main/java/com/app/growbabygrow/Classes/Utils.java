@@ -21,6 +21,7 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.os.Environment;
+import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import static android.R.attr.width;
+import static android.R.attr.y;
 import static android.R.id.list;
 
 public class Utils {
@@ -174,42 +176,141 @@ public class Utils {
         return null;
     }
 
-    public static float GetImageUsability(Face face) //face landmark scores are always 0 to 1 or -1 if not detected
+    public static float GetImageUsability(Face face, int framewidth, int frameheight) //face landmark scores are always 0 to 1 or -1 if not detected
     {
+        if (face == null)
+            return -1;
+
+        float result = -1;
         try
         {
-            Helpers.FaceLandMarks Facemarks = new Helpers.FaceLandMarks(face.getLandmarks());
+            //Helpers.FaceLandMarks Facemarks = new Helpers.FaceLandMarks(face.getLandmarks()); //don't use for now
+            int vClipSeverity = VerticalClipSeverity(face.getPosition().y, face.getHeight(), frameheight);
+            int hCloseSeverity = HorizontalClosenessSeverity(face.getPosition().x, face.getWidth(), framewidth);
 
 
-            if (face != null && Math.abs(face.getEulerY()) <= 18 && Facemarks.HasRequiredLandmarks()) //forward facing
+            //documentation says eulerY of > +-18 is not facing but thats not really true per testing i was still able to get most landmarks
+            if (Math.abs(face.getEulerY()) <= 19 && vClipSeverity <= 20 && hCloseSeverity <= 20) //face exists, forward facing, not too much top or bottom clipping, not too close to sides
             {
                 //always zero instead of -1 for these because at least they are forward facing
                 float smilescore = face.getIsSmilingProbability() < 0 ? 0 : face.getIsSmilingProbability();
                 float righteyescore = face.getIsRightEyeOpenProbability() < 0 ? 0 : face.getIsRightEyeOpenProbability();
                 float lefteyescore = face.getIsLeftEyeOpenProbability() < 0 ? 0 : face.getIsLeftEyeOpenProbability();
 
-                return (smilescore + righteyescore + lefteyescore) / 3;
+                result = (smilescore + righteyescore + lefteyescore) / 3;
             }
-            else if (face != null && Math.abs(face.getEulerY()) > 18) //if not forward facing then return 0
+            else if (Math.abs(face.getEulerY()) > 19) //if not forward facing then return 0
             {
-                return 0;
+                result = 0;
             }
-            else if (face != null && !Facemarks.HasRequiredLandmarks()) //if not all required landmarks present give -1 because face has probably gotten clipped offscreen
+            else if (vClipSeverity > 20) //if too much top or bottom clipping return 0
             {
-                return 0;
+                result = 0;
             }
-            else //if no face -1
+            else if (hCloseSeverity > 20) //if too close to sides return 0
             {
-                return -1;
+                result = 0;
             }
         }
         catch (Exception e)
         {
             Log.d("utils.GetImageUsability",e.getMessage());
-            return 0;
         }
+        return result;
     }
 
+    //not so strict because in landscape a close face can easily be clipped by bottom or top of screen
+    public static int VerticalClipSeverity(float y, float face_height, int frame_height)
+    {
+        //bottom and top are inverted in front facing camera!!
+        int bottomclipseverity = 0;
+        int topclipseverity = 0;
+        int framescale20 = (int)(frame_height * .2) * -1; //20 percent scale clipped
+        int framescale10 = (int)(frame_height * .1) * -1; //10 percent scale clipped
+        int framescale0 = 0; //5 percent scale clipped
+
+        if (y >= framescale0) //no bottom clipping
+            bottomclipseverity = 0;
+        else if (y < framescale0 && y >= framescale10) //small clipping of bottom
+            bottomclipseverity = 10;
+        else if (y < framescale10 && y >= framescale20) //medium clipping of bottom
+            bottomclipseverity = 20;
+        else
+            bottomclipseverity = 51; //too much clipping
+
+
+        if (y + face_height <= frame_height) //no top clipping
+            topclipseverity = 0;
+        else if (y + face_height > frame_height) //clipping confirmed
+        {
+            if ((y + face_height) - frame_height > framescale0 && (y + face_height) - frame_height <= Math.abs(framescale10))
+                topclipseverity = 10; //small clipping of top
+            else if ((y + face_height) - frame_height > Math.abs(framescale10) && (y + face_height) - frame_height <= Math.abs(framescale20))
+                topclipseverity = 20; //medium clipping of top
+            else
+                topclipseverity = 51; //too much clipping
+        }
+
+
+        int result=0;
+
+        if (topclipseverity > 0 && bottomclipseverity > 0) //face too close, very bad, can happen in landscape because of small height of screen
+            result = 51;
+        else {
+            if (topclipseverity > 0) //any clipping
+                result = topclipseverity;
+            if (bottomclipseverity > 0) //any clipping
+                result = bottomclipseverity;
+        }
+
+
+        return result;
+    }
+
+    //strict because in landscape we want to give lower score to frames around the far right or left edges
+    //severity here is not based on clipping but on closeness to edge
+    public static int HorizontalClosenessSeverity(float x, float face_width, int frame_width)
+    {
+        //right and left are inverted in front facing camera!!
+        int rightclipseverity = 0;
+        int leftclipseverity = 0;
+        int framescale20 = (int)(frame_width * .2); //20 percent scale
+        int framescale10 = (int)(frame_width * .1); //10 percent scale
+        int framescale5 = (int)(frame_width * .05); //5 percent scale
+
+
+        if (x >= framescale20) //not close to left
+            leftclipseverity = 0;
+        else if (x < framescale20 && x >= framescale10) //close to left
+            leftclipseverity = 10;
+        else if (x < framescale10 && x >= framescale5) //very close to left
+            leftclipseverity = 20;
+        else
+            leftclipseverity = 51; //clipping
+
+
+        if (x + face_width + framescale20 <= frame_width) //not close to right
+            rightclipseverity = 0;
+        else if (x + face_width + framescale20 > frame_width) //too close to right confirmed
+        {
+            if (Math.abs((x + face_width) - frame_width) < framescale20 && Math.abs((x + face_width) - frame_width) >= framescale10)
+                rightclipseverity = 10; //close to right
+            else if (Math.abs((x + face_width) - frame_width) < framescale10 && Math.abs((x + face_width) - frame_width) >= framescale5)
+                rightclipseverity = 20; //very close to right
+            else
+                rightclipseverity = 51; //basically clipping
+        }
+
+
+        int result = 0;
+        if (leftclipseverity > 0) //any left is bad
+            result = leftclipseverity;
+        else if (rightclipseverity > 0) //any right is bad
+            result = rightclipseverity;
+
+
+        return result;
+    }
 
 
     public static double calculateAverage(ArrayList<Helpers.FaceData>  table) {

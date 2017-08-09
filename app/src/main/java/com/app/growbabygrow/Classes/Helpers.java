@@ -14,10 +14,14 @@ public class Helpers {
 
         public SparseArray<Face> _faces;
         public Long _timeStamp;
+        public int _frameHeight;
+        public int _frameWidth;
 
-        public FrameData(Long timeStamp, SparseArray<Face> faces) {
+        FrameData(Long timeStamp, SparseArray<Face> faces, int frameWidth, int frameHeight) {
             _timeStamp = timeStamp;
             _faces = faces;
+            _frameWidth = frameWidth;
+            _frameHeight = frameHeight;
         }
 
     }

@@ -176,9 +176,9 @@ public class CaptureActivity extends AppCompatActivity {
                             recButton.setText(R.string.record);
                             requestPermissionThenOpenCamera(); //back to preview mode
 
-                            //this will have to stay constant throughout Grow baby session SO i will have to stop them from switching cameras eventually (just lock down using of back camera)
+                            //this will have to stay constant throughout Grow baby session, if back and front don't support same resolutions will have to show user error or lock down camera facing
                             VerifySaveLockedDownVidSize(mCamera2Source.mVideoSize);
-
+                            SaveFacing(usingFrontCamera);
                             try {
 
                                 RunFaceProcessing(fs_current);
@@ -215,6 +215,13 @@ public class CaptureActivity extends AppCompatActivity {
             Log.d(TAG,e.getMessage());
         }
 
+    }
+
+    private void SaveFacing(Boolean isfacingfront)
+    {
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putString(getString(R.string.p_file1_saved_current_session_camera_facing), isfacingfront ? "Front" : "Back" ); //will overwrite previous value each time
+        editor.apply();
     }
 
     //function will check to see if new session then save resolution if not new then check to make sure resolution is same else throw exception.
@@ -306,7 +313,7 @@ public class CaptureActivity extends AppCompatActivity {
                 ArrayList<Helpers.FaceData> corescores = new ArrayList<>();
                 for (Helpers.FrameData face : coreframes)
                 {
-                    corescores.add(new Helpers.FaceData(face._timeStamp, Utils.GetImageUsability(Utils.GetFirstFace(face._faces)))); //todo improve this by moving all the face finding and scoring outside so its done only once per frame
+                    corescores.add(new Helpers.FaceData(face._timeStamp, Utils.GetImageUsability(Utils.GetFirstFace(face._faces), face._frameWidth, face._frameHeight))); //todo improve this by moving all the face finding and scoring outside so its done only once per frame
                 }
 
                 double avg = Utils.calculateAverage(corescores);

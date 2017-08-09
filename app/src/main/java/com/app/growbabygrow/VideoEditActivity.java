@@ -102,6 +102,7 @@ public class VideoEditActivity extends AppCompatActivity {
     private Face SelectedTrimmedVideoface;
     private Long SelectedTrimmedVideofacets;
     private String OverlayBitmapFilePath;
+    private String Camerafacing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,6 +156,7 @@ public class VideoEditActivity extends AppCompatActivity {
         fixed_width = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_width), 0);
         fixed_height = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_height), 0);
         OverlayBitmapFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), null);
+        Camerafacing = sharedpreferences.getString(getString(R.string.p_file1_saved_current_session_camera_facing), null);
 
         //if new session lets get a head start and begin async intro video creation while user pics preview
         if (isnewsession) {
@@ -350,11 +352,22 @@ public class VideoEditActivity extends AppCompatActivity {
 
         try {
             Bitmap cropped = crop(scaledbmap, face);
-            //Bitmap Greyfacebitmap = Utils.toGrayscale(faceBitmap); //grey scale
+            scaledbmap.recycle();
             Bitmap newbitmap = Bitmap.createBitmap(cropped.getWidth(), cropped.getHeight(), Bitmap.Config.ARGB_8888);
             fade(cropped, newbitmap);
-            Bitmap mirrored = flip(newbitmap);
-            Utils.testSavebitmap(mirrored, Savepath);
+            cropped.recycle();
+
+            Bitmap finalbitmap = null;
+
+            if (Camerafacing.equals("Front")) //mirror for front camera only
+            {
+                finalbitmap = flip(newbitmap);
+                newbitmap.recycle();
+            }
+            else
+                finalbitmap = newbitmap;
+
+            Utils.testSavebitmap(finalbitmap, Savepath);
         }
         catch(Exception e) //this is wonky right now
         {
@@ -384,8 +397,6 @@ public class VideoEditActivity extends AppCompatActivity {
                 facewidth = src.getWidth() - actualCropX -1;
 
             cropped = Bitmap.createBitmap(src, actualCropX , actualCropY, facewidth, faceheight); //crop
-
-
         }
         catch(Exception ex)
         {
@@ -403,7 +414,6 @@ public class VideoEditActivity extends AppCompatActivity {
         m.preScale(-1, 1);
         Bitmap dst = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, false);
         dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
-        //src.recycle();
         return dst;
     }
 
@@ -413,7 +423,6 @@ public class VideoEditActivity extends AppCompatActivity {
         Paint alphapaint = new Paint();
         alphapaint.setAlpha(80); //transparency
         canvas.drawBitmap(src, 0, 0, alphapaint);
-        src.recycle();
     }
 
 
@@ -534,8 +543,6 @@ public class VideoEditActivity extends AppCompatActivity {
             //draw bitmaps from resource
             b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, intro1, width, height, 102));
             b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, GetIntroPeriod(period), width, height, 102));
-//            Utils.testSavebitmap(b.get(0), new File(MainMergedVideoOutputFile().getParent(),"ass.bmp").getAbsolutePath());
-//            Utils.testSavebitmap(b.get(1), new File(MainMergedVideoOutputFile().getParent(),"ass2.bmp").getAbsolutePath());
 
             VideoUtils.CreatevideoFromBitmaps(vidfilepath, b, 30);
         }

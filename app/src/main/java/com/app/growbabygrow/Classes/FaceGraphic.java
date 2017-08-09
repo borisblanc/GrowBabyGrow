@@ -115,9 +115,12 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         mBoxPaint.setStyle(Paint.Style.STROKE);
         mBoxPaint.setStrokeWidth(BOX_STROKE_WIDTH);
 
+
         opt = new BitmapFactory.Options();
         opt.inScaled = false;
         resources = context.getResources();
+        marker = BitmapFactory.decodeResource(resources, R.drawable.marker, opt);
+
 
         smiley = BitmapFactory.decodeResource(resources, R.drawable.smile2, opt);
         cool = BitmapFactory.decodeResource(resources, R.drawable.cool, opt);
@@ -180,7 +183,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         if (face.getIsSmilingProbability() > .7)
             numberofsmiles += .2;
 
-        if (Utils.GetImageUsability(face) > .7)
+        if (Utils.GetImageUsability(face, mOverlay.mPreviewWidth, mOverlay.mPreviewHeight) > .7)
             numberofgoodfaces+= .2;
 
 
@@ -191,6 +194,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         canvas.drawBitmap(smiley, 10, canvas.getHeight() - 150, null); //bottom right on top of above
         canvas.drawText("Smiles: " + Math.round(numberofsmiles), 100, canvas.getHeight() - 100, mIdPaint);
 
+        canvas.drawBitmap(marker, x - (myface.getWidth()/ 2), y - (myface.getHeight()/2), null); //puts image in center of face
         //canvas.drawCircle(x, y, FACE_POSITION_RADIUS, mFacePositionPaint);
         //canvas.drawText("id: " + faceId, x + ID_X_OFFSET, y + ID_Y_OFFSET, mIdPaint);
 
@@ -218,7 +222,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
             float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
             float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
             canvas.drawCircle(oldx, oldy, FACE_POSITION_RADIUS, mFacePositionPaint); //this will show center of face from last week
-            canvas.drawBitmap(myface, oldx - (myface.getWidth()/ 2), oldy - (myface.getWidth()/2), null); //puts image in center of where it was last week
+            canvas.drawBitmap(myface, oldx - (myface.getWidth()/ 2), oldy - (myface.getHeight()/2), null); //puts image in center of where it was last week
         }
 
 

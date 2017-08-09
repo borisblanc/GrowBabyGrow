@@ -7,8 +7,7 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
 
 import java.util.ArrayList;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+
 
 
 public class CustomFaceDetector extends Detector<Face> {
@@ -21,12 +20,9 @@ public class CustomFaceDetector extends Detector<Face> {
         _faces = faces;
     }
 
-    public SparseArray<Face> detect(final Frame frame) {
-
-        Long timestamp = frame.getMetadata().getTimestampMillis();
-        final SparseArray<Face> faces = mDelegate.detect(frame);
-        _faces.add(new Helpers.FrameData(timestamp, faces));
-
+    public SparseArray<Face> detect(Frame frame) {
+        SparseArray<Face> faces = mDelegate.detect(frame);
+        _faces.add(new Helpers.FrameData(frame.getMetadata().getTimestampMillis(), faces, frame.getMetadata().getWidth(),frame.getMetadata().getHeight()));
         return faces;
     }
 
