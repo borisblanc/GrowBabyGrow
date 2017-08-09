@@ -439,7 +439,7 @@ public class CaptureActivity extends AppCompatActivity {
             previewFaceDetector = new FaceDetector.Builder(context)
                     .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
                     .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-                    .setMode(FaceDetector.FAST_MODE)
+                    .setMode(FaceDetector.ACCURATE_MODE) //need accurate mode for Euler Y
                     .setProminentFaceOnly(true)
                     .setTrackingEnabled(true)
                     .build();

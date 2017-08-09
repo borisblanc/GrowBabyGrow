@@ -221,6 +221,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
             canvas.drawBitmap(myface, oldx - (myface.getWidth()/ 2), oldy - (myface.getWidth()/2), null); //puts image in center of where it was last week
         }
 
+
+
     }
 
 

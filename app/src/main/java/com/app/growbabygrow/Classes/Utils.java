@@ -31,6 +31,7 @@ import android.view.WindowManager;
 import com.app.growbabygrow.Classes.FrameData;
 import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.Landmark;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -176,7 +177,10 @@ public class Utils {
     {
         try
         {
-            if (face != null && Math.abs(face.getEulerY()) <= 18) //forward facing
+            FrameData.FaceLandMarks Facemarks = new FrameData.FaceLandMarks(face.getLandmarks());
+
+
+            if (face != null && Math.abs(face.getEulerY()) <= 18 && Facemarks.HasRequiredLandmarks()) //forward facing
             {
                 //always zero instead of -1 for these because at least they are forward facing
                 float smilescore = face.getIsSmilingProbability() < 0 ? 0 : face.getIsSmilingProbability();
@@ -186,6 +190,10 @@ public class Utils {
                 return (smilescore + righteyescore + lefteyescore) / 3;
             }
             else if (face != null && Math.abs(face.getEulerY()) > 18) //if not forward facing then return 0
+            {
+                return 0;
+            }
+            else if (face != null && !Facemarks.HasRequiredLandmarks()) //if not all required landmarks present give -1 because face has probably gotten clipped offscreen
             {
                 return 0;
             }
@@ -200,6 +208,8 @@ public class Utils {
             return 0;
         }
     }
+
+
 
     public static double calculateAverage(ArrayList<FrameData.FaceData>  table) {
         double sum = 0;

@@ -95,7 +95,7 @@ public class MainMenuActivity extends AppCompatActivity {
             finish();
             return; // add this to prevent from doing unnecessary stuffs
         }
-        
+
         context = getApplicationContext();
         baseVideoFileDir = context.getExternalFilesDir(null);
         txtname = (EditText) findViewById(R.id.editTextName);
