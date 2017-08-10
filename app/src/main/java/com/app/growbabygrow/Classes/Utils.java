@@ -399,6 +399,7 @@ public class Utils {
      */
     public static void animateView(final View view, final int toVisibility, float toAlpha, int duration) {
         boolean show = toVisibility == View.VISIBLE;
+        view.bringToFront();
         if (show) {
             view.setAlpha(0);
         }

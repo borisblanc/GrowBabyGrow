@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.app.growbabygrow.Classes.Bigflake.ExtractDecodeEditEncodeMuxTest;
+import com.app.growbabygrow.Classes.SyncDialogue;
 import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
 import com.google.android.gms.vision.Frame;
@@ -40,14 +41,8 @@ import com.google.gson.Gson;
 
 import java.io.File;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import static android.R.attr.bitmap;
-import static android.R.attr.width;
-import static android.R.transition.fade;
-import static com.app.growbabygrow.Classes.Utils.GetFirstFace;
-import static com.app.growbabygrow.Classes.Utils.scaleBitmap;
 
 
 public class VideoEditActivity extends AppCompatActivity {
@@ -103,6 +98,7 @@ public class VideoEditActivity extends AppCompatActivity {
     private Long SelectedTrimmedVideofacets;
     private String OverlayBitmapFilePath;
     private String Camerafacing;
+    private boolean performMerge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -215,51 +211,58 @@ public class VideoEditActivity extends AppCompatActivity {
 
         SetVideoButtons();
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (exitapp)
+                if (exitapp) {
                     ExitApp();
+                    return;
+                }
 
                 if (!isnewsession) {
-                    new AlertDialog.Builder(VideoEditActivity.this)
-                            .setTitle("Merge Baby Grow?")
-                            .setMessage("Are you sure you want merge this Video into your Baby Grow?")
-                            .setIcon(android.R.drawable.ic_dialog_alert)
-                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    //this merge works fine for 'similar' vids
-                                    //VideoUtils.Mp4ParserMergeVideos(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, SelectedTrimmedVideoOutputFilepath);
+                    SyncDialogue sd = new SyncDialogue();
+                    performMerge = sd.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?",VideoEditActivity.this);
+//                    new AlertDialog.Builder(VideoEditActivity.this)
+//                            .setTitle("Merge Baby Grow?")
+//                            .setMessage("Are you sure you want merge this Video into your Baby Grow?")
+//                            .setIcon(android.R.drawable.ic_dialog_alert)
+//                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+//
+//                                public void onClick(DialogInterface dialog, int whichButton) {
+//                                    performMerge = true;
+//                                    Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
+//                                }
+//                            })
+//                            .setNegativeButton(android.R.string.no, null).show();
 
-                                    //face image for previous session overlay
-                                    Thread th = new Thread(new Runnable() {
-                                        public void run() {
-                                            ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
-                                            SetNextSessionface(SelectedTrimmedVideoface); //next session face
-                                        }
-                                    });
-                                    th.start();
-
-                                    VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
-
-                                    Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
-                                    HidePreviewsShowGoodbye();
-
+                        if (performMerge) {
+                            Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
+                            //face image for previous session overlay
+                            Thread th = new Thread(new Runnable() {
+                                public void run() {
+                                    ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
+                                    SetNextSessionface(SelectedTrimmedVideoface); //next session face
                                 }
-                            })
-                            .setNegativeButton(android.R.string.no, null).show();
+                            });
+                            th.start();
 
+                            VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
 
-
+                            Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
+                            HidePreviewsShowGoodbye();
+                            Utils.animateView(progressOverlay, View.GONE, 0, 200);
+                        }
                 }
                 else //first time when no movie yet rename selected trim to main and add merge in intro movie
                 {
                     //need to block UI thread and show loading overlay if preview isn't ready yet and poll until it is
                     if (!ispreviewready) {
-                        Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_LONG).show();
+                        orig_view_btn.setEnabled(false);
+                        retry_btn.setEnabled(false);
+                        fab.setEnabled(false);
                         Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
                     }
 
@@ -292,6 +295,8 @@ public class VideoEditActivity extends AppCompatActivity {
                             ExtractDecodeEditEncodeMuxTest test = new ExtractDecodeEditEncodeMuxTest();
                             try {
                                 test.ExtractDecodeEditEncodeMux(IntroVideoOutputFilePath, tempintrofile.getAbsolutePath(), fixed_width, fixed_height, SelectedTrimmedVideoOutputFilepath, MainMergedVideoOutputFilepath);
+                                if (tempintrofile.exists())
+                                    tempintrofile.delete();
 
                                 runOnUiThread(new Runnable() { //run this shit on UI thread
                                     @Override
@@ -347,6 +352,7 @@ public class VideoEditActivity extends AppCompatActivity {
 
         SparseArray faces = detector.detect(newframe); //todo sometimes no face is detected when face is off screen need to think of how to handle this
 
+        //Utils.testSavebitmap(scaledbmap, Savepath);
         Face face = Utils.GetFirstFace(faces); //this face is only good for cropping image, can't use this for overlay because its not relative to preview dimensions just bitmap dimensions
 
 
@@ -390,10 +396,10 @@ public class VideoEditActivity extends AppCompatActivity {
             int faceheight = (int) face.getHeight();
 
             //todo will need to experiment with different use cases of when face goes off screen for this.
-            if (src.getHeight() <= (actualCropY + faceheight)) //this happens when face is too low and cut off on bottom
-                actualCropY = (int) 0f;
+            if (src.getHeight() <= (actualCropY + faceheight)) //this happens when face is too low/high and cut off on bottom/top
+                faceheight = src.getHeight() - actualCropY - 1;
 
-            if (src.getWidth() <= (actualCropX + facewidth)) //this happens when face is too off to the side and cut off on left
+            if (src.getWidth() <= (actualCropX + facewidth)) //this happens when face is too off to the side and cut off on left/right
                 facewidth = src.getWidth() - actualCropX -1;
 
             cropped = Bitmap.createBitmap(src, actualCropX , actualCropY, facewidth, faceheight); //crop
@@ -451,6 +457,7 @@ public class VideoEditActivity extends AppCompatActivity {
         prev1_imageview.setVisibility(View.INVISIBLE);
         prev2_imageview.setVisibility(View.INVISIBLE);
         prev3_imageview.setVisibility(View.INVISIBLE);
+        fab.setEnabled(true);
 
         String period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
         switch (period) {

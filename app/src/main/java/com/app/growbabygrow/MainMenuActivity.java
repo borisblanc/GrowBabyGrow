@@ -194,7 +194,7 @@ public class MainMenuActivity extends AppCompatActivity {
 
                               public void onClick(DialogInterface dialog, int whichButton) {
                                   ClearSharedDefault();
-                                  //todo add logic to delete actual videos
+                                  ClearMediaFiles();
                                   ShowBabyGrowNew();
                                   savedexists = false;
                                   startbabygrow = false;
@@ -258,6 +258,34 @@ public class MainMenuActivity extends AppCompatActivity {
         editor.clear();
         editor.apply();
         Toast.makeText(MainMenuActivity.this, "Everything has been deleted", Toast.LENGTH_SHORT).show();
+    }
+
+    private void ClearMediaFiles()
+    {
+        if (IntroVideoOutputFilePath().exists())
+            IntroVideoOutputFilePath().delete();
+
+        if (TrimmedVideoOutputFilePath(1).exists())
+            TrimmedVideoOutputFilePath(1).delete();
+
+        if (TrimmedVideoOutputFilePath(2).exists())
+            TrimmedVideoOutputFilePath(2).delete();
+
+        if (TrimmedVideoOutputFilePath(3).exists())
+            TrimmedVideoOutputFilePath(3).delete();
+
+        if (OriginalVideoOutputFilePath().exists())
+            OriginalVideoOutputFilePath().delete();
+
+        if (OverlayBitmapFilePath().exists())
+            OverlayBitmapFilePath().delete();
+
+//        if (MainMergedVideoOutputFilePath().exists()) //leave for now
+//            MainMergedVideoOutputFilePath().delete();
+
+
+
+
     }
 
 

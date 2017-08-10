@@ -450,14 +450,14 @@ public class Camera2Source {
         stop();
     }
 
-    /**
-     * Closes the camera and stops sending frames to the underlying frame detector.
-     * <p/>
-     * This camera source may be restarted again by calling {@link #start(AutoFitTextureView, int)}.
-     * <p/>
-     * Call {@link #release()} instead to completely shut down this camera source and release the
-     * resources of the underlying detector.
-     */
+//    /**
+//     * Closes the camera and stops sending frames to the underlying frame detector.
+//     * <p/>
+//     * This camera source may be restarted again by calling {@link #start(AutoFitTextureView, int)}.
+//     * <p/>
+//     * Call {@link #release()} instead to completely shut down this camera source and release the
+//     * resources of the underlying detector.
+//     */
     public void stop() {
         try {
             mFrameProcessor.setActive(false);

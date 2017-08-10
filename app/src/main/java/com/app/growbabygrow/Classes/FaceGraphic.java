@@ -169,10 +169,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         Face face = mFace;
 
 
-
         if (face == null) //if null don't bother any face tracking draws
             return;
-
 
 
         // Draws a circle at the position of the detected face, with the face's track id below.
@@ -194,7 +192,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         canvas.drawBitmap(smiley, 10, canvas.getHeight() - 150, null); //bottom right on top of above
         canvas.drawText("Smiles: " + Math.round(numberofsmiles), 100, canvas.getHeight() - 100, mIdPaint);
 
-        canvas.drawBitmap(marker, x - (myface.getWidth()/ 2), y - (myface.getHeight()/2), null); //puts image in center of face
+//        if (myface != null) //test only
+//            canvas.drawBitmap(marker, x - (myface.getWidth()/ 2), y - (myface.getHeight()/2), null); //puts image in center of face
         //canvas.drawCircle(x, y, FACE_POSITION_RADIUS, mFacePositionPaint);
         //canvas.drawText("id: " + faceId, x + ID_X_OFFSET, y + ID_Y_OFFSET, mIdPaint);
 

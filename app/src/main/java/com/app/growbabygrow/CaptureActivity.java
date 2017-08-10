@@ -65,7 +65,7 @@ public class CaptureActivity extends AppCompatActivity {
     private boolean wasActivityResumed = false;
 
     // DEFAULT CAMERA BEING OPENED
-    private boolean usingFrontCamera = true;
+    private boolean usingFrontCamera = false;
 
     // MUST BE CAREFUL USING THIS VARIABLE.
     // ANY ATTEMPT TO START CAMERA2 ON API < 21 WILL CRASH.
@@ -449,6 +449,7 @@ public class CaptureActivity extends AppCompatActivity {
                     .setMode(FaceDetector.ACCURATE_MODE) //need accurate mode for Euler Y
                     .setProminentFaceOnly(true)
                     .setTrackingEnabled(true)
+                    .setMinFaceSize((float)0.05)
                     .build();
 
             CustomFaceDetector faceDetector = new CustomFaceDetector(previewFaceDetector, fs_current._faces);
