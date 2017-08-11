@@ -27,10 +27,12 @@ import com.app.growbabygrow.Classes.VideoUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import static android.R.attr.width;
 import static com.app.growbabygrow.Classes.VideoUtils.drawTextToBitmap;
+import static com.app.growbabygrow.Classes.VideoUtils.encodeYUV420SP;
 import static com.app.growbabygrow.R.id.fab;
 
 
@@ -96,7 +98,11 @@ public class MainMenuActivity extends AppCompatActivity {
             return; // add this to prevent from doing unnecessary stuffs
         }
 
+
+
         context = getApplicationContext();
+
+
         baseVideoFileDir = context.getExternalFilesDir(null);
         txtname = (EditText) findViewById(R.id.editTextName);
         timeperiods = (Spinner) findViewById(R.id.spinnerTime);
@@ -207,7 +213,6 @@ public class MainMenuActivity extends AppCompatActivity {
     }
 
 
-
     private void ShowBabyGrowNew()
     {
         tvnewproject.setText(R.string.add_new_project);
@@ -286,6 +291,11 @@ public class MainMenuActivity extends AppCompatActivity {
 
 
 
+    }
+
+    @Override
+    public void onBackPressed(){
+        finish();
     }
 
 

@@ -551,6 +551,7 @@ public class VideoEditActivity extends AppCompatActivity {
             b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, intro1, width, height, 102));
             b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, GetIntroPeriod(period), width, height, 102));
 
+
             VideoUtils.CreatevideoFromBitmaps(vidfilepath, b, 30);
         }
         catch (Exception e)

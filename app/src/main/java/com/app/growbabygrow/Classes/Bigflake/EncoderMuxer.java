@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.R.attr.width;
+import static com.app.growbabygrow.Classes.VideoUtils.encodeYUV420SP;
 import static junit.framework.Assert.fail;
 
 public class EncoderMuxer
@@ -65,14 +66,14 @@ public class EncoderMuxer
 
     //  allocate one of these up front so we don't need to do it every time
 
-    private ArrayList<byte[]> _ByteBuffers;
+    private ArrayList<Bitmap> _ByteBuffers;
 
 //    private static MediaCodecCapabilities _SelectedCodecColor;
 //
   // private static ImageFormat _CameraColorFormat = ImageFormat.NV21; //ImageFormatType NV21 or YV12 should be the image formats all Android cameras save under ?nv21 should always work i think?
 
 
-    public EncoderMuxer(int width, int height, int bitRate, int framerate, String oFilePath, ArrayList<byte[]> byteBuffers)
+    public EncoderMuxer(int width, int height, int bitRate, int framerate, String oFilePath, ArrayList<Bitmap> byteBuffers)
     {
         _Width = width;
         _Height = height;
@@ -246,7 +247,7 @@ public class EncoderMuxer
                         {
 
                             ByteBuffer inputBuf = encoderInputBuffers[inputBufIndex];
-                            Bitmap b = null;//Utils.GetBitmap(_ByteBuffers.get(frameIndex), _Width, _Height);
+                            Bitmap b = _ByteBuffers.get(frameIndex);
                             int chunkSize = 0;
 
                             if (b == null)
@@ -255,50 +256,19 @@ public class EncoderMuxer
                             }
                             else
                             {
-                                //old way don't need to do this anymore.
-                                //Bitmap b = GetBitmap(imagedata);
-                                //byte[] yuv = new byte[b.Width * b.Height * 3 / 2];
-                                //int[] argb = new int[b.Width * b.Height];
-                                //b.GetPixels(argb, 0, b.Width, 0, 0, b.Width, b.Height);
-                                //encodeYUV420SP(yuv, argb, b.Width, b.Height);
-                                //b.Recycle();
-                                //old way don't need to do this anymore?
 
-                                //int[] argb = new int[imagedata.Width * imagedata.Height];
-                                //imagedata.GetPixels(argb, 0, imagedata.Width, 0, 0, imagedata.Width, imagedata.Height);
-                                //byte[] yuv = new byte[imagedata.Width * imagedata.Height * 3 / 2];
-                                //encodeYUV420SP(yuv, argb, imagedata.Width, imagedata.Height);
-                                //YuvImage yuv = GetYUVImage(imagedata);
-
-                                //byte[] decomB = Utils.DecompressFast(imagedata);
-
-                                //var yuv = new YuvImage(decomB, _CameraColorFormat, _Width, _Height, null);
-                                //Bitmap b = BitmapFactory.DecodeByteArray(imagedata, 0, imagedata.Length);
                                 byte[] yuv = new byte[b.getWidth() * b.getHeight() * 3 / 2];
                                 int[] argb = new int[b.getWidth() * b.getHeight()];
                                 b.getPixels(argb, 0, b.getWidth(), 0, 0, b.getWidth(), b.getHeight());
+
+                                //this conversion will vary depending on device and what the codec wants as input for color format, see selectColorFormat above
+                                //that's why i need to use a surface and not add bitmaps to buffer
                                 encodeYUV420SP(yuv, argb, b.getWidth(), b.getHeight());
-                                //YuvImage yuvimage = new YuvImage(yuv, ImageFormat.NV21, _Width, _Height, null);
-                                //swapNV21_NV12(yuv, _Width, _Height);
-                                //byte[] fuck = swapYV12toI420(yuv, b.getWidth(), b.getHeight());
-//                                byte [] yuv = new byte[_Width * _Height*3/2];
-//                                int [] argb = new int[_Width * _Height];
-//
-//                                imagedata.getPixels(argb, 0, _Width, 0, 0, _Width, _Height);
-//                                encodeYUV420SP(yuv, argb, _Width, _Height);
 
-//                                int bytes = imagedata.getByteCount();
-//                                ByteBuffer buffer = ByteBuffer.allocate(bytes);
-//                                imagedata.copyPixelsToBuffer(buffer); //Move the byte data to the buffer
-//
-//                                byte[] data = buffer.array(); //Get the bytes array of the bitmap
-//                                YuvImage yuv = new YuvImage(data, ImageFormat.NV21, 1920, 1280, null);
-
-                                //YuvImage yuv = new YuvImage(imagedata, ImageFormat.NV21,_Width , _Height, null);
                                 inputBuf.put(yuv);
 
                                 chunkSize = yuv.length;
-                                //imagedata.recycle();
+
                                 //yuv = null;
                                 //GC.Collect(); //essential to fix memory leak from new YuvImage allocation above
                             }
@@ -308,7 +278,9 @@ public class EncoderMuxer
                             inputBuf.clear();
                             _Encoder.queueInputBuffer(inputBufIndex, 0, chunkSize, ptsUsec, 0);
                             frameIndex++;
+
                         }
+                        //b.recycle();
                     }
                     else
                     {
@@ -450,40 +422,6 @@ public class EncoderMuxer
 
 
 
-    void encodeYUV420SP(byte[] yuv420sp, int[] argb, int width, int height) {
-        final int frameSize = width * height;
-
-        int yIndex = 0;
-        int uvIndex = frameSize;
-
-        int a, R, G, B, Y, U, V;
-        int index = 0;
-        for (int j = 0; j < height; j++) {
-            for (int i = 0; i < width; i++) {
-
-                a = (argb[index] & 0xff000000) >> 24; // a is not used obviously
-                R = (argb[index] & 0xff0000) >> 16;
-                G = (argb[index] & 0xff00) >> 8;
-                B = (argb[index] & 0xff) >> 0;
-
-                // well known RGB to YUV algorithm
-                Y = ( (  66 * R + 129 * G +  25 * B + 128) >> 8) +  16;
-                U = ( ( -38 * R -  74 * G + 112 * B + 128) >> 8) + 128;
-                V = ( ( 112 * R -  94 * G -  18 * B + 128) >> 8) + 128;
-
-                // NV21 has a plane of Y and interleaved planes of VU each sampled by a factor of 2
-                //    meaning for every 4 Y pixels there are 1 V and 1 U.  Note the sampling is every other
-                //    pixel AND every other scanline.
-                yuv420sp[yIndex++] = (byte) ((Y < 0) ? 0 : ((Y > 255) ? 255 : Y));
-                if (j % 2 == 0 && index % 2 == 0) {
-                    yuv420sp[uvIndex++] = (byte)((V<0) ? 0 : ((V > 255) ? 255 : V));
-                    yuv420sp[uvIndex++] = (byte)((U<0) ? 0 : ((U > 255) ? 255 : U));
-                }
-
-                index ++;
-            }
-        }
-    }
 
 
     public static void swapNV21_NV12(byte[] yuv, int _Width, int _Height)
