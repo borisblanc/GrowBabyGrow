@@ -2,6 +2,7 @@ package com.app.growbabygrow.Classes;
 
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,6 +20,7 @@ import android.media.MediaMuxer;
 import android.util.Log;
 import android.util.SparseIntArray;
 
+import com.app.growbabygrow.R;
 import com.coremedia.iso.boxes.Container;
 import com.googlecode.mp4parser.authoring.Movie;
 import com.googlecode.mp4parser.authoring.Track;
@@ -31,7 +33,10 @@ import org.jcodec.common.model.ColorSpace;
 import org.jcodec.common.model.Picture;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -78,7 +83,7 @@ public class VideoUtils {
      * @param useVideo true if keep the video track from the source.
      * @throws IOException
      */
-    public static void genTrimVideoUsingMuxer(String srcPath, String dstPath, Long startMs, Long endMs, boolean useAudio, boolean useVideo) throws IOException {
+    private static void genTrimVideoUsingMuxer(String srcPath, String dstPath, Long startMs, Long endMs, boolean useAudio, boolean useVideo) throws IOException {
         // Set up MediaExtractor to read from the source.
         MediaExtractor extractor = new MediaExtractor();
         extractor.setDataSource(srcPath);
@@ -155,6 +160,114 @@ public class VideoUtils {
         }
         muxer.stop();
         muxer.release();
+    }
+
+    public static void MuxAudioVideo(String outputfilepath, String videofilepath, String audiopath) {
+        try {
+
+            MediaExtractor videoExtractor = new MediaExtractor();
+//            AssetFileDescriptor afdd = getAssets().openFd("Produce.MP4");
+//            videoExtractor.setDataSource(afdd.getFileDescriptor() ,afdd.getStartOffset(),afdd.getLength());
+            videoExtractor.setDataSource(videofilepath);
+
+            MediaExtractor audioExtractor = new MediaExtractor();
+            //final AssetFileDescriptor afd= context.getResources().openRawResourceFd(audioFilerawid);
+            audioExtractor.setDataSource(audiopath);
+
+            Log.d(LOGTAG, "Video Extractor Track Count " + videoExtractor.getTrackCount());
+            Log.d(LOGTAG, "Audio Extractor Track Count " + audioExtractor.getTrackCount());
+
+            MediaMuxer muxer = new MediaMuxer(outputfilepath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+
+            videoExtractor.selectTrack(0);
+            MediaFormat videoFormat = videoExtractor.getTrackFormat(0);
+            int videoTrack = muxer.addTrack(videoFormat);
+
+            audioExtractor.selectTrack(0);
+            MediaFormat audioFormat = audioExtractor.getTrackFormat(0);
+            int audioTrack = muxer.addTrack(audioFormat);
+
+            Log.d(LOGTAG, "Video Format " + videoFormat.toString());
+            Log.d(LOGTAG, "Audio Format " + audioFormat.toString());
+
+            boolean sawEOS = false;
+            int frameCount = 0;
+            int offset = 100;
+            int sampleSize = 256 * 1024;
+            ByteBuffer videoBuf = ByteBuffer.allocate(sampleSize);
+            ByteBuffer audioBuf = ByteBuffer.allocate(sampleSize);
+            MediaCodec.BufferInfo videoBufferInfo = new MediaCodec.BufferInfo();
+            MediaCodec.BufferInfo audioBufferInfo = new MediaCodec.BufferInfo();
+
+
+            videoExtractor.seekTo(0, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
+            audioExtractor.seekTo(0, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
+
+            muxer.start();
+
+            while (!sawEOS) {
+                videoBufferInfo.offset = offset;
+                videoBufferInfo.size = videoExtractor.readSampleData(videoBuf, offset);
+
+
+                if (videoBufferInfo.size < 0 || audioBufferInfo.size < 0) {
+                    Log.d(LOGTAG, "saw input EOS.");
+                    sawEOS = true;
+                    videoBufferInfo.size = 0;
+
+                } else {
+                    videoBufferInfo.presentationTimeUs = videoExtractor.getSampleTime();
+                    videoBufferInfo.flags = videoExtractor.getSampleFlags();
+                    muxer.writeSampleData(videoTrack, videoBuf, videoBufferInfo);
+                    videoExtractor.advance();
+
+
+                    frameCount++;
+                    Log.d(LOGTAG, "Frame (" + frameCount + ") Video PresentationTimeUs:" + videoBufferInfo.presentationTimeUs + " Flags:" + videoBufferInfo.flags + " Size(KB) " + videoBufferInfo.size / 1024);
+                    Log.d(LOGTAG, "Frame (" + frameCount + ") Audio PresentationTimeUs:" + audioBufferInfo.presentationTimeUs + " Flags:" + audioBufferInfo.flags + " Size(KB) " + audioBufferInfo.size / 1024);
+
+                }
+            }
+
+            // Toast.makeText(getApplicationContext() , "frame:" + frameCount , Toast.LENGTH_SHORT).show();
+
+
+            boolean sawEOS2 = false;
+            int frameCount2 = 0;
+            while (!sawEOS2) {
+                frameCount2++;
+
+                audioBufferInfo.offset = offset;
+                audioBufferInfo.size = audioExtractor.readSampleData(audioBuf, offset);
+
+                if (videoBufferInfo.size < 0 || audioBufferInfo.size < 0) {
+                    Log.d(LOGTAG, "saw input EOS.");
+                    sawEOS2 = true;
+                    audioBufferInfo.size = 0;
+                } else {
+                    audioBufferInfo.presentationTimeUs = audioExtractor.getSampleTime();
+                    audioBufferInfo.flags = audioExtractor.getSampleFlags();
+                    muxer.writeSampleData(audioTrack, audioBuf, audioBufferInfo);
+                    audioExtractor.advance();
+
+
+                    Log.d(LOGTAG, "Frame (" + frameCount + ") Video PresentationTimeUs:" + videoBufferInfo.presentationTimeUs + " Flags:" + videoBufferInfo.flags + " Size(KB) " + videoBufferInfo.size / 1024);
+                    Log.d(LOGTAG, "Frame (" + frameCount + ") Audio PresentationTimeUs:" + audioBufferInfo.presentationTimeUs + " Flags:" + audioBufferInfo.flags + " Size(KB) " + audioBufferInfo.size / 1024);
+
+                }
+            }
+
+            //Toast.makeText(getApplicationContext() , "frame:" + frameCount2 , Toast.LENGTH_SHORT).show();
+
+            muxer.stop();
+            muxer.release();
+
+
+        } catch (IOException e) {
+            Log.d(LOGTAG, "Mixer Error 1 " + e.getMessage());
+        } catch (Exception e) {
+            Log.d(LOGTAG, "Mixer Error 2 " + e.getMessage());
+        }
     }
 
     //works good for similar videos only, Must have same fps, resolution and codec, might not need it if replacement below is fast enough (MuxMergeVideos)
@@ -436,9 +549,90 @@ public class VideoUtils {
         }
     }
 
+    public static ArrayList<Long> Getvidtimestamps(String Videopath){
+
+        ArrayList<Long> vidtimes = new ArrayList<>();
+        MediaExtractor extractor = new MediaExtractor();
+
+        try {
+            extractor.setDataSource(Videopath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //int trackindex = extractor.selectTrack(0);
+        extractor.selectTrack(0);
+
+        while (extractor.getSampleTime() != -1) {
+            long sampleTime = extractor.getSampleTime();
+
+            // check not really necessary but JIC
+            if ((extractor.getSampleFlags() & MediaExtractor.SAMPLE_FLAG_SYNC) > 0) {
+                vidtimes.add(sampleTime / 1000);
+            }
+
+            extractor.seekTo(sampleTime + 1, MediaExtractor.SEEK_TO_NEXT_SYNC);
+        }
+
+        return vidtimes;
+    }
+
+
+    public static long GetMediaDurationMilli(String path)
+    {
+        return GetMediaDurationMilli(null, null, path);
+    }
+
+    public static long GetMediaDurationMilli(Context context, int fileid)
+    {
+        return GetMediaDurationMilli(context, fileid, null);
+    }
+
+
+    private static long GetMediaDurationMilli(Context context, Integer fileid, String path)
+    {
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+
+        if (path == null) {
+            final AssetFileDescriptor afd = context.getResources().openRawResourceFd(fileid);
+            mmr.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+        }
+        else {
+            mmr.setDataSource(path);
+        }
+
+        String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        return Long.parseLong(durationStr);
+    }
 
 
 
+    public static void CopyResourcetoDisk(InputStream in, String outpath)
+    {
+        //InputStream in = getResources().openRawResource(R.raw.myresource);
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(outpath);
+
+            byte[] buff = new byte[1024];
+            int read = 0;
+
+            while ((read = in.read(buff)) > 0) {
+                out.write(buff, 0, read);
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                in.close();
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 
 

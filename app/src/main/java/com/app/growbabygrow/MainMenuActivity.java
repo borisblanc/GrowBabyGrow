@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.DrawerLayout;
@@ -25,7 +26,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.app.growbabygrow.Classes.VideoUtils;
+
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -132,6 +136,25 @@ public class MainMenuActivity extends AppCompatActivity {
         Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
         Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
 
+        //String audiopath = "android.resource://" + getPackageName() + "/" + R.raw.bensound_sunny2;
+
+        InputStream in = getResources().openRawResource(R.raw.bensound_sunny);
+        File audiofile = new File (baseVideoFileDir, "ass.m4a");
+        if (!audiofile.exists())
+            VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath());
+
+//        Intent intent = new Intent(MainMenuActivity.this, VideoViewActivity.class);
+//        intent.putExtra(getString(R.string.player_video_file_path), audiopath);
+//        intent.putExtra(getString(R.string.ActivityName), TAG);
+//        startActivity(intent);
+
+
+        long dur = VideoUtils.GetMediaDurationMilli(OriginalVideoOutputFilePath().getAbsolutePath());
+
+
+        VideoUtils.TrimVideo(audiofile.getAbsolutePath(), new File (baseVideoFileDir, "newass.m4a").getAbsolutePath(), 0L, dur, true, false);
+
+        VideoUtils.MuxAudioVideo(new File (baseVideoFileDir, "newass2.mp4").getAbsolutePath(), OriginalVideoOutputFilePath().getAbsolutePath(), new File (baseVideoFileDir, "newass.m4a").getAbsolutePath());
 
         if (Name == null) {//no projects exist
             ShowBabyGrowNew();
