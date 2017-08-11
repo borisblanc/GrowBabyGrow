@@ -8,8 +8,14 @@
     <string name="player_video_file_path">FilePath</string>
     <string name="title_activity_video_edit">VideoEditActivity</string>
 
+    <string name="StartDrawer">Start</string>
+    <string name="VideoDrawer">Video</string>
+    <string name="MusicDrawer">Music</string>
+
+    <string name="ActivityName">ActivityName</string>
+
     <string name="save_project_settings">Save Baby Grow…</string>
-    <string name="go_capture_start">Grow Baby Grow!!</string>
+    <string name="go_capture_start">Start Baby Grow!!</string>
 
 
     <!--array for spinner-->
@@ -54,10 +60,10 @@
     <string name="p_file1_saved_intro_mp4pathname">saved_intro_mp4pathname</string>
 
 
-
     <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
 
-
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 
 </resources>

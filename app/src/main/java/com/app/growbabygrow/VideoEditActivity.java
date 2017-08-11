@@ -1,12 +1,9 @@
 package com.app.growbabygrow;
 
-import android.app.Application;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -15,10 +12,7 @@ import android.media.ThumbnailUtils;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
-
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
@@ -40,7 +34,6 @@ import com.google.android.gms.vision.face.FaceDetector;
 import com.google.gson.Gson;
 
 import java.io.File;
-
 import java.util.ArrayList;
 
 
@@ -105,6 +98,8 @@ public class VideoEditActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_video_edit);
+
+
         context = getApplicationContext();
 
         main_imageview = (ImageView) findViewById(R.id.imageViewBGMain);
@@ -124,7 +119,12 @@ public class VideoEditActivity extends AppCompatActivity {
         retry_btn = (Button) findViewById(R.id.buttonretry);
 
         fab.setVisibility(View.INVISIBLE);
-        txt_fab.setVisibility(View.INVISIBLE);
+
+
+//        if(getIntent().getStringExtra(getString(R.string.ActivityName)).equals(MainMenuActivity.TAG))
+//        {
+//            SetPreviewMode();
+//        }
 
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
         Gson gson = new Gson();
@@ -448,6 +448,19 @@ public class VideoEditActivity extends AppCompatActivity {
         }
     }
 
+
+    private void SetPreviewMode()
+    {
+        Radio_Group_prev.setVisibility(View.INVISIBLE);
+        orig_view_btn.setVisibility(View.INVISIBLE);
+        retry_btn.setVisibility(View.INVISIBLE);
+        new_title.setVisibility(View.INVISIBLE);
+        prev1_imageview.setVisibility(View.INVISIBLE);
+        prev2_imageview.setVisibility(View.INVISIBLE);
+        prev3_imageview.setVisibility(View.INVISIBLE);
+        fab.setVisibility(View.INVISIBLE);
+        txt_fab.setVisibility(View.INVISIBLE);
+    }
     private void HidePreviewsShowGoodbye()
     {
         Radio_Group_prev.setVisibility(View.INVISIBLE);

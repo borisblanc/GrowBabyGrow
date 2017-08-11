@@ -12,8 +12,8 @@
         android:id="@+id/editTextName"
         android:layout_width="300dp"
         android:layout_height="60dp"
-        android:layout_marginLeft="28dp"
-        android:layout_marginTop="55dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="75dp"
         android:ems="10"
         android:hint="Please enter baby's name"
         android:inputType="textPersonName"
@@ -27,10 +27,10 @@
         android:layout_height="60dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="-1dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="30dp"
         android:entries="@array/Time_periods"
         android:visibility="invisible"
-        app:layout_constraintHorizontal_bias="0.8"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintLeft_toLeftOf="@+id/editTextName"
         app:layout_constraintRight_toRightOf="@+id/editTextName"
         app:layout_constraintTop_toBottomOf="@+id/editTextName" />
@@ -39,8 +39,8 @@
         android:id="@+id/deletebtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginLeft="8dp"
+        android:layout_marginBottom="6dp"
+        android:layout_marginLeft="16dp"
         android:backgroundTint="@android:color/holo_red_light"
         android:tintMode="src_atop"
         android:visibility="invisible"
@@ -48,6 +48,15 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:srcCompat="@android:drawable/ic_menu_delete" />
 
+    <ImageButton
+        android:id="@+id/btn_hamburger"
+        android:layout_width="46dp"
+        android:layout_height="39dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/hamburger_icon" />
 
 
 </android.support.constraint.ConstraintLayout>

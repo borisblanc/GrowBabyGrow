@@ -4,40 +4,37 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.app.growbabygrow.Classes.Bigflake.EncoderMuxer;
-import com.app.growbabygrow.Classes.Utils;
-import com.app.growbabygrow.Classes.VideoUtils;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-import static android.R.attr.width;
-import static com.app.growbabygrow.Classes.VideoUtils.drawTextToBitmap;
-import static com.app.growbabygrow.Classes.VideoUtils.encodeYUV420SP;
 import static com.app.growbabygrow.R.id.fab;
 
 
 public class MainMenuActivity extends AppCompatActivity {
-    private static final String TAG = "MainMenuActivity";
+    public static final String TAG = "MainMenuActivity";
     private TextView tvnewproject;
     private FloatingActionButton fabnewproj;
     private EditText txtname;
@@ -45,6 +42,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private Boolean startbabygrow;
     private Spinner timeperiods;
     private ImageButton delete;
+    private ImageButton hamburger;
 
     private Context context;
 
@@ -87,6 +85,14 @@ public class MainMenuActivity extends AppCompatActivity {
         return new File(baseVideoFileDir, "overlay_" + GetHash() + ".bmp");
     }
 
+    private ListView mDrawerList;
+    private RelativeLayout mDrawerPane;
+    //private ActionBarDrawerToggle mDrawerToggle;
+    private DrawerListAdapter mAdapter;
+    private DrawerLayout mDrawerLayout;
+
+    ArrayList<NavItem> mNavItems = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,8 +104,6 @@ public class MainMenuActivity extends AppCompatActivity {
             return; // add this to prevent from doing unnecessary stuffs
         }
 
-
-
         context = getApplicationContext();
 
 
@@ -108,7 +112,20 @@ public class MainMenuActivity extends AppCompatActivity {
         timeperiods = (Spinner) findViewById(R.id.spinnerTime);
         fabnewproj = (FloatingActionButton) findViewById(fab);
         tvnewproject = (TextView) findViewById(R.id.TV_noProjects);
-        delete = (ImageButton) findViewById((R.id.deletebtn));
+        delete = (ImageButton) findViewById(R.id.deletebtn);
+        hamburger = (ImageButton) findViewById(R.id.btn_hamburger);
+
+        mNavItems.add(new NavItem(getString(R.string.StartDrawer),"Start Menu", "Begin New BabyGrow", android.R.drawable.star_big_on));
+        mNavItems.add(new NavItem(getString(R.string.VideoDrawer), "View Video", "View Saved BabyGrow", R.drawable.video_icon));
+        mNavItems.add(new NavItem(getString(R.string.MusicDrawer), "Add Music", "Baby Grow Music", R.drawable.music_icon));
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
+
+        // Populate the Navigation Drawer with options
+        mDrawerPane = (RelativeLayout) findViewById(R.id.drawerPane);
+        mDrawerList = (ListView) findViewById(R.id.navList);
+        mAdapter = new DrawerListAdapter(this, mNavItems);
+        mDrawerList.setAdapter(mAdapter);
+
 
         //Default first project will always use this constant R.string.preference_file_key1
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
@@ -209,7 +226,61 @@ public class MainMenuActivity extends AppCompatActivity {
               }
         });
 
+        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                selectItemFromDrawer(position);
+            }
+        });
 
+        hamburger.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDrawerLayout.openDrawer(mDrawerPane);
+            }
+        });
+
+    }
+
+
+
+    private void selectItemFromDrawer(int position) {
+        NavItem currentNav = mNavItems.get(position);
+        mDrawerList.setItemChecked(position, true);
+
+        for (Map.Entry<Integer, View> e : mAdapter.Views.entrySet()) {
+            if (e.getKey() == position)
+                e.getValue().setBackgroundColor(Color.GRAY);
+            else
+                e.getValue().setBackgroundColor(Color.WHITE);
+
+        }
+        setTitle(currentNav.mTitle);
+
+        if (currentNav.mName.equals(getString(R.string.StartDrawer))) //do nothing if current activity is selected
+        {
+            mDrawerLayout.closeDrawer(mDrawerPane);
+        }
+        else if (currentNav.mName.equals(getString(R.string.VideoDrawer)))
+        {
+            Intent intent = new Intent(MainMenuActivity.this, VideoViewActivity.class);
+            intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFilePath().getAbsolutePath());
+            intent.putExtra(getString(R.string.ActivityName), TAG);
+            startActivity(intent);
+        }
+        else if (currentNav.mName.equals(getString(R.string.MusicDrawer)))
+        {
+
+            //todo route to music activity
+        }
+        else
+        {
+            mDrawerLayout.closeDrawer(mDrawerPane);
+        }
+
+
+        // Close the drawer
+        mDrawerLayout.closeDrawer(mDrawerPane);
     }
 
 
@@ -298,5 +369,79 @@ public class MainMenuActivity extends AppCompatActivity {
         finish();
     }
 
+    class NavItem {
+        String mName;
+        String mTitle;
+        String mSubtitle;
+        int mIcon;
 
+        public NavItem(String name, String title, String subtitle, int icon) {
+            mName = name;
+            mTitle = title;
+            mSubtitle = subtitle;
+            mIcon = icon;
+        }
+    }
+
+    class DrawerListAdapter extends BaseAdapter {
+
+        Context mContext;
+        ArrayList<NavItem> mNavItems;
+        public HashMap<Integer, View> Views = new HashMap <>();
+
+        public DrawerListAdapter(Context context, ArrayList<NavItem> navItems) {
+            mContext = context;
+            mNavItems = navItems;
+        }
+
+        @Override
+        public int getCount() {
+            return mNavItems.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mNavItems.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view;
+
+            if (convertView == null) {
+                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                view = inflater.inflate(R.layout.drawer_item, null);
+            }
+            else {
+                view = convertView;
+            }
+
+            TextView titleView = (TextView) view.findViewById(R.id.title);
+            TextView subtitleView = (TextView) view.findViewById(R.id.subTitle);
+            ImageView iconView = (ImageView) view.findViewById(R.id.icon);
+
+            titleView.setText( mNavItems.get(position).mTitle );
+            subtitleView.setText( mNavItems.get(position).mSubtitle );
+            iconView.setImageResource(mNavItems.get(position).mIcon);
+
+            Views.put(position,view);
+            if(position == 0){
+                mDrawerList.performItemClick(view, position, mDrawerList.getItemIdAtPosition(position));
+            }
+
+            return view;
+        }
+
+
+
+        public View getSavedView(int position) {
+            return Views.get(position);
+        }
+
+    }
 }
