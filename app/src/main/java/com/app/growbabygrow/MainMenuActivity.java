@@ -138,23 +138,23 @@ public class MainMenuActivity extends AppCompatActivity {
 
         //String audiopath = "android.resource://" + getPackageName() + "/" + R.raw.bensound_sunny2;
 
-        InputStream in = getResources().openRawResource(R.raw.bensound_sunny);
-        File audiofile = new File (baseVideoFileDir, "ass.m4a");
-        if (!audiofile.exists())
-            VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath());
-
-//        Intent intent = new Intent(MainMenuActivity.this, VideoViewActivity.class);
-//        intent.putExtra(getString(R.string.player_video_file_path), audiopath);
-//        intent.putExtra(getString(R.string.ActivityName), TAG);
-//        startActivity(intent);
-
-
-        long dur = VideoUtils.GetMediaDurationMilli(OriginalVideoOutputFilePath().getAbsolutePath());
-
-
-        VideoUtils.TrimVideo(audiofile.getAbsolutePath(), new File (baseVideoFileDir, "newass.m4a").getAbsolutePath(), 0L, dur, true, false);
-
-        VideoUtils.MuxAudioVideo(new File (baseVideoFileDir, "newass2.mp4").getAbsolutePath(), OriginalVideoOutputFilePath().getAbsolutePath(), new File (baseVideoFileDir, "newass.m4a").getAbsolutePath());
+//        InputStream in = getResources().openRawResource(R.raw.bensound_sunny);
+//        File audiofile = new File (baseVideoFileDir, "ass.m4a");
+//        if (!audiofile.exists())
+//            VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath());
+//
+////        Intent intent = new Intent(MainMenuActivity.this, VideoViewActivity.class);
+////        intent.putExtra(getString(R.string.player_video_file_path), audiopath);
+////        intent.putExtra(getString(R.string.ActivityName), TAG);
+////        startActivity(intent);
+//
+//
+//        long dur = VideoUtils.GetMediaDurationMilli(OriginalVideoOutputFilePath().getAbsolutePath());
+//
+//
+//        VideoUtils.TrimVideo(audiofile.getAbsolutePath(), new File (baseVideoFileDir, "newass.m4a").getAbsolutePath(), 0L, dur, true, false);
+//
+//        VideoUtils.MuxAudioVideo(new File (baseVideoFileDir, "newass2.mp4").getAbsolutePath(), OriginalVideoOutputFilePath().getAbsolutePath(), new File (baseVideoFileDir, "newass.m4a").getAbsolutePath());
 
         if (Name == null) {//no projects exist
             ShowBabyGrowNew();
@@ -293,8 +293,10 @@ public class MainMenuActivity extends AppCompatActivity {
         }
         else if (currentNav.mName.equals(getString(R.string.MusicDrawer)))
         {
-
-            //todo route to music activity
+            Intent intent = new Intent(MainMenuActivity.this, AudioActivity.class);
+            //intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFilePath().getAbsolutePath());
+            intent.putExtra(getString(R.string.ActivityName), TAG);
+            startActivity(intent);
         }
         else
         {

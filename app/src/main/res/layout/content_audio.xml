@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="250dp"
+    android:layout_height="120dp"
+    android:background="@drawable/layout_border"
+
+
+
+    tools:context="com.app.growbabygrow.AudioActivity"
+    tools:showIn="@layout/activity_audio">
+
+
+    <TextView
+        android:id="@+id/txtartist"
+        android:layout_width="100dp"
+        android:layout_height="19dp"
+        android:layout_marginRight="0dp"
+        android:layout_marginTop="16dp"
+        android:text="By: Bensound"
+        android:textColor="@android:color/black"
+        android:textSize="12sp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="49dp"
+        android:layout_height="34dp"
+        android:layout_marginBottom="7dp"
+        android:text="@string/forward"
+
+        android:textSize="8sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.45"
+        app:layout_constraintLeft_toRightOf="@+id/button2"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="49dp"
+        android:layout_height="34dp"
+        android:layout_marginLeft="13dp"
+        android:text="Pause"
+        android:textSize="6sp"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toRightOf="@+id/button3"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="7dp" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="49dp"
+        android:layout_height="34dp"
+        android:layout_marginBottom="7dp"
+        android:layout_marginLeft="8dp"
+        android:text="Play"
+        android:textSize="6sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/button4" />
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="49dp"
+        android:layout_height="34dp"
+        android:layout_marginBottom="7dp"
+        android:layout_marginLeft="7dp"
+        android:text="@string/rewind"
+        android:textSize="8sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <SeekBar
+        android:layout_width="236dp"
+        android:layout_height="13dp"
+        android:id="@+id/seekBar"
+
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/textDuration"
+        android:layout_marginLeft="0dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        tools:layout_editor_absoluteY="64dp" />
+
+    <TextView
+        android:id="@+id/textDuration"
+        android:layout_width="123dp"
+        android:layout_height="16dp"
+        android:layout_above="@+id/seekBar"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="0dp"
+        android:text="Duration: "
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textSize="12sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtname" />
+
+    <TextView
+        android:id="@+id/txtname"
+        android:layout_width="100dp"
+        android:layout_height="28dp"
+        android:text="Sunny"
+        android:textColor="@android:color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="11dp"
+        android:layout_marginLeft="16dp"
+        tools:layout_editor_absoluteY="7dp" />
+
+</android.support.constraint.ConstraintLayout>

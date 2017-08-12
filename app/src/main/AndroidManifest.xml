@@ -45,11 +45,12 @@
             android:label="@string/title_activity_video_edit"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme" />
-
-        <activity android:name=".VideoViewActivity"
+        <activity
+            android:name=".VideoViewActivity"
             android:screenOrientation="landscape" />
-
-
+        <activity
+            android:name=".AudioActivity"
+            android:screenOrientation="landscape"/>
     </application>
 
 </manifest>

@@ -17,6 +17,12 @@
     <string name="save_project_settings">Save Baby Grow…</string>
     <string name="go_capture_start">Start Baby Grow!!</string>
 
+    <string name="back"><![CDATA[<]]></string>
+    <string name="rewind"><![CDATA[<<]]></string>
+    <string name="forward"><![CDATA[>>]]></string>
+    <string name="pause">||</string>
+
+
 
     <!--array for spinner-->
     <string-array name="Time_periods">
