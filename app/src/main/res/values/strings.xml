@@ -17,10 +17,13 @@
     <string name="save_project_settings">Save Baby Grow…</string>
     <string name="go_capture_start">Start Baby Grow!!</string>
 
-    <string name="back"><![CDATA[<]]></string>
+
+    <string name="music_file_key">musicfilekey</string>
+
+    <!--for audio buttons-->
     <string name="rewind"><![CDATA[<<]]></string>
     <string name="forward"><![CDATA[>>]]></string>
-    <string name="pause">||</string>
+
 
 
 
@@ -34,7 +37,7 @@
     </string-array>
 
 
-    <!-- preference file values -->
+    <!-- shared preference keys for saved session info and videos -->
     <string name="p_file1_key">com.app.growbabygrow.pfile1</string>
     <string name="p_file1_is_new">is_new</string>
     <string name="p_file1_saved_name">saved_name</string>
@@ -68,8 +71,7 @@
 
     <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 
 
 </resources>

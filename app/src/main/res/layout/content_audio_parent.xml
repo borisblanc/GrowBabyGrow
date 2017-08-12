@@ -7,7 +7,7 @@
     android:layout_height="match_parent">
 
     <include
-        layout="@layout/content_audio"
+        layout="@layout/content_audio_child"
         android:layout_height="120dp"
         android:layout_width="250dp"
         app:layout_constraintTop_toTopOf="parent"

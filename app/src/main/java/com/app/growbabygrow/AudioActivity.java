@@ -8,13 +8,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import java.util.concurrent.TimeUnit;
 
 public class AudioActivity extends AppCompatActivity {
 
-    private Button b1, b2, b3, b4;
+    private Button bFF, bPause, bPlay, bRW;
     private MediaPlayer mediaPlayer;
 
     private double startTime = 0;
@@ -30,23 +30,21 @@ public class AudioActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_audio);
+        setContentView(R.layout.content_audio_child);
 
-        b1 = (Button) findViewById(R.id.button);
-        b2 = (Button) findViewById(R.id.button2);
-        b3 = (Button) findViewById(R.id.button3);
-        b4 = (Button) findViewById(R.id.button4);
+        bFF = (Button) findViewById(R.id.btnFF);
+        bPause = (Button) findViewById(R.id.btnPause);
+        bPlay = (Button) findViewById(R.id.btnPlay);
+        bRW = (Button) findViewById(R.id.btnRw);
 
         txtDuration = (TextView) findViewById(R.id.textDuration);
-
-
 
         mediaPlayer = MediaPlayer.create(this, R.raw.bensound_sunny);
         seekbar = (SeekBar)findViewById(R.id.seekBar);
         seekbar.setClickable(false);
-        b2.setEnabled(false);
+        bPause.setEnabled(false);
 
-        b3.setOnClickListener(new View.OnClickListener() {
+        bPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -71,21 +69,21 @@ public class AudioActivity extends AppCompatActivity {
 
                 seekbar.setProgress((int)startTime);
                 myHandler.postDelayed(UpdateSongTime,100);
-                b2.setEnabled(true);
-                b3.setEnabled(false);
+                bPause.setEnabled(true);
+                bPlay.setEnabled(false);
             }
         });
 
-        b2.setOnClickListener(new View.OnClickListener() {
+        bPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Toast.makeText(getApplicationContext(), "Pausing sound",Toast.LENGTH_SHORT).show();mediaPlayer.pause();
-                b2.setEnabled(false);
-                b3.setEnabled(true);
+                mediaPlayer.pause();
+                bPause.setEnabled(false);
+                bPlay.setEnabled(true);
             }
         });
 
-        b1.setOnClickListener(new View.OnClickListener() {
+        bFF.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int temp = (int)startTime;
@@ -93,7 +91,6 @@ public class AudioActivity extends AppCompatActivity {
                 if((temp+forwardTime)<=finalTime){
                     startTime = startTime + forwardTime;
                     mediaPlayer.seekTo((int) startTime);
-                    //Toast.makeText(getApplicationContext(),"You have Jumped forward 5 seconds",Toast.LENGTH_SHORT).show();
                 }
 //                else{
 //                    Toast.makeText(getApplicationContext(),"Cannot jump forward 5 seconds",Toast.LENGTH_SHORT).show();
@@ -101,7 +98,7 @@ public class AudioActivity extends AppCompatActivity {
             }
         });
 
-        b4.setOnClickListener(new View.OnClickListener() {
+        bRW.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int temp = (int)startTime;
@@ -109,7 +106,6 @@ public class AudioActivity extends AppCompatActivity {
                 if((temp-backwardTime)>0){
                     startTime = startTime - backwardTime;
                     mediaPlayer.seekTo((int) startTime);
-                    //Toast.makeText(getApplicationContext(),"You have Jumped backward 5 seconds",Toast.LENGTH_SHORT).show();
                 }
 //                else{
 //                    Toast.makeText(getApplicationContext(),"Cannot jump backward 5 seconds",Toast.LENGTH_SHORT).show();
