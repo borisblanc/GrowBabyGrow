@@ -475,4 +475,9 @@ public class Utils {
         return decoded;
     }
 
+//    private static int ConvertDpToPixels(int value)
+//    {
+//        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics());
+//    }
+
 }
