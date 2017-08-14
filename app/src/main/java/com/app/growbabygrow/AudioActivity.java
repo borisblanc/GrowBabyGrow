@@ -39,13 +39,14 @@ public class AudioActivity extends AppCompatActivity {
         files.add(new MusicFile(R.raw.bensound_happiness, "Happiness", "4m21s", "bensound", R.id.audiochild2));
         files.add(new MusicFile(R.raw.bensound_sweet, "Sweet", "5m07s", "bensound", R.id.audiochild3));
         files.add(new MusicFile(R.raw.bensound_tenderness, "Tenderness", "2m03s", "bensound", R.id.audiochild4));
+        files.add(new MusicFile(R.raw.bensound_cute, "Cute", "3m14s", "bensound", R.id.audiochild5));
 
         //audiochild view layouts are hardcoded for now because creating them dynamically and placing them in another layout via code is a bitch
         //todo create them dynamically and place them on layout
         for (MusicFile mfile: files)
         {
             mfile._MusicPlayer = findViewById(mfile._PlayerId);
-            mfile._MusicPlayerConfig = new MusicPlayerConfig(mfile._MusicPlayer, this, mfile._Name, mfile._Artist, mfile._FileId, mfile._Duration);
+            mfile._MPController = new MusicPlayerController(mfile._MusicPlayer, this, mfile._Name, mfile._Artist, mfile._FileId, mfile._Duration);
         }
 
         return files;
@@ -53,7 +54,7 @@ public class AudioActivity extends AppCompatActivity {
 
 
 
-    private class MusicPlayerConfig
+    private class MusicPlayerController
     {
         private Button bFF, bPause, bPlay, bRW;
         private MediaPlayer mediaPlayer;
@@ -69,7 +70,10 @@ public class AudioActivity extends AppCompatActivity {
         private TextView txtSongname;
         private TextView txtArtist;
 
-        public MusicPlayerConfig(View view, Context context, String songname, String artist, int rawmusicid, String duration)
+        private int rawMusicId;
+        private Boolean isplaying = false;
+
+        public MusicPlayerController(View view, Context context, String songname, String artist, int rawmusicid, String duration)
         {
             //setContentView(R.layout.content_audio_child);
 
@@ -81,10 +85,11 @@ public class AudioActivity extends AppCompatActivity {
             seekbar = (SeekBar) view.findViewById(R.id.seekBar);
             txtSongname = (TextView) view.findViewById(R.id.txtname);
             txtArtist = (TextView) view.findViewById(R.id.txtartist);
+            rawMusicId = rawmusicid;
 
             seekbar.setClickable(false);
             bPause.setEnabled(false);
-            mediaPlayer = MediaPlayer.create(context, rawmusicid);
+            mediaPlayer = MediaPlayer.create(context, rawMusicId);
             txtSongname.setText(songname);
             txtDuration.setText(duration);
             txtArtist.setText(String.format("by: %s", artist));
@@ -92,6 +97,7 @@ public class AudioActivity extends AppCompatActivity {
             bPlay.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    stopAllOtherPlayers(rawMusicId);
 
                     mediaPlayer.start();
 
@@ -116,6 +122,7 @@ public class AudioActivity extends AppCompatActivity {
                     myHandler.postDelayed(UpdateSongTime,100);
                     bPause.setEnabled(true);
                     bPlay.setEnabled(false);
+                    isplaying = true;
                 }
 
 
@@ -127,6 +134,7 @@ public class AudioActivity extends AppCompatActivity {
                     mediaPlayer.pause();
                     bPause.setEnabled(false);
                     bPlay.setEnabled(true);
+                    isplaying = false;
                 }
             });
 
@@ -163,6 +171,19 @@ public class AudioActivity extends AppCompatActivity {
 
         }
 
+        private void stopAllOtherPlayers(int currentmusicid)
+        {
+            for (MusicFile mfile: musicfiles)
+            {
+                if (mfile._MPController.rawMusicId != currentmusicid && mfile._MPController.isplaying) {
+                    mfile._MPController.mediaPlayer.pause();
+                    mfile._MPController.bPause.setEnabled(false);
+                    mfile._MPController.bPlay.setEnabled(true);
+                    mfile._MPController.isplaying = false;
+                }
+            }
+        }
+
         Runnable UpdateSongTime = new Runnable() {
             public void run() {
                 startTime = mediaPlayer.getCurrentPosition();
@@ -186,7 +207,7 @@ public class AudioActivity extends AppCompatActivity {
         public int _PlayerId;
 
         public View _MusicPlayer;
-        public MusicPlayerConfig _MusicPlayerConfig;
+        public MusicPlayerController _MPController;
 
 
         public MusicFile(int fileId, String name, String duration, String artist, int playerid)

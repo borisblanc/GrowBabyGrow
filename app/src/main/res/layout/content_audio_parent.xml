@@ -1,52 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    android:id="@+id/constraintaudiomain"
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-      <include
-          layout="@layout/content_audio_child"
-          android:id="@+id/audiochild1"
-          android:layout_height="120dp"
-          android:layout_width="250dp"
-          app:layout_constraintTop_toTopOf="parent"
-          android:layout_marginTop="8dp"
-          android:layout_marginLeft="8dp"
-          app:layout_constraintLeft_toLeftOf="parent" />
 
-    <include
-        layout="@layout/content_audio_child"
-        android:id="@+id/audiochild2"
-        android:layout_height="120dp"
-        android:layout_width="250dp"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="8dp"
-        app:layout_constraintLeft_toRightOf="@+id/audiochild1"
-        android:layout_marginLeft="35dp" />
 
-    <include
-        layout="@layout/content_audio_child"
-        android:id="@+id/audiochild3"
-        android:layout_height="120dp"
-        android:layout_width="250dp"
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/constraintaudiomain"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        android:layout_marginLeft="8dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginTop="30dp"
-        app:layout_constraintTop_toBottomOf="@+id/audiochild1" />
 
-    <include
-        layout="@layout/content_audio_child"
-        android:id="@+id/audiochild4"
-        android:layout_height="120dp"
-        android:layout_width="250dp"
+          <include
+              layout="@layout/content_audio_child"
+              android:id="@+id/audiochild1"
+              android:layout_height="120dp"
+              android:layout_width="250dp"
+              app:layout_constraintTop_toTopOf="parent"
+              android:layout_marginTop="16dp"
+              android:layout_marginLeft="50dp"
+              app:layout_constraintLeft_toLeftOf="parent" />
 
-        android:layout_marginTop="30dp"
-        app:layout_constraintTop_toBottomOf="@+id/audiochild2"
-        app:layout_constraintLeft_toRightOf="@+id/audiochild3"
-        android:layout_marginLeft="35dp" />
+        <include
+            layout="@layout/content_audio_child"
+            android:id="@+id/audiochild2"
+            android:layout_height="120dp"
+            android:layout_width="250dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="16dp"
+            app:layout_constraintLeft_toRightOf="@+id/audiochild1"
+            android:layout_marginLeft="15dp"
+            android:layout_marginStart="15dp" />
 
-</android.support.constraint.ConstraintLayout>
+        <include
+            layout="@layout/content_audio_child"
+            android:id="@+id/audiochild3"
+            android:layout_height="120dp"
+            android:layout_width="250dp"
+            android:layout_marginLeft="50dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginTop="13dp"
+            app:layout_constraintTop_toBottomOf="@+id/audiochild1" />
+
+        <include
+            layout="@layout/content_audio_child"
+            android:id="@+id/audiochild4"
+            android:layout_height="120dp"
+            android:layout_width="250dp"
+            android:layout_marginTop="13dp"
+            app:layout_constraintTop_toBottomOf="@+id/audiochild2"
+            app:layout_constraintLeft_toRightOf="@+id/audiochild3"
+            android:layout_marginLeft="15dp"
+            android:layout_marginStart="15dp" />
+
+        <include
+            layout="@layout/content_audio_child"
+            android:id="@+id/audiochild5"
+            android:layout_height="120dp"
+            android:layout_width="250dp"
+            android:layout_marginTop="13dp"
+            app:layout_constraintTop_toBottomOf="@+id/audiochild3"
+            android:layout_marginLeft="50dp"
+            app:layout_constraintLeft_toLeftOf="parent" />
+
+
+
+
+    </android.support.constraint.ConstraintLayout>
+
+</ScrollView>
