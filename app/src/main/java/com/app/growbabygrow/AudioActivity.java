@@ -26,11 +26,11 @@ public class AudioActivity extends AppCompatActivity {
         setContentView(R.layout.activity_audio);
         constmain = (ConstraintLayout) findViewById(R.id.constraintaudiomain);
 
-        musicfiles = SetGetMusicSelection();
+        musicfiles = SetGetMusicSelection(this);
 
     }
 
-    private ArrayList<MusicFile> SetGetMusicSelection()
+    private ArrayList<MusicFile> SetGetMusicSelection(Context context)
     {
         ArrayList<MusicFile> files = new ArrayList<>();
 
@@ -46,7 +46,7 @@ public class AudioActivity extends AppCompatActivity {
         for (MusicFile mfile: files)
         {
             mfile._MusicPlayer = findViewById(mfile._PlayerId);
-            mfile._MPController = new MusicPlayerController(mfile._MusicPlayer, this, mfile._Name, mfile._Artist, mfile._FileId, mfile._Duration);
+            mfile._MPController = new MusicPlayerController(mfile._MusicPlayer, context, mfile._Name, mfile._Artist, mfile._FileId, mfile._Duration);
         }
 
         return files;
