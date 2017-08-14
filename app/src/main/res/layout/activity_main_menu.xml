@@ -55,7 +55,6 @@
         android:layout_gravity="start">
 
         <!-- Profile Box -->
-
         <RelativeLayout
             android:id="@+id/profileBox"
             android:layout_width="match_parent"

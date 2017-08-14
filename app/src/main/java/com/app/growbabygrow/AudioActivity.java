@@ -2,29 +2,22 @@ package com.app.growbabygrow;
 
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.constraint.ConstraintLayout;
-import android.support.constraint.ConstraintSet;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.TypedValue;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class AudioActivity extends AppCompatActivity {
 
     private ConstraintLayout constmain;
-    private View musicplayer1;
-    private MusicPlayer musicplayer1class;
-    private View musicplayer2;
-    private MusicPlayer musicplayer2class;
+    private ArrayList<MusicFile> musicfiles;
 
     public static int oneTimeOnly = 0;
     @Override
@@ -33,20 +26,34 @@ public class AudioActivity extends AppCompatActivity {
         setContentView(R.layout.activity_audio);
         constmain = (ConstraintLayout) findViewById(R.id.constraintaudiomain);
 
-        musicplayer1 = findViewById(R.id.audiochild1);
-        musicplayer1class = new MusicPlayer(musicplayer1, this, "Sunny", "bensound", R.raw.bensound_sunny, "5:00");
+        musicfiles = SetGetMusicSelection();
 
-        musicplayer2 = findViewById(R.id.audiochild2);
-        musicplayer2class = new MusicPlayer(musicplayer2, this, "Fart", "bensound", R.raw.bensound_sunny, "5:00");
+    }
 
+    private ArrayList<MusicFile> SetGetMusicSelection()
+    {
+        ArrayList<MusicFile> files = new ArrayList<>();
 
+        //manually add for now
+        files.add(new MusicFile(R.raw.bensound_sunny, "Sunny", "2m20s", "bensound", R.id.audiochild1));
+        files.add(new MusicFile(R.raw.bensound_happiness, "Happiness", "4m21s", "bensound", R.id.audiochild2));
+        files.add(new MusicFile(R.raw.bensound_sweet, "Sweet", "5m07s", "bensound", R.id.audiochild3));
+        files.add(new MusicFile(R.raw.bensound_tenderness, "Tenderness", "2m03s", "bensound", R.id.audiochild4));
 
+        //audiochild view layouts are hardcoded for now because creating them dynamically and placing them in another layout via code is a bitch
+        //todo create them dynamically and place them on layout
+        for (MusicFile mfile: files)
+        {
+            mfile._MusicPlayer = findViewById(mfile._PlayerId);
+            mfile._MusicPlayerConfig = new MusicPlayerConfig(mfile._MusicPlayer, this, mfile._Name, mfile._Artist, mfile._FileId, mfile._Duration);
+        }
 
+        return files;
     }
 
 
 
-    private class MusicPlayer
+    private class MusicPlayerConfig
     {
         private Button bFF, bPause, bPlay, bRW;
         private MediaPlayer mediaPlayer;
@@ -60,8 +67,9 @@ public class AudioActivity extends AppCompatActivity {
         private SeekBar seekbar;
         private TextView txtDuration;
         private TextView txtSongname;
+        private TextView txtArtist;
 
-        public MusicPlayer(View view, Context context, String songname, String artist, int rawmusicid, String duration)
+        public MusicPlayerConfig(View view, Context context, String songname, String artist, int rawmusicid, String duration)
         {
             //setContentView(R.layout.content_audio_child);
 
@@ -72,11 +80,14 @@ public class AudioActivity extends AppCompatActivity {
             txtDuration = (TextView) view.findViewById(R.id.textDuration);
             seekbar = (SeekBar) view.findViewById(R.id.seekBar);
             txtSongname = (TextView) view.findViewById(R.id.txtname);
+            txtArtist = (TextView) view.findViewById(R.id.txtartist);
 
             seekbar.setClickable(false);
             bPause.setEnabled(false);
-            mediaPlayer = MediaPlayer.create(context, R.raw.bensound_sunny);
+            mediaPlayer = MediaPlayer.create(context, rawmusicid);
             txtSongname.setText(songname);
+            txtDuration.setText(duration);
+            txtArtist.setText(String.format("by: %s", artist));
 
             bPlay.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -164,6 +175,28 @@ public class AudioActivity extends AppCompatActivity {
             }
         };
 
+    }
+
+    private class MusicFile
+    {
+        public String _Name;
+        public String _Duration;
+        public int _FileId;
+        public String _Artist;
+        public int _PlayerId;
+
+        public View _MusicPlayer;
+        public MusicPlayerConfig _MusicPlayerConfig;
+
+
+        public MusicFile(int fileId, String name, String duration, String artist, int playerid)
+        {
+            _Name = name;
+            _Duration = duration;
+            _FileId = fileId;
+            _Artist = artist;
+            _PlayerId = playerid;
+        }
     }
 
 
