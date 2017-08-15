@@ -1,6 +1,7 @@
 package com.app.growbabygrow;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -9,46 +10,125 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.constraint.ConstraintLayout;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.RadioButton;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.app.growbabygrow.Classes.Helpers;
 import com.app.growbabygrow.Classes.SyncDialogue;
 import com.app.growbabygrow.Classes.VideoUtils;
 
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class AudioActivity extends AppCompatActivity {
 
+    public static final String TAG = "AudioActivity";
     private Context context;
     private ConstraintLayout constmain;
     private ArrayList<MusicFile> musicfiles;
     private SharedPreferences sharedpreferences;
     private String MainMergedVideoOutputFilepath;
+    private ImageButton hamburger;
+    private ListView mDrawerList;
+    private RelativeLayout mDrawerPane;
+    private Helpers.DrawerListAdapter mAdapter;
+    private DrawerLayout mDrawerLayout;
+    private ArrayList<Helpers.NavItem> mNavItems = new ArrayList<>();
+
     private File MainMergedVideoOutputFile()
     {
         return new File(MainMergedVideoOutputFilepath);
     }
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_audio);
+        hamburger = (ImageButton) findViewById(R.id.btn_hamburger);
         context = getApplicationContext();
         constmain = (ConstraintLayout) findViewById(R.id.constraintaudiomain);
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
         MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
+        populateDrawer();
 
         musicfiles = SetGetMusicSelection();
+
+        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                selectItemFromDrawer(position);
+            }
+        });
+
+        hamburger.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDrawerLayout.openDrawer(mDrawerPane);
+            }
+        });
+    }
+
+    private void populateDrawer()// Populate the Navigation Drawer with options
+    {
+        mNavItems.add(new Helpers.NavItem(getString(R.string.StartDrawer),"Start Menu", "Begin New BabyGrow", android.R.drawable.star_big_on));
+        mNavItems.add(new Helpers.NavItem(getString(R.string.VideoDrawer), "View Video", "View Saved BabyGrow", R.drawable.video_icon));
+        mNavItems.add(new Helpers.NavItem(getString(R.string.MusicDrawer), "Add Music", "Baby Grow Music", R.drawable.music_icon));
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
+        mDrawerPane = (RelativeLayout) findViewById(R.id.drawerPane);
+        mDrawerList = (ListView) findViewById(R.id.navListAudio);
+        mAdapter = new Helpers.DrawerListAdapter(context, mNavItems, mDrawerList, 2);
+        mDrawerList.setAdapter(mAdapter);
+    }
+
+    private void selectItemFromDrawer(int position) {
+        Helpers.NavItem currentNav = mNavItems.get(position);
+        mDrawerList.setItemChecked(position, true);
+
+        for (Map.Entry<Integer, View> e : mAdapter.Views.entrySet()) {
+            if (e.getKey() == position)
+                e.getValue().setBackgroundColor(Color.GRAY);
+            else
+                e.getValue().setBackgroundColor(Color.WHITE);
+
+        }
+        setTitle(currentNav.mTitle);
+
+        if (currentNav.mName.equals(getString(R.string.StartDrawer))) //do nothing if current activity is selected
+        {
+            Intent intent = new Intent(AudioActivity.this, MainMenuActivity.class);
+            intent.putExtra(getString(R.string.ActivityName), TAG);
+            startActivity(intent);
+        }
+        else if (currentNav.mName.equals(getString(R.string.VideoDrawer)))
+        {
+            Intent intent = new Intent(AudioActivity.this, VideoViewActivity.class);
+            intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFile().getAbsolutePath());
+            intent.putExtra(getString(R.string.ActivityName), TAG);
+            startActivity(intent);
+        }
+        else if (currentNav.mName.equals(getString(R.string.MusicDrawer)))
+        {
+            mDrawerLayout.closeDrawer(mDrawerPane);
+        }
+        else
+        {
+            mDrawerLayout.closeDrawer(mDrawerPane);
+        }
+
     }
 
     private ArrayList<MusicFile> SetGetMusicSelection()
@@ -213,16 +293,12 @@ public class AudioActivity extends AppCompatActivity {
 
         private void MergeAudio(int rawmusicid, String songName)
         {
+            StopAllOtherPlayers(0);
             String baseVideoDir = MainMergedVideoOutputFile().getParent();
             InputStream in = getResources().openRawResource(rawmusicid);
             File audiofile = new File(baseVideoDir, songName + ".m4a");
             if (!audiofile.exists()) //if not copied to disk yet then do it
                 VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath());
-
-//        Intent intent = new Intent(MainMenuActivity.this, VideoViewActivity.class);
-//        intent.putExtra(getString(R.string.player_video_file_path), audiopath);
-//        intent.putExtra(getString(R.string.ActivityName), TAG);
-//        startActivity(intent);
 
 
             long videoDuration = VideoUtils.GetMediaDurationMilli(MainMergedVideoOutputFile().getAbsolutePath());
@@ -231,34 +307,9 @@ public class AudioActivity extends AppCompatActivity {
             VideoUtils.TrimMedia(audiofile.getAbsolutePath(), new File(baseVideoDir, songName + "_trim.m4a").getAbsolutePath(), 0L, videoDuration, true, false);
 
             VideoUtils.MuxAudioVideo(MainMergedVideoOutputFile().getAbsolutePath(), MainMergedVideoOutputFile().getAbsolutePath(), new File(baseVideoDir, songName + "_trim.m4a").getAbsolutePath());
-
+            DeselectOthers(0);
         }
 
-        private void StopAllOtherPlayers(int currentmusicid)
-        {
-            for (MusicFile mfile: musicfiles)
-            {
-                if (mfile._MPController.rawMusicId != currentmusicid && mfile._MPController.isplaying) {
-                    mfile._MPController.mediaPlayer.pause();
-                    mfile._MPController.bPause.setEnabled(false);
-                    mfile._MPController.bPlay.setEnabled(true);
-                    mfile._MPController.isplaying = false;
-                }
-            }
-        }
-
-        private void DeselectOthers(int currentmusicid)
-        {
-            for (MusicFile mfile: musicfiles)
-            {
-                if (mfile._MPController.rawMusicId != currentmusicid)
-                {
-                    mfile._MPController.rdoSelected.setChecked(false);
-                    Drawable background = mfile._MPController.parentview.getBackground();
-                    ((GradientDrawable)background).setColor(Color.WHITE);
-                }
-            }
-        }
 
         Runnable UpdateSongTime = new Runnable() {
             public void run() {
@@ -274,6 +325,39 @@ public class AudioActivity extends AppCompatActivity {
             }
         };
 
+    }
+
+    public void StopAllOtherPlayers(int currentmusicid)
+    {
+        for (MusicFile mfile: musicfiles)
+        {
+            if (mfile._MPController.rawMusicId != currentmusicid && mfile._MPController.isplaying) {
+                mfile._MPController.mediaPlayer.pause();
+                mfile._MPController.bPause.setEnabled(false);
+                mfile._MPController.bPlay.setEnabled(true);
+                mfile._MPController.isplaying = false;
+            }
+        }
+    }
+
+    private void DeselectOthers(int currentmusicid)
+    {
+        for (MusicFile mfile: musicfiles)
+        {
+            if (mfile._MPController.rawMusicId != currentmusicid)
+            {
+                mfile._MPController.rdoSelected.setChecked(false);
+                Drawable background = mfile._MPController.parentview.getBackground();
+                ((GradientDrawable)background).setColor(Color.WHITE);
+            }
+        }
+    }
+
+    @Override
+    public void onBackPressed(){
+        StopAllOtherPlayers(0);
+        Intent intent = new Intent(AudioActivity.this, MainMenuActivity.class);
+        startActivity(intent);
     }
 
     private class MusicFile

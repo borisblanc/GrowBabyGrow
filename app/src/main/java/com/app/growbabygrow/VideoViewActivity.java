@@ -38,9 +38,14 @@ public class VideoViewActivity extends AppCompatActivity {
     @Override
     public void onBackPressed(){
 
-        //go back to main if coming from main
+        //go back to act coming from unless edit then whatever
         if(actcomingfrom != null && actcomingfrom.equals(MainMenuActivity.TAG)) {
             Intent intent = new Intent(VideoViewActivity.this, MainMenuActivity.class);
+            startActivity(intent);
+        }
+        else if (actcomingfrom != null && actcomingfrom.equals(AudioActivity.TAG))
+        {
+            Intent intent = new Intent(VideoViewActivity.this, AudioActivity.class);
             startActivity(intent);
         }
         else {
