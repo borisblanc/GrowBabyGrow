@@ -288,12 +288,13 @@ public class VideoEditActivity extends AppCompatActivity {
                             }
                             //step 2 & 3 inside, need to extract decode (might need to remove edit part) encode and mux using phones codec and then MuxMerge
                             //looper warning here, setting timeout to infinity for it to work but in future will need to create looper thread for
-                            //todo clean this file up after its used
                             File tempintrofile = new File(new File(MainMergedVideoOutputFile().getParent()), "Temp.mp4");
 
-                            ExtractDecodeEditEncodeMuxTest test = new ExtractDecodeEditEncodeMuxTest();
+                            ExtractDecodeEditEncodeMuxTest mux = new ExtractDecodeEditEncodeMuxTest();
                             try {
-                                test.ExtractDecodeEditEncodeMux(IntroVideoOutputFilePath, tempintrofile.getAbsolutePath(), fixed_width, fixed_height, SelectedTrimmedVideoOutputFilepath, MainMergedVideoOutputFilepath);
+
+                                mux.ExtractDecodeEditEncodeMux(IntroVideoOutputFilePath, tempintrofile.getAbsolutePath(), fixed_width, fixed_height, SelectedTrimmedVideoOutputFilepath, MainMergedVideoOutputFilepath);
+                                VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(tempintrofile.getAbsolutePath()), new File(SelectedTrimmedVideoOutputFilepath));
                                 if (tempintrofile.exists())
                                     tempintrofile.delete();
 

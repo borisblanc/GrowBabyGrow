@@ -80,7 +80,7 @@
 
         <!-- List of Actions (pages) -->
         <ListView
-            android:id="@+id/navListAudio"
+            android:id="@+id/navList"
             android:layout_width="280dp"
             android:layout_height="match_parent"
             android:layout_below="@+id/profileBox"

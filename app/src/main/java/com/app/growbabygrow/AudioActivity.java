@@ -89,7 +89,7 @@ public class AudioActivity extends AppCompatActivity {
         mNavItems.add(new Helpers.NavItem(getString(R.string.MusicDrawer), "Add Music", "Baby Grow Music", R.drawable.music_icon));
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         mDrawerPane = (RelativeLayout) findViewById(R.id.drawerPane);
-        mDrawerList = (ListView) findViewById(R.id.navListAudio);
+        mDrawerList = (ListView) findViewById(R.id.navList);
         mAdapter = new Helpers.DrawerListAdapter(context, mNavItems, mDrawerList, 2);
         mDrawerList.setAdapter(mAdapter);
     }
@@ -204,6 +204,7 @@ public class AudioActivity extends AppCompatActivity {
             rdoSelected.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View innerview) {
+                    StopAllOtherPlayers(rawMusicId);
                     DeselectOthers(rawMusicId);
                     Drawable background = parentview.getBackground();
                     ((GradientDrawable)background).setColor(Color.LTGRAY);
@@ -224,7 +225,7 @@ public class AudioActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     StopAllOtherPlayers(rawMusicId);
-
+                    DeselectOthers(rawMusicId);
                     mediaPlayer.start();
 
                     finalTime = mediaPlayer.getDuration();

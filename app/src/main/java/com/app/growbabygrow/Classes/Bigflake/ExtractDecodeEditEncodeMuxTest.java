@@ -98,7 +98,8 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
         _mergeOutputPath = MergeOutput;
         _selectTrimOutputPath = SelectTrimOutput;
         setSize(width, height);
-        setCopyVideo(); //vid only for now
+        setCopyVideo(); //vid only for
+        extractDecodeEditEncodeMux();
         TestWrapper.runTest(this);
     }
 
@@ -115,7 +116,7 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
                 mTest.extractDecodeEditEncodeMux();
                 //have to do this here because we want to process output away from main thread after muxing is complete,
                 //need to create a separate thread with a looper for  onFrameAvailable and refactor all this at a later date
-                VideoUtils.MuxMergeVideos(new File(_mergeOutputPath), new File(_outputFilePath), new File(_selectTrimOutputPath));
+                //VideoUtils.MuxMergeVideos(new File(_mergeOutputPath), new File(_outputFilePath), new File(_selectTrimOutputPath));
 
             } catch (Throwable th) {
                 mThrowable = th;
@@ -135,7 +136,7 @@ public class ExtractDecodeEditEncodeMuxTest extends AndroidTestCase {
             //join will make main UI thread wait till this worker thread is done and this thread will never happen
             //because awaitNewImage on this worker is waiting for (infinite timeout) onFrameAvailable to notify it and it is being run on main thread
             //this circular dependency sucks but I can't fix it now because I don't know how to create a separate thread with a looper for  onFrameAvailable
-            //th.join();
+            th.join();
 
             if (wrapper.mThrowable != null) {
                 throw wrapper.mThrowable;

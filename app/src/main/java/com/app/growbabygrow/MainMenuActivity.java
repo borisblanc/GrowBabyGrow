@@ -274,7 +274,6 @@ public class MainMenuActivity extends AppCompatActivity {
         else if (currentNav.mName.equals(getString(R.string.MusicDrawer)))
         {
             Intent intent = new Intent(MainMenuActivity.this, AudioActivity.class);
-            //intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFilePath().getAbsolutePath());
             intent.putExtra(getString(R.string.ActivityName), TAG);
             startActivity(intent);
         }
