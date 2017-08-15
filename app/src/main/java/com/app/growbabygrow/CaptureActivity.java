@@ -291,7 +291,7 @@ public class CaptureActivity extends AppCompatActivity {
         if (bestfacetimestamps == null)
             return;
 
-        VideoUtils.TrimVideo(OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath, bestfacetimestamps.firstTimeStamp, bestfacetimestamps.lastTimeStamp, false, true);
+        VideoUtils.TrimMedia(OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath, bestfacetimestamps.firstTimeStamp, bestfacetimestamps.lastTimeStamp, false, true);
     }
 
     //process all of first preview (data & results) and subsequent data only for all other previews

@@ -10,8 +10,8 @@ import android.os.Message;
 
 public class SyncDialogue {
 
-    private  boolean mResult;
-    public  boolean getYesNoWithExecutionStop(String title, String message, Context context) {
+    private static boolean mResult;
+    public static boolean getYesNoWithExecutionStop(String title, String message, Context context) {
         // make a handler that throws a runtime exception when a message is received
         final Handler handler = new Handler() {
             @Override

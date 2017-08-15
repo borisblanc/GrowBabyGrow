@@ -222,8 +222,7 @@ public class VideoEditActivity extends AppCompatActivity {
 
                 if (!isnewsession) {
 
-                    SyncDialogue sd = new SyncDialogue();
-                    performMerge = sd.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?",VideoEditActivity.this);
+                    performMerge = SyncDialogue.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?",VideoEditActivity.this);
 //                    new AlertDialog.Builder(VideoEditActivity.this)
 //                            .setTitle("Merge Baby Grow?")
 //                            .setMessage("Are you sure you want merge this Video into your Baby Grow?")

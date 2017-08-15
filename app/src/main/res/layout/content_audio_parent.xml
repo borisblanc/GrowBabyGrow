@@ -22,7 +22,7 @@
               android:layout_height="120dp"
               android:layout_width="250dp"
               app:layout_constraintTop_toTopOf="parent"
-              android:layout_marginTop="16dp"
+              android:layout_marginTop="38dp"
               android:layout_marginLeft="50dp"
               app:layout_constraintLeft_toLeftOf="parent" />
 
@@ -32,7 +32,7 @@
             android:layout_height="120dp"
             android:layout_width="250dp"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="38dp"
             app:layout_constraintLeft_toRightOf="@+id/audiochild1"
             android:layout_marginLeft="15dp"
             android:layout_marginStart="15dp" />
@@ -44,7 +44,7 @@
             android:layout_width="250dp"
             android:layout_marginLeft="50dp"
             app:layout_constraintLeft_toLeftOf="parent"
-            android:layout_marginTop="13dp"
+            android:layout_marginTop="9dp"
             app:layout_constraintTop_toBottomOf="@+id/audiochild1" />
 
         <include
@@ -52,10 +52,10 @@
             android:id="@+id/audiochild4"
             android:layout_height="120dp"
             android:layout_width="250dp"
-            android:layout_marginTop="13dp"
+            android:layout_marginTop="9dp"
             app:layout_constraintTop_toBottomOf="@+id/audiochild2"
             app:layout_constraintLeft_toRightOf="@+id/audiochild3"
-            android:layout_marginLeft="15dp"
+            android:layout_marginLeft="7dp"
             android:layout_marginStart="15dp" />
 
         <include
@@ -63,12 +63,22 @@
             android:id="@+id/audiochild5"
             android:layout_height="120dp"
             android:layout_width="250dp"
-            android:layout_marginTop="13dp"
+            android:layout_marginTop="9dp"
             app:layout_constraintTop_toBottomOf="@+id/audiochild3"
             android:layout_marginLeft="50dp"
             app:layout_constraintLeft_toLeftOf="parent" />
 
-
+        <TextView
+            android:id="@+id/txtmain"
+            android:layout_width="460dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="50dp"
+            android:layout_marginTop="3dp"
+            android:text="Select Music for your Baby Grow..."
+            android:textColor="@android:color/black"
+            android:textSize="24sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
 
     </android.support.constraint.ConstraintLayout>
