@@ -92,7 +92,6 @@ public class CaptureActivity extends AppCompatActivity {
             setContentView(R.layout.captureactivity_main);
             context = getApplicationContext();
             recButton = (Button) findViewById(R.id.btn_record);
-            Button switchButton = (Button) findViewById(R.id.btn_switch);
             mPreview = (CameraSourcePreview) findViewById(R.id.preview);
             mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
             ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
@@ -121,6 +120,7 @@ public class CaptureActivity extends AppCompatActivity {
 
             isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
             OverlayBitmapFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), null);
+            usingFrontCamera = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_current_session_camera_facing_is_front), false);
 
             if (!isnewsession) {//if not new session try to track face from last session
                 Gson gson = new Gson();
@@ -134,21 +134,6 @@ public class CaptureActivity extends AppCompatActivity {
 
                 requestPermissionThenOpenCamera();
 
-                switchButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (usingFrontCamera) {
-                            stopCameraSource();
-                            createCameraSource(Camera2Source.CAMERA_FACING_BACK);
-                            usingFrontCamera = false;
-                        }
-                        else {
-                            stopCameraSource();
-                            createCameraSource(Camera2Source.CAMERA_FACING_FRONT);
-                            usingFrontCamera = true;
-                        }
-                    }
-                });
 
                 toggleoverlayButton.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -178,7 +163,6 @@ public class CaptureActivity extends AppCompatActivity {
 
                             //this will have to stay constant throughout Grow baby session, if back and front don't support same resolutions will have to show user error or lock down camera facing
                             VerifySaveLockedDownVidSize(mCamera2Source.mVideoSize);
-                            SaveFacing(usingFrontCamera);
                             try {
 
                                 RunFaceProcessing(fs_current);
@@ -217,12 +201,6 @@ public class CaptureActivity extends AppCompatActivity {
 
     }
 
-    private void SaveFacing(Boolean isfacingfront)
-    {
-        SharedPreferences.Editor editor = sharedpreferences.edit();
-        editor.putString(getString(R.string.p_file1_saved_current_session_camera_facing), isfacingfront ? "Front" : "Back" ); //will overwrite previous value each time
-        editor.apply();
-    }
 
     //function will check to see if new session then save resolution if not new then check to make sure resolution is same else throw exception.
     private void VerifySaveLockedDownVidSize(Size recordedsize)

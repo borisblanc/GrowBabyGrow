@@ -27,6 +27,7 @@ import com.app.growbabygrow.Classes.Helpers;
 import com.app.growbabygrow.Classes.SyncDialogue;
 import com.app.growbabygrow.Classes.VideoUtils;
 
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -41,6 +42,8 @@ public class AudioActivity extends AppCompatActivity {
     private ArrayList<MusicFile> musicfiles;
     private SharedPreferences sharedpreferences;
     private String MainMergedVideoOutputFilepath;
+    private String MainMergedVideoOutputFilepath_with_audio;
+    private Boolean MainMergedVideoOutputFilepath_has_Audio;
     private ImageButton hamburger;
     private ListView mDrawerList;
     private RelativeLayout mDrawerPane;
@@ -63,6 +66,9 @@ public class AudioActivity extends AppCompatActivity {
         constmain = (ConstraintLayout) findViewById(R.id.constraintaudiomain);
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
         MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
+        MainMergedVideoOutputFilepath_with_audio = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname_with_audio), null);
+        MainMergedVideoOutputFilepath_has_Audio = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_main_has_audio), false);
+
         populateDrawer();
 
         musicfiles = SetGetMusicSelection();
@@ -116,7 +122,11 @@ public class AudioActivity extends AppCompatActivity {
         else if (currentNav.mName.equals(getString(R.string.VideoDrawer)))
         {
             Intent intent = new Intent(AudioActivity.this, VideoViewActivity.class);
-            intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFile().getAbsolutePath());
+            if (!MainMergedVideoOutputFilepath_has_Audio)
+                intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFilepath);
+            else
+                intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFilepath_with_audio);
+
             intent.putExtra(getString(R.string.ActivityName), TAG);
             startActivity(intent);
         }
@@ -213,7 +223,7 @@ public class AudioActivity extends AppCompatActivity {
 
                     if (performAudioMerge)
                     {
-                        MergeAudio(rawMusicId, Songname);
+                        MergeAudio(rawMusicId);
                         Toast.makeText(context, "Finished adding Music to your Baby Grow!", Toast.LENGTH_LONG).show();
                     }
 
@@ -292,12 +302,12 @@ public class AudioActivity extends AppCompatActivity {
 
         }
 
-        private void MergeAudio(int rawmusicid, String songName)
+        private void MergeAudio(int rawmusicid)
         {
             StopAllOtherPlayers(0);
             String baseVideoDir = MainMergedVideoOutputFile().getParent();
             InputStream in = getResources().openRawResource(rawmusicid);
-            File audiofile = new File(baseVideoDir, songName + ".m4a");
+            File audiofile = new File(baseVideoDir, rawmusicid + ".m4a");
             if (!audiofile.exists()) //if not copied to disk yet then do it
                 VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath());
 
@@ -305,10 +315,20 @@ public class AudioActivity extends AppCompatActivity {
             long videoDuration = VideoUtils.GetMediaDurationMilli(MainMergedVideoOutputFile().getAbsolutePath());
 
             //trims mp3
-            VideoUtils.TrimMedia(audiofile.getAbsolutePath(), new File(baseVideoDir, songName + "_trim.m4a").getAbsolutePath(), 0L, videoDuration, true, false);
+            VideoUtils.TrimMedia(audiofile.getAbsolutePath(), new File(baseVideoDir, rawmusicid + "_trim.m4a").getAbsolutePath(), 0L, videoDuration, true, false);
 
-            VideoUtils.MuxAudioVideo(MainMergedVideoOutputFile().getAbsolutePath(), MainMergedVideoOutputFile().getAbsolutePath(), new File(baseVideoDir, songName + "_trim.m4a").getAbsolutePath());
+            //must merge into new mp4 with audio and leave original alone for later merges
+            VideoUtils.MuxAudioVideo(MainMergedVideoOutputFilepath_with_audio, MainMergedVideoOutputFile().getAbsolutePath(), new File(baseVideoDir, rawmusicid + "_trim.m4a").getAbsolutePath());
             DeselectOthers(0);
+            SetAudioMovieInfo(rawmusicid);
+        }
+
+        private void SetAudioMovieInfo(int rawmusicid)
+        {
+            SharedPreferences.Editor editor = sharedpreferences.edit();
+            editor.putBoolean(getString(R.string.p_file1_saved_main_has_audio), true);
+            editor.putInt(getString(R.string.p_file1_saved_main_audio_file_id), rawmusicid);
+            editor.apply();
         }
 
 

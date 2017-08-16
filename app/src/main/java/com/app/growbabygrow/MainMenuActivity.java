@@ -5,34 +5,28 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.app.growbabygrow.Classes.Helpers;
-import com.app.growbabygrow.Classes.VideoUtils;
 
 import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.app.growbabygrow.R.id.fab;
@@ -48,6 +42,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private Spinner timeperiods;
     private ImageButton delete;
     private ImageButton hamburger;
+    private Switch camSwitch;
 
     private Context context;
 
@@ -57,6 +52,9 @@ public class MainMenuActivity extends AppCompatActivity {
 
     private String Name;
     private String Period;
+    private Boolean MainMergedVideoOutputFilepath_has_Audio;
+
+    private boolean usingFrontCamera = false;
 
     private Integer GetHash()
     {
@@ -67,6 +65,12 @@ public class MainMenuActivity extends AppCompatActivity {
     {
         //simple non unique hash
         return new File(baseVideoFileDir, "main_merge_" + GetHash() + ".mp4");
+    }
+
+    private File MainMergedVideoOutputFilePath_With_Audio()
+    {
+        //simple non unique hash
+        return new File(baseVideoFileDir, "main_merge_audio" + GetHash() + ".mp4");
     }
 
     private File OriginalVideoOutputFilePath()
@@ -116,6 +120,7 @@ public class MainMenuActivity extends AppCompatActivity {
         tvnewproject = (TextView) findViewById(R.id.TV_noProjects);
         delete = (ImageButton) findViewById(R.id.deletebtn);
         hamburger = (ImageButton) findViewById(R.id.btn_hamburger);
+        camSwitch = (Switch) findViewById(R.id.switchCameraface);
 
 
         populateDrawer();
@@ -124,13 +129,13 @@ public class MainMenuActivity extends AppCompatActivity {
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
         Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
         Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
+        MainMergedVideoOutputFilepath_has_Audio = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_main_has_audio), false);
 
 
         if (Name == null) {//no projects exist
             ShowBabyGrowNew();
             savedexists = false;
             startbabygrow = false;
-
         }
         else {
             savedexists = true;
@@ -180,17 +185,22 @@ public class MainMenuActivity extends AppCompatActivity {
                 else
                 {
 
+                    SharedPreferences.Editor editor = sharedpreferences.edit();
                     if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main merge video file does not exist create new names and save for all files
                     {
-                        SharedPreferences.Editor editor = sharedpreferences.edit();
                         editor.putString(getString(R.string.p_file1_saved_main_mp4pathname), MainMergedVideoOutputFilePath().getAbsolutePath());
+                        editor.putString(getString(R.string.p_file1_saved_main_mp4pathname_with_audio), MainMergedVideoOutputFilePath_With_Audio().getAbsolutePath());
+                        editor.putBoolean(getString(R.string.p_file1_saved_main_has_audio), false); //at first we have no audio
                         editor.putString(getString(R.string.p_file1_saved_orig_mp4pathname), OriginalVideoOutputFilePath().getAbsolutePath());
                         editor.putString(getString(R.string.p_file1_saved_trim1_mp4pathname), TrimmedVideoOutputFilePath(1).getAbsolutePath());
                         editor.putString(getString(R.string.p_file1_saved_trim2_mp4pathname), TrimmedVideoOutputFilePath(2).getAbsolutePath());
                         editor.putString(getString(R.string.p_file1_saved_trim3_mp4pathname), TrimmedVideoOutputFilePath(3).getAbsolutePath());
                         editor.putString(getString(R.string.p_file1_saved_intro_mp4pathname), IntroVideoOutputFilePath().getAbsolutePath());
-                        editor.apply();
+                        editor.putString(getString(R.string.p_file1_saved_intro_mp4pathname), IntroVideoOutputFilePath().getAbsolutePath());
                     }
+
+                    editor.putBoolean(getString(R.string.p_file1_saved_current_session_camera_facing_is_front), usingFrontCamera ); //always send this as it can change
+                    editor.apply();
 
                     Intent intent = new Intent(MainMenuActivity.this, CaptureActivity.class);
                     startActivity(intent);
@@ -233,6 +243,14 @@ public class MainMenuActivity extends AppCompatActivity {
             }
         });
 
+        camSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+            {
+                usingFrontCamera = camSwitch.isChecked();
+            }
+        });
+
     }
 
     private void populateDrawer()// Populate the Navigation Drawer with options
@@ -267,7 +285,12 @@ public class MainMenuActivity extends AppCompatActivity {
         else if (currentNav.mName.equals(getString(R.string.VideoDrawer)))
         {
             Intent intent = new Intent(MainMenuActivity.this, VideoViewActivity.class);
-            intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFilePath().getAbsolutePath());
+
+            if (!MainMergedVideoOutputFilepath_has_Audio)
+                intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFilePath().getAbsolutePath());
+            else
+                intent.putExtra(getString(R.string.player_video_file_path), MainMergedVideoOutputFilePath_With_Audio().getAbsolutePath());
+
             intent.putExtra(getString(R.string.ActivityName), TAG);
             startActivity(intent);
         }
@@ -292,6 +315,7 @@ public class MainMenuActivity extends AppCompatActivity {
         timeperiods.setVisibility(View.INVISIBLE);
         txtname.setVisibility(View.INVISIBLE);
         delete.setVisibility(View.INVISIBLE);
+        camSwitch.setVisibility(View.INVISIBLE);
     }
 
     private void ShowBabyGrowInput()
@@ -315,6 +339,7 @@ public class MainMenuActivity extends AppCompatActivity {
         timeperiods.setSelection(getSpinnerIndex(timeperiods, period));
         timeperiods.setEnabled(false);
         delete.setVisibility(View.VISIBLE);
+        camSwitch.setVisibility(View.VISIBLE);
     }
 
     private int getSpinnerIndex(Spinner spinner, String myString) {

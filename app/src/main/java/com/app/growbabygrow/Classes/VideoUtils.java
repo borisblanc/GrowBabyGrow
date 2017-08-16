@@ -327,7 +327,8 @@ public class VideoUtils {
 
     }
 
-    //this one works better than Mp4ParserMergeVideos for some different video types, but they still need to have same resolution might not be as fast though
+    //this one works better than Mp4ParserMergeVideos for some different video types, but they still need to have same resolution might not be as fast
+    //Can't use anything with audio or this will not work, must keep copy of audio free version for all merging because will need to trim song and re-add it anyways
     public static boolean MuxMergeVideos(File dst, File... sources) {
 
         int MAX_SAMPLE_SIZE = 1000000; //not sure best value for this yet

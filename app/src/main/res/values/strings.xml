@@ -43,9 +43,12 @@
     <string name="p_file1_saved_name">saved_name</string>
     <string name="p_file1_saved_period">saved_period</string>
     <string name="p_file1_saved_main_mp4pathname">saved_main_mp4pathname</string>
+    <string name="p_file1_saved_main_mp4pathname_with_audio">saved_main_mp4pathname_w_audio</string>
+    <string name="p_file1_saved_main_has_audio">saved_main_has_audio</string>
+    <string name="p_file1_saved_main_audio_file_id">saved_main_audio_file_id</string>
     <string name="p_file1_saved_main_mp4_fixed_width">saved_main_mp4_width</string>
     <string name="p_file1_saved_main_mp4_fixed_height">saved_main_mp4_height</string>
-    <string name="p_file1_saved_current_session_camera_facing">saved_current_session_camera_facing</string>
+    <string name="p_file1_saved_current_session_camera_facing_is_front">saved_current_session_camera_facing_is_front</string>
 
     <string name="p_file1_saved_orig_mp4pathname">saved_orig_mp4pathname</string>
 

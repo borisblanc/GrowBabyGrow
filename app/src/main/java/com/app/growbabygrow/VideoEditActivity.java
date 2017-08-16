@@ -34,6 +34,7 @@ import com.google.android.gms.vision.face.FaceDetector;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 
@@ -45,6 +46,10 @@ public class VideoEditActivity extends AppCompatActivity {
     private String TAG = "VideoEditActivity";
 
     private String MainMergedVideoOutputFilepath;
+    private String MainMergedVideoOutputFilepath_with_Audio;
+    private Boolean MainMergedVideoOutputFilepath_has_Audio;
+    private int MainMergedVideoOutputFilepath_file_id;
+
     private String OriginalVideoOutputFilepath;
     private String TrimmedVideoOutputFilepath1;
     private Face TrimmedVideo1face;
@@ -90,7 +95,7 @@ public class VideoEditActivity extends AppCompatActivity {
     private Face SelectedTrimmedVideoface;
     private Long SelectedTrimmedVideofacets;
     private String OverlayBitmapFilePath;
-    private String Camerafacing;
+    private boolean usingFrontCamera = false;
     private boolean performMerge;
 
     @Override
@@ -130,6 +135,10 @@ public class VideoEditActivity extends AppCompatActivity {
         Gson gson = new Gson();
 
         MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
+        MainMergedVideoOutputFilepath_has_Audio = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_main_has_audio), false);
+        MainMergedVideoOutputFilepath_with_Audio = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname_with_audio), null);
+        MainMergedVideoOutputFilepath_file_id = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_audio_file_id), 0);
+
         OriginalVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_orig_mp4pathname), null);
 
         TrimmedVideoOutputFilepath1 = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
@@ -152,7 +161,7 @@ public class VideoEditActivity extends AppCompatActivity {
         fixed_width = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_width), 0);
         fixed_height = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_height), 0);
         OverlayBitmapFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), null);
-        Camerafacing = sharedpreferences.getString(getString(R.string.p_file1_saved_current_session_camera_facing), null);
+        usingFrontCamera = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_current_session_camera_facing_is_front), false);
 
         //if new session lets get a head start and begin async intro video creation while user pics preview
         if (isnewsession) {
@@ -238,7 +247,7 @@ public class VideoEditActivity extends AppCompatActivity {
 
                         if (performMerge) {
                             Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
-                            //face image for previous session overlay
+                            //face image for next session overlay
                             Thread th = new Thread(new Runnable() {
                                 public void run() {
                                     ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
@@ -249,6 +258,10 @@ public class VideoEditActivity extends AppCompatActivity {
 
                             VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
 
+                            if (MainMergedVideoOutputFilepath_has_Audio) //if audio version exists need to merge it also
+                                MergeAudio();
+
+
                             Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
                             HidePreviewsShowGoodbye();
                             Utils.animateView(progressOverlay, View.GONE, 0, 200);
@@ -256,6 +269,10 @@ public class VideoEditActivity extends AppCompatActivity {
                 }
                 else //first time when no movie yet rename selected trim to main and add merge in intro movie
                 {
+
+                    performMerge = SyncDialogue.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?",VideoEditActivity.this);
+                    if (!performMerge)
+                        return;
                     //need to block UI thread and show loading overlay if preview isn't ready yet and poll until it is
                     if (!ispreviewready) {
                         Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_LONG).show();
@@ -326,6 +343,27 @@ public class VideoEditActivity extends AppCompatActivity {
 
     }
 
+    private void MergeAudio()
+    {
+        if (MainMergedVideoOutputFilepath_file_id == 0) //no selected music then forget it
+            return;
+
+        String baseVideoDir = MainMergedVideoOutputFile().getParent();
+        InputStream in = getResources().openRawResource(MainMergedVideoOutputFilepath_file_id);
+        File audiofile = new File(baseVideoDir, MainMergedVideoOutputFilepath_file_id + ".m4a");
+        if (!audiofile.exists()) //if not copied to disk yet then do it
+            VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath());
+
+
+        long videoDuration = VideoUtils.GetMediaDurationMilli(MainMergedVideoOutputFile().getAbsolutePath());
+
+        //trims mp3
+        VideoUtils.TrimMedia(audiofile.getAbsolutePath(), new File(baseVideoDir, MainMergedVideoOutputFilepath_file_id + "_trim.m4a").getAbsolutePath(), 0L, videoDuration, true, false);
+
+        //must merge into new mp4 with audio and leave original alone for later merges
+        VideoUtils.MuxAudioVideo(MainMergedVideoOutputFilepath_with_Audio, MainMergedVideoOutputFile().getAbsolutePath(), new File(baseVideoDir, MainMergedVideoOutputFilepath_file_id + "_trim.m4a").getAbsolutePath());
+    }
+
     //do this on separate thread
     private void ExtractEditSaveBitmap(String inputvideopath, String Savepath, Long Timestampmilli)
     {
@@ -365,7 +403,7 @@ public class VideoEditActivity extends AppCompatActivity {
 
             Bitmap finalbitmap = null;
 
-            if (Camerafacing.equals("Front")) //mirror for front camera only
+            if (usingFrontCamera) //mirror for front camera only
             {
                 finalbitmap = flip(newbitmap);
                 newbitmap.recycle();
@@ -449,18 +487,18 @@ public class VideoEditActivity extends AppCompatActivity {
     }
 
 
-    private void SetPreviewMode()
-    {
-        Radio_Group_prev.setVisibility(View.INVISIBLE);
-        orig_view_btn.setVisibility(View.INVISIBLE);
-        retry_btn.setVisibility(View.INVISIBLE);
-        new_title.setVisibility(View.INVISIBLE);
-        prev1_imageview.setVisibility(View.INVISIBLE);
-        prev2_imageview.setVisibility(View.INVISIBLE);
-        prev3_imageview.setVisibility(View.INVISIBLE);
-        fab.setVisibility(View.INVISIBLE);
-        txt_fab.setVisibility(View.INVISIBLE);
-    }
+//    private void SetPreviewMode()
+//    {
+//        Radio_Group_prev.setVisibility(View.INVISIBLE);
+//        orig_view_btn.setVisibility(View.INVISIBLE);
+//        retry_btn.setVisibility(View.INVISIBLE);
+//        new_title.setVisibility(View.INVISIBLE);
+//        prev1_imageview.setVisibility(View.INVISIBLE);
+//        prev2_imageview.setVisibility(View.INVISIBLE);
+//        prev3_imageview.setVisibility(View.INVISIBLE);
+//        fab.setVisibility(View.INVISIBLE);
+//        txt_fab.setVisibility(View.INVISIBLE);
+//    }
     private void HidePreviewsShowGoodbye()
     {
         Radio_Group_prev.setVisibility(View.INVISIBLE);
@@ -510,7 +548,6 @@ public class VideoEditActivity extends AppCompatActivity {
     {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         Gson gson = new Gson();
-
         String json = gson.toJson(face);
         editor.putString(getString(R.string.p_file1_saved_selected_last_week_face), json);
         editor.apply();
@@ -521,7 +558,10 @@ public class VideoEditActivity extends AppCompatActivity {
     {
         if (!isnewsession) //will not exist first time around
         {
-            InitVideoButton(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, main_imageview);
+            if (!MainMergedVideoOutputFilepath_has_Audio)
+                InitVideoButton(MainMergedVideoOutputFilepath, MainMergedVideoOutputFilepath, main_imageview);
+            else
+                InitVideoButton(MainMergedVideoOutputFilepath_with_Audio, MainMergedVideoOutputFilepath_with_Audio, main_imageview);
         }
         else
         {
