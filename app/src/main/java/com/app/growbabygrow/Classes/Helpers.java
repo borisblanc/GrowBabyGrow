@@ -1,6 +1,8 @@
 package com.app.growbabygrow.Classes;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,12 +11,17 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import com.app.growbabygrow.R;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.Landmark;
-
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
@@ -198,10 +205,70 @@ public class Helpers {
             return view;
         }
 
-        public View getSavedView(int position) {
-            return Views.get(position);
+//        public View getSavedView(int position) {
+//            return Views.get(position);
+//        }
+
+    }
+
+    public static class Logger
+    {
+
+        public static void LogExceptionToFile(String Tag, File fullfilepath, Throwable ex)
+        {
+            LogExceptionToFile(Tag, fullfilepath, ex, null);
         }
 
+        public static void LogExceptionToFile(String Tag, File fullfilepath, Throwable ex, @Nullable String Threadname)
+        {
+
+            PrintStream ps = null;
+
+            if (!fullfilepath.exists()) {
+                try {
+                    fullfilepath.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            Calendar c = Calendar.getInstance();
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedDate = df.format(c.getTime());
+
+            try {
+                ps = new PrintStream(new FileOutputStream(fullfilepath, true));
+                ps.append("\r\n");
+                ps.append("TimeStamp: ").append(formattedDate);
+                ps.append("\r\n");
+                ps.append("Location: ").append(Tag);
+                ps.append("\r\n");
+                if (Threadname != null)
+                {
+                    ps.append("ThreadName: ").append(Threadname);
+                    ps.append("\r\n");
+                }
+                ps.append("StackTrace..." );
+                ps.append("\r\n");
+                ex.printStackTrace(ps);
+            } catch (FileNotFoundException e) {
+                Log.d("Logger", ex.getMessage(), ex);
+            }
+
+            if (ps != null) {
+                ps.close();
+            }
+        }
+
+
+        public static File ErrorLoggerFilePath(Context context, String FileName)
+        {
+            File error_dir = context.getExternalFilesDir(context.getString(R.string.Error_Log_Dir));
+            if (!error_dir.exists())
+                error_dir.mkdir();
+
+            return new File(error_dir, FileName + ".txt");
+        }
     }
 
 }

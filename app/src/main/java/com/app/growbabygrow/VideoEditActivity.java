@@ -25,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.app.growbabygrow.Classes.Bigflake.ExtractDecodeEditEncodeMuxTest;
+import com.app.growbabygrow.Classes.Helpers;
 import com.app.growbabygrow.Classes.SyncDialogue;
 import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
@@ -44,6 +45,7 @@ public class VideoEditActivity extends AppCompatActivity {
     private Context context;
     private SharedPreferences sharedpreferences;
     private String TAG = "VideoEditActivity";
+    private String errorfilename = "VideoEditActivityErrors";
 
     private String MainMergedVideoOutputFilepath;
     private String MainMergedVideoOutputFilepath_with_Audio;
@@ -100,13 +102,12 @@ public class VideoEditActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_video_edit);
 
-
         context = getApplicationContext();
-
         main_imageview = (ImageView) findViewById(R.id.imageViewBGMain);
         prev1_imageview = (ImageView) findViewById(R.id.imageViewPrev1);
         prev2_imageview = (ImageView) findViewById(R.id.imageViewPrev2);
@@ -120,16 +121,10 @@ public class VideoEditActivity extends AppCompatActivity {
         Radio_prev2 = (RadioButton) findViewById(R.id.radioButtonprev2);
         Radio_prev3 = (RadioButton) findViewById(R.id.radioButtonprev3);
         Radio_Group_prev = (RadioGroup) findViewById(R.id.radioGroupPrev);
-        progressOverlay  = findViewById(R.id.progress_overlay);
+        progressOverlay = findViewById(R.id.progress_overlay);
         retry_btn = (Button) findViewById(R.id.buttonretry);
-
         fab.setVisibility(View.INVISIBLE);
 
-
-//        if(getIntent().getStringExtra(getString(R.string.ActivityName)).equals(MainMenuActivity.TAG))
-//        {
-//            SetPreviewMode();
-//        }
 
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
         Gson gson = new Gson();
@@ -169,15 +164,15 @@ public class VideoEditActivity extends AppCompatActivity {
         }
 
         Radio_prev1.setOnClickListener(new View.OnClickListener() {
-           @Override
-           public void onClick(View view) {
-               fab.setVisibility(View.VISIBLE);
-               txt_fab.setVisibility(View.VISIBLE);
-               SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath1;
-               SelectedTrimmedVideoface = TrimmedVideo1face;
-               SelectedTrimmedVideofacets = TrimmedVideo1facets;
-           }
-       });
+            @Override
+            public void onClick(View view) {
+                fab.setVisibility(View.VISIBLE);
+                txt_fab.setVisibility(View.VISIBLE);
+                SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath1;
+                SelectedTrimmedVideoface = TrimmedVideo1face;
+                SelectedTrimmedVideofacets = TrimmedVideo1facets;
+            }
+        });
 
         Radio_prev2.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -231,7 +226,7 @@ public class VideoEditActivity extends AppCompatActivity {
 
                 if (!isnewsession) {
 
-                    performMerge = SyncDialogue.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?",VideoEditActivity.this);
+                    performMerge = SyncDialogue.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?", VideoEditActivity.this);
 //                    new AlertDialog.Builder(VideoEditActivity.this)
 //                            .setTitle("Merge Baby Grow?")
 //                            .setMessage("Are you sure you want merge this Video into your Baby Grow?")
@@ -245,32 +240,32 @@ public class VideoEditActivity extends AppCompatActivity {
 //                            })
 //                            .setNegativeButton(android.R.string.no, null).show();
 
-                        if (performMerge) {
-                            Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
-                            //face image for next session overlay
-                            Thread th = new Thread(new Runnable() {
-                                public void run() {
-                                    ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
-                                    SetNextSessionface(SelectedTrimmedVideoface); //next session face
-                                }
-                            });
-                            th.start();
+                    if (performMerge) {
+                        Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
+                        //face image for next session overlay
+                        Thread th = new Thread(new Runnable() {
+                            public void run() {
+                                ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
+                                SetNextSessionface(SelectedTrimmedVideoface); //next session face
+                            }
+                        });
+                        th.start();
 
-                            VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
+                        VideoUtils.MuxMergeVideos(getApplicationContext(), new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
 
-                            if (MainMergedVideoOutputFilepath_has_Audio) //if audio version exists need to merge it also
-                                MergeAudio();
+                        if (MainMergedVideoOutputFilepath_has_Audio) //if audio version exists need to merge it also
+                            MergeAudio();
 
 
-                            Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
-                            HidePreviewsShowGoodbye();
-                            Utils.animateView(progressOverlay, View.GONE, 0, 200);
-                        }
+                        Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
+                        HidePreviewsShowGoodbye();
+                        Utils.animateView(progressOverlay, View.GONE, 0, 200);
+                    }
                 }
                 else //first time when no movie yet rename selected trim to main and add merge in intro movie
                 {
 
-                    performMerge = SyncDialogue.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?",VideoEditActivity.this);
+                    performMerge = SyncDialogue.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?", VideoEditActivity.this);
                     if (!performMerge)
                         return;
                     //need to block UI thread and show loading overlay if preview isn't ready yet and poll until it is
@@ -298,9 +293,9 @@ public class VideoEditActivity extends AppCompatActivity {
                             while (!ispreviewready) {
                                 try {
                                     Thread.sleep(1000);
-                                }
-                                catch (InterruptedException e) {
-                                    e.printStackTrace();
+                                } catch (InterruptedException ex) {
+                                    Log.d(TAG, ex.getMessage(), ex);
+                                    Helpers.Logger.LogExceptionToFile("VideoEditActivity.line306", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
                                 }
                             }
                             //step 2 & 3 inside, need to extract decode (might need to remove edit part) encode and mux using phones codec and then MuxMerge
@@ -311,7 +306,7 @@ public class VideoEditActivity extends AppCompatActivity {
                             try {
 
                                 mux.ExtractDecodeEditEncodeMux(IntroVideoOutputFilePath, tempintrofile.getAbsolutePath(), fixed_width, fixed_height, SelectedTrimmedVideoOutputFilepath, MainMergedVideoOutputFilepath);
-                                VideoUtils.MuxMergeVideos(new File(MainMergedVideoOutputFilepath), new File(tempintrofile.getAbsolutePath()), new File(SelectedTrimmedVideoOutputFilepath));
+                                VideoUtils.MuxMergeVideos(getApplicationContext(), new File(MainMergedVideoOutputFilepath), new File(tempintrofile.getAbsolutePath()), new File(SelectedTrimmedVideoOutputFilepath));
                                 if (tempintrofile.exists())
                                     tempintrofile.delete();
 
@@ -328,8 +323,10 @@ public class VideoEditActivity extends AppCompatActivity {
                                     }
                                 });
 
-                            } catch (Throwable throwable) {
+                            }
+                            catch (Throwable throwable) {
                                 Log.d(TAG, throwable.getMessage(), throwable);
+                                Helpers.Logger.LogExceptionToFile("VideoEditActivity.line329", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), throwable);
                             }
                         }
                     });
@@ -340,7 +337,6 @@ public class VideoEditActivity extends AppCompatActivity {
                 }
             }
         });
-
     }
 
     private void MergeAudio()
@@ -352,16 +348,14 @@ public class VideoEditActivity extends AppCompatActivity {
         InputStream in = getResources().openRawResource(MainMergedVideoOutputFilepath_file_id);
         File audiofile = new File(baseVideoDir, MainMergedVideoOutputFilepath_file_id + ".m4a");
         if (!audiofile.exists()) //if not copied to disk yet then do it
-            VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath());
+            VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath(), getApplicationContext());
 
 
         long videoDuration = VideoUtils.GetMediaDurationMilli(MainMergedVideoOutputFile().getAbsolutePath());
-
         //trims mp3
-        VideoUtils.TrimMedia(audiofile.getAbsolutePath(), new File(baseVideoDir, MainMergedVideoOutputFilepath_file_id + "_trim.m4a").getAbsolutePath(), 0L, videoDuration, true, false);
-
+        VideoUtils.TrimMedia(audiofile.getAbsolutePath(), new File(baseVideoDir, MainMergedVideoOutputFilepath_file_id + "_trim.m4a").getAbsolutePath(), 0L, videoDuration, true, false, getApplicationContext());
         //must merge into new mp4 with audio and leave original alone for later merges
-        VideoUtils.MuxAudioVideo(MainMergedVideoOutputFilepath_with_Audio, MainMergedVideoOutputFile().getAbsolutePath(), new File(baseVideoDir, MainMergedVideoOutputFilepath_file_id + "_trim.m4a").getAbsolutePath());
+        VideoUtils.MuxAudioVideo(MainMergedVideoOutputFilepath_with_Audio, MainMergedVideoOutputFile().getAbsolutePath(), new File(baseVideoDir, MainMergedVideoOutputFilepath_file_id + "_trim.m4a").getAbsolutePath(), getApplicationContext());
     }
 
     //do this on separate thread
@@ -411,11 +405,12 @@ public class VideoEditActivity extends AppCompatActivity {
             else
                 finalbitmap = newbitmap;
 
-            Utils.testSavebitmap(finalbitmap, Savepath);
+            Utils.Savebitmap(finalbitmap, Savepath, getApplicationContext());
         }
-        catch(Exception e) //this is wonky right now
+        catch(Exception ex)
         {
-            e.printStackTrace();
+            Log.e(TAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoEditActivity.SaveLastFaceImage", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
         }
 
         detector.release();
@@ -444,7 +439,8 @@ public class VideoEditActivity extends AppCompatActivity {
         }
         catch(Exception ex)
         {
-            ex.printStackTrace();
+            Log.e(TAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoEditActivity.crop", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
         }
 
         //src.recycle();
@@ -487,18 +483,6 @@ public class VideoEditActivity extends AppCompatActivity {
     }
 
 
-//    private void SetPreviewMode()
-//    {
-//        Radio_Group_prev.setVisibility(View.INVISIBLE);
-//        orig_view_btn.setVisibility(View.INVISIBLE);
-//        retry_btn.setVisibility(View.INVISIBLE);
-//        new_title.setVisibility(View.INVISIBLE);
-//        prev1_imageview.setVisibility(View.INVISIBLE);
-//        prev2_imageview.setVisibility(View.INVISIBLE);
-//        prev3_imageview.setVisibility(View.INVISIBLE);
-//        fab.setVisibility(View.INVISIBLE);
-//        txt_fab.setVisibility(View.INVISIBLE);
-//    }
     private void HidePreviewsShowGoodbye()
     {
         Radio_Group_prev.setVisibility(View.INVISIBLE);
@@ -605,11 +589,12 @@ public class VideoEditActivity extends AppCompatActivity {
             b.add(VideoUtils.drawTextToBitmap(context, R.drawable.black_canvas, GetIntroPeriod(period), width, height, 102));
 
 
-            VideoUtils.CreatevideoFromBitmaps(vidfilepath, b, 30);
+            VideoUtils.CreatevideoFromBitmaps(vidfilepath, b, 30, getApplicationContext());
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Log.d(TAG,e.getMessage(),e);
+            Log.d(TAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoEditActivity.CreateIntro_movie", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
         }
     }
 

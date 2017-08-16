@@ -1,14 +1,10 @@
 package com.app.growbabygrow.Classes;
 
-/**
- * Created by boris on 2017-07-27.
- */
 
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -21,7 +17,6 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.os.Environment;
-import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
@@ -29,10 +24,8 @@ import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 
-
 import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.face.Face;
-import com.google.android.gms.vision.face.Landmark;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,17 +37,16 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import static android.R.attr.width;
-import static android.R.attr.y;
-import static android.R.id.list;
-
 public class Utils {
 
-    public static int dpToPx(int dp) {
-        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
-    }
+    private static String tag = "Utils";
+    private static String errorfilename = "UtilsErrors";
 
-    public static int getScreenHeight(Context c) {
+//    public static int dpToPx(int dp) {
+//        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
+//    }
+
+    static int getScreenHeight(Context c) {
         WindowManager wm = (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         Point size = new Point();
@@ -62,7 +54,7 @@ public class Utils {
         return size.y;
     }
 
-    public static int getScreenWidth(Context c) {
+    static int getScreenWidth(Context c) {
         WindowManager wm = (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         Point size = new Point();
@@ -70,12 +62,12 @@ public class Utils {
         return size.x;
     }
 
-    public static float getScreenRatio(Context c) {
+    static float getScreenRatio(Context c) {
         DisplayMetrics metrics = c.getResources().getDisplayMetrics();
         return ((float)metrics.heightPixels / (float)metrics.widthPixels);
     }
 
-    public static int getScreenRotation(Context c) {
+    static int getScreenRotation(Context c) {
         WindowManager wm = (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
         return wm.getDefaultDisplay().getRotation();
     }
@@ -90,7 +82,7 @@ public class Utils {
         return new PointF((p1.x+p2.x)/2, (p1.y+p2.y)/2);
     }
 
-    public static Size[] sizeToSize(android.util.Size[] sizes) {
+    static Size[] sizeToSize(android.util.Size[] sizes) {
         Size[] size = new Size[sizes.length];
         for(int i=0; i<sizes.length; i++) {
             size[i] = new Size(sizes[i].getWidth(), sizes[i].getHeight());
@@ -99,6 +91,7 @@ public class Utils {
     }
 
 
+    //only used for testing
     public static void testSaveRawImage(Size s, byte [] mPendingFrameData)
     {
         File _filesdir = android.os.Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
@@ -124,7 +117,7 @@ public class Utils {
             String a = ex.toString();
         }
         finally {
-            if (bos != null) try {
+            try {
                 bos.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -134,31 +127,24 @@ public class Utils {
 
     }
 
-    public static void testSavebitmap(Bitmap bitmap, String fullfilepath)
+    public static void Savebitmap(Bitmap bitmap, String fullfilepath, Context appcontext)
     {
-//        File _filesdir = android.os.Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-//        String createfilepath = new File(_filesdir, Calendar.getInstance().getTimeInMillis() + ".png").getAbsolutePath();
-
         BufferedOutputStream bos = null;
-        try {
-
-            //Bitmap bitmap = BitmapFactory.decodeByteArray(jpegArray, 0, jpegArray.length);
-
+        try
+        {
             bos = new BufferedOutputStream(new FileOutputStream(fullfilepath));
-
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
-            //bitmap.recycle();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         }
         catch (Exception ex){
-            String a = ex.toString();
+            Log.d(tag, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile(tag, Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
         }
         finally {
-            if (bos != null) try {
+            try {
                 bos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ex) {
+                Log.d(tag, ex.getMessage(), ex);
+                Helpers.Logger.LogExceptionToFile(tag, Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
             }
 
         }
@@ -182,40 +168,35 @@ public class Utils {
             return -1;
 
         float result = -1;
-        try
+
+        //Helpers.FaceLandMarks Facemarks = new Helpers.FaceLandMarks(face.getLandmarks()); //don't use for now
+        int vClipSeverity = VerticalClipSeverity(face.getPosition().y, face.getHeight(), frameheight);
+        int hCloseSeverity = HorizontalClosenessSeverity(face.getPosition().x, face.getWidth(), framewidth);
+
+
+        //documentation says eulerY of > +-18 is not facing but thats not really true per testing i was still able to get most landmarks
+        if (Math.abs(face.getEulerY()) <= 19 && vClipSeverity <= 20 && hCloseSeverity <= 20) //face exists, forward facing, not too much top or bottom clipping, not too close to sides
         {
-            //Helpers.FaceLandMarks Facemarks = new Helpers.FaceLandMarks(face.getLandmarks()); //don't use for now
-            int vClipSeverity = VerticalClipSeverity(face.getPosition().y, face.getHeight(), frameheight);
-            int hCloseSeverity = HorizontalClosenessSeverity(face.getPosition().x, face.getWidth(), framewidth);
+            //always zero instead of -1 for these because at least they are forward facing
+            float smilescore = face.getIsSmilingProbability() < 0 ? 0 : face.getIsSmilingProbability();
+            float righteyescore = face.getIsRightEyeOpenProbability() < 0 ? 0 : face.getIsRightEyeOpenProbability();
+            float lefteyescore = face.getIsLeftEyeOpenProbability() < 0 ? 0 : face.getIsLeftEyeOpenProbability();
 
-
-            //documentation says eulerY of > +-18 is not facing but thats not really true per testing i was still able to get most landmarks
-            if (Math.abs(face.getEulerY()) <= 19 && vClipSeverity <= 20 && hCloseSeverity <= 20) //face exists, forward facing, not too much top or bottom clipping, not too close to sides
-            {
-                //always zero instead of -1 for these because at least they are forward facing
-                float smilescore = face.getIsSmilingProbability() < 0 ? 0 : face.getIsSmilingProbability();
-                float righteyescore = face.getIsRightEyeOpenProbability() < 0 ? 0 : face.getIsRightEyeOpenProbability();
-                float lefteyescore = face.getIsLeftEyeOpenProbability() < 0 ? 0 : face.getIsLeftEyeOpenProbability();
-
-                result = (smilescore + righteyescore + lefteyescore) / 3;
-            }
-            else if (Math.abs(face.getEulerY()) > 19) //if not forward facing then return 0
-            {
-                result = 0;
-            }
-            else if (vClipSeverity > 20) //if too much top or bottom clipping return 0
-            {
-                result = 0;
-            }
-            else if (hCloseSeverity > 20) //if too close to sides return 0
-            {
-                result = 0;
-            }
+            result = (smilescore + righteyescore + lefteyescore) / 3;
         }
-        catch (Exception e)
+        else if (Math.abs(face.getEulerY()) > 19) //if not forward facing then return 0
         {
-            Log.d("utils.GetImageUsability",e.getMessage());
+            result = 0;
         }
+        else if (vClipSeverity > 20) //if too much top or bottom clipping return 0
+        {
+            result = 0;
+        }
+        else if (hCloseSeverity > 20) //if too close to sides return 0
+        {
+            result = 0;
+        }
+
         return result;
     }
 
@@ -474,6 +455,8 @@ public class Utils {
 
         return decoded;
     }
+
+
 
 //    private static int ConvertDpToPixels(int value)
 //    {

@@ -18,7 +18,7 @@
     <string name="go_capture_start">Start Baby Grow!!</string>
 
 
-    <string name="music_file_key">musicfilekey</string>
+    <string name="Error_Log_Dir">error_log_dir</string>
 
     <!--for audio buttons-->
     <string name="rewind"><![CDATA[<<]]></string>

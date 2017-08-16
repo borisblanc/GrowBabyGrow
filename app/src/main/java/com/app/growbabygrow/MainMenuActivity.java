@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.app.growbabygrow.Classes.Helpers;
+import com.app.growbabygrow.Classes.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -94,6 +95,7 @@ public class MainMenuActivity extends AppCompatActivity {
         return new File(baseVideoFileDir, "overlay_" + GetHash() + ".bmp");
     }
 
+
     private ListView mDrawerList;
     private RelativeLayout mDrawerPane;
     private Helpers.DrawerListAdapter mAdapter;
@@ -103,153 +105,149 @@ public class MainMenuActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_menu);
 
-        if(getIntent().getBooleanExtra("Exit me", false)){
-            finish();
-            return; // add this to prevent from doing unnecessary stuffs
-        }
+            Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_main_menu);
 
-        context = getApplicationContext();
+            if (getIntent().getBooleanExtra("Exit me", false)) {
+                finish();
+                return; // add this to prevent from doing unnecessary stuffs
+            }
 
-        baseVideoFileDir = context.getExternalFilesDir(null);
-        txtname = (EditText) findViewById(R.id.editTextName);
-        timeperiods = (Spinner) findViewById(R.id.spinnerTime);
-        fabnewproj = (FloatingActionButton) findViewById(fab);
-        tvnewproject = (TextView) findViewById(R.id.TV_noProjects);
-        delete = (ImageButton) findViewById(R.id.deletebtn);
-        hamburger = (ImageButton) findViewById(R.id.btn_hamburger);
-        camSwitch = (Switch) findViewById(R.id.switchCameraface);
+            context = getApplicationContext();
 
-
-        populateDrawer();
-
-        //Default first project will always use this constant R.string.preference_file_key1
-        sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
-        Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
-        Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
-        MainMergedVideoOutputFilepath_has_Audio = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_main_has_audio), false);
+            baseVideoFileDir = context.getExternalFilesDir(null);
+            txtname = (EditText) findViewById(R.id.editTextName);
+            timeperiods = (Spinner) findViewById(R.id.spinnerTime);
+            fabnewproj = (FloatingActionButton) findViewById(fab);
+            tvnewproject = (TextView) findViewById(R.id.TV_noProjects);
+            delete = (ImageButton) findViewById(R.id.deletebtn);
+            hamburger = (ImageButton) findViewById(R.id.btn_hamburger);
+            camSwitch = (Switch) findViewById(R.id.switchCameraface);
 
 
-        if (Name == null) {//no projects exist
-            ShowBabyGrowNew();
-            savedexists = false;
-            startbabygrow = false;
-        }
-        else {
-            savedexists = true;
-            startbabygrow = true;
-            ShowBabyGrowReady(Name, Period);
-        }
+            populateDrawer();
 
-        fabnewproj.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!startbabygrow) {
-                    if (!savedexists) {
-                        ShowBabyGrowInput();
-                        savedexists = true;
-                    }
-                    else {
-                        if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule..")) {
-                            try
-                            {
-                                Name = txtname.getText().toString();
-                                Period = timeperiods.getSelectedItem().toString();
+            //Default first project will always use this constant R.string.preference_file_key1
+            sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
+            Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
+            Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
+            MainMergedVideoOutputFilepath_has_Audio = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_main_has_audio), false);
 
-                                SharedPreferences.Editor editor = sharedpreferences.edit();
-                                //set isnew flag so we can create intro movie later this will be set to false after intro video is created and merged in videoedit
-                                editor.putBoolean(getString(R.string.p_file1_is_new), true);
 
-                                editor.putString(getString(R.string.p_file1_saved_name), Name);
-                                editor.putString(getString(R.string.p_file1_saved_period), Period);
-                                editor.putString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), OverlayBitmapFilePath().getAbsolutePath());
-                                editor.apply();
+            if (Name == null) {//no projects exist
+                ShowBabyGrowNew();
+                savedexists = false;
+                startbabygrow = false;
+            } else {
+                savedexists = true;
+                startbabygrow = true;
+                ShowBabyGrowReady(Name, Period);
+            }
 
-                                startbabygrow = true;
-                                ShowBabyGrowReady(Name, Period);
+            fabnewproj.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (!startbabygrow) {
+                        if (!savedexists) {
+                            ShowBabyGrowInput();
+                            savedexists = true;
+                        } else {
+                            if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule..")) {
+                                try {
+                                    Name = txtname.getText().toString();
+                                    Period = timeperiods.getSelectedItem().toString();
 
-                            } catch (Exception ex) {
-                                Log.d(TAG, ex.getMessage());
+                                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                                    //set isnew flag so we can create intro movie later this will be set to false after intro video is created and merged in videoedit
+                                    editor.putBoolean(getString(R.string.p_file1_is_new), true);
+
+                                    editor.putString(getString(R.string.p_file1_saved_name), Name);
+                                    editor.putString(getString(R.string.p_file1_saved_period), Period);
+                                    editor.putString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), OverlayBitmapFilePath().getAbsolutePath());
+                                    editor.apply();
+
+                                    startbabygrow = true;
+                                    ShowBabyGrowReady(Name, Period);
+
+                                } catch (Exception ex) {
+                                    Log.d(TAG, ex.getMessage());
+                                }
+
+                            } else {
+                                Toast.makeText(context, "Please enter all required fields to proceed!", Toast.LENGTH_SHORT).show();
                             }
 
                         }
-                        else
+                    } else {
+
+                        SharedPreferences.Editor editor = sharedpreferences.edit();
+                        if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main merge video file does not exist create new names and save for all files
                         {
-                            Toast.makeText(context, "Please enter all required fields to proceed!", Toast.LENGTH_SHORT).show();
+                            editor.putString(getString(R.string.p_file1_saved_main_mp4pathname), MainMergedVideoOutputFilePath().getAbsolutePath());
+                            editor.putString(getString(R.string.p_file1_saved_main_mp4pathname_with_audio), MainMergedVideoOutputFilePath_With_Audio().getAbsolutePath());
+                            editor.putBoolean(getString(R.string.p_file1_saved_main_has_audio), false); //at first we have no audio
+                            editor.putString(getString(R.string.p_file1_saved_orig_mp4pathname), OriginalVideoOutputFilePath().getAbsolutePath());
+                            editor.putString(getString(R.string.p_file1_saved_trim1_mp4pathname), TrimmedVideoOutputFilePath(1).getAbsolutePath());
+                            editor.putString(getString(R.string.p_file1_saved_trim2_mp4pathname), TrimmedVideoOutputFilePath(2).getAbsolutePath());
+                            editor.putString(getString(R.string.p_file1_saved_trim3_mp4pathname), TrimmedVideoOutputFilePath(3).getAbsolutePath());
+                            editor.putString(getString(R.string.p_file1_saved_intro_mp4pathname), IntroVideoOutputFilePath().getAbsolutePath());
+                            editor.putString(getString(R.string.p_file1_saved_intro_mp4pathname), IntroVideoOutputFilePath().getAbsolutePath());
                         }
 
+                        editor.putBoolean(getString(R.string.p_file1_saved_current_session_camera_facing_is_front), usingFrontCamera); //always send this as it can change
+                        editor.apply();
+
+                        Intent intent = new Intent(MainMenuActivity.this, CaptureActivity.class);
+                        startActivity(intent);
                     }
                 }
-                else
-                {
+            });
 
-                    SharedPreferences.Editor editor = sharedpreferences.edit();
-                    if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main merge video file does not exist create new names and save for all files
-                    {
-                        editor.putString(getString(R.string.p_file1_saved_main_mp4pathname), MainMergedVideoOutputFilePath().getAbsolutePath());
-                        editor.putString(getString(R.string.p_file1_saved_main_mp4pathname_with_audio), MainMergedVideoOutputFilePath_With_Audio().getAbsolutePath());
-                        editor.putBoolean(getString(R.string.p_file1_saved_main_has_audio), false); //at first we have no audio
-                        editor.putString(getString(R.string.p_file1_saved_orig_mp4pathname), OriginalVideoOutputFilePath().getAbsolutePath());
-                        editor.putString(getString(R.string.p_file1_saved_trim1_mp4pathname), TrimmedVideoOutputFilePath(1).getAbsolutePath());
-                        editor.putString(getString(R.string.p_file1_saved_trim2_mp4pathname), TrimmedVideoOutputFilePath(2).getAbsolutePath());
-                        editor.putString(getString(R.string.p_file1_saved_trim3_mp4pathname), TrimmedVideoOutputFilePath(3).getAbsolutePath());
-                        editor.putString(getString(R.string.p_file1_saved_intro_mp4pathname), IntroVideoOutputFilePath().getAbsolutePath());
-                        editor.putString(getString(R.string.p_file1_saved_intro_mp4pathname), IntroVideoOutputFilePath().getAbsolutePath());
-                    }
+            delete.setOnClickListener(new View.OnClickListener() {
 
-                    editor.putBoolean(getString(R.string.p_file1_saved_current_session_camera_facing_is_front), usingFrontCamera ); //always send this as it can change
-                    editor.apply();
+                @Override
+                public void onClick(View v) {
+                    new AlertDialog.Builder(MainMenuActivity.this)
+                            .setTitle("!Delete Baby Grow Session!")
+                            .setMessage("Are you sure you want to delete all videos and info on your Baby Grow?")
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
-                    Intent intent = new Intent(MainMenuActivity.this, CaptureActivity.class);
-                    startActivity(intent);
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    ClearSharedDefault();
+                                    ClearMediaFiles();
+                                    ShowBabyGrowNew();
+                                    savedexists = false;
+                                    startbabygrow = false;
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, null).show();
                 }
-            }
-        });
+            });
 
-        delete.setOnClickListener(new View.OnClickListener() {
+            mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    selectItemFromDrawer(position);
+                }
+            });
 
-              @Override
-              public void onClick(View v) {
-                  new AlertDialog.Builder(MainMenuActivity.this)
-                          .setTitle("!Delete Baby Grow Session!")
-                          .setMessage("Are you sure you want to delete all videos and info on your Baby Grow?")
-                          .setIcon(android.R.drawable.ic_dialog_alert)
-                          .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+            hamburger.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mDrawerLayout.openDrawer(mDrawerPane);
+                }
+            });
 
-                              public void onClick(DialogInterface dialog, int whichButton) {
-                                  ClearSharedDefault();
-                                  ClearMediaFiles();
-                                  ShowBabyGrowNew();
-                                  savedexists = false;
-                                  startbabygrow = false;
-                              }})
-                          .setNegativeButton(android.R.string.no, null).show();
-              }
-        });
+            camSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
-        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                selectItemFromDrawer(position);
-            }
-        });
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    usingFrontCamera = camSwitch.isChecked();
+                }
+            });
 
-        hamburger.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mDrawerLayout.openDrawer(mDrawerPane);
-            }
-        });
-
-        camSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
-            {
-                usingFrontCamera = camSwitch.isChecked();
-            }
-        });
 
     }
 
@@ -385,9 +383,6 @@ public class MainMenuActivity extends AppCompatActivity {
 //        if (MainMergedVideoOutputFilePath().exists()) //leave for now
 //            MainMergedVideoOutputFilePath().delete();
 
-
-
-
     }
 
     @Override
@@ -395,6 +390,18 @@ public class MainMenuActivity extends AppCompatActivity {
         finish();
     }
 
+
+    Thread.UncaughtExceptionHandler uncaughtExceptionHandler = new Thread.UncaughtExceptionHandler(){
+
+        @Override
+        public void uncaughtException(Thread thread, Throwable ex) {
+            String tag = "Unhandled Exception";
+            Log.d(tag, ex.getMessage(), ex);
+
+            Helpers.Logger.LogExceptionToFile(tag, Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), "Unhandled"), ex, thread.getName());
+        }
+
+    };
 
 
 }

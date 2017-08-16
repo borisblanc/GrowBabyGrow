@@ -1,9 +1,5 @@
 package com.app.growbabygrow.Classes;
 
-/**
- * Created by boris on 2017-07-27.
- */
-
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -39,12 +35,9 @@ import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.widget.Toast;
-
-import com.app.growbabygrow.Classes.Utils;
 import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
-
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.nio.ByteBuffer;
@@ -58,7 +51,7 @@ import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import javax.xml.transform.Source;
+
 
 import static android.hardware.camera2.CameraMetadata.CONTROL_VIDEO_STABILIZATION_MODE_ON;
 
@@ -89,6 +82,7 @@ public class Camera2Source {
     private int mFocusMode = CAMERA_AF_AUTO;
 
     private static final String TAG = "Camera2Source";
+    private static String errorfilename = "Camera2SourceErrors";
     private static final double maxRatioTolerance = 0.1;
     private Context mContext;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
@@ -97,8 +91,8 @@ public class Camera2Source {
     private int mSensorOrientation;
 
     //hard code for now until i figure this shit out
-    private static int _width = 1280;
-    private static int _height = 720;
+//    private static int _width = 1280;
+//    private static int _height = 720;
 
     /**
      * A reference to the opened {@link CameraDevice}.
@@ -119,8 +113,6 @@ public class Camera2Source {
      * Camera state: Showing camera preview.
      */
     private static final int STATE_PREVIEW = 0;
-
-
 
 
     private int mDisplayOrientation;
@@ -172,7 +164,7 @@ public class Camera2Source {
      */
     private AutoFitTextureView mTextureView;
 
-    private AutoFocusCallback mAutoFocusCallback;
+    //private AutoFocusCallback mAutoFocusCallback;
 
 //    private Rect sensorArraySize;
 //    private boolean isMeteringAreaAFSupported = false;
@@ -330,7 +322,6 @@ public class Camera2Source {
         private final Detector<?> mDetector;
         private Camera2Source mCameraSource = new Camera2Source();
 
-
         //for preview only
         public Builder (Context context)
         {
@@ -339,7 +330,6 @@ public class Camera2Source {
             }
 
             mDetector = null;
-
             mCameraSource.mContext = context;
         }
 
@@ -437,8 +427,9 @@ public class Camera2Source {
                 mBackgroundThread = null;
                 mBackgroundHandler = null;
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ex) {
+            Log.d(TAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("Camera2Source.stopBackgroundThread", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
         }
     }
 
@@ -467,8 +458,9 @@ public class Camera2Source {
                     // executing at the same time (i.e., which would happen if we called start too
                     // quickly after stop).
                     mProcessingThread.join();
-                } catch (InterruptedException e) {
+                } catch (InterruptedException ex) {
                     Log.d(TAG, "Frame processing thread interrupted on release.");
+                    Helpers.Logger.LogExceptionToFile("Camera2Source.stopBackgroundThread", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
                 }
                 mProcessingThread = null;
             }
@@ -501,7 +493,9 @@ public class Camera2Source {
 
     public boolean isCamera2Native() {
         try {
-            if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {return false;}
+            if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+                return false;
+
             manager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
             mCameraId = manager.getCameraIdList()[mFacing];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraId);
@@ -791,14 +785,16 @@ public class Camera2Source {
                 setUpMediaRecorder();
             }
             manager.openCamera(mCameraId, mStateCallback, mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Camera access Error: "+e.getMessage());
+        } catch (CameraAccessException ex) {
+            Log.d(TAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("Camera2Source.setUpCameraOutputs", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
-        } catch (NullPointerException e) {
+        } catch (NullPointerException ex) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
-            Log.d(TAG, "Camera Error: "+e.getMessage());
+            Log.d(TAG, "Camera Error: "+ex.getMessage());
+            Helpers.Logger.LogExceptionToFile("Camera2Source.setUpCameraOutputs", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
         }
     }
 
@@ -863,6 +859,7 @@ public class Camera2Source {
         catch(Exception ex)
         {
             Log.e(TAG, "Exception thrown from MediaRecorder config.", ex);
+            Helpers.Logger.LogExceptionToFile("Camera2Source.setUpMediaRecorder", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
             throw new RuntimeException("mMediaRecorder config failed.", ex);
         }
     }
@@ -927,8 +924,10 @@ public class Camera2Source {
                                 mTrackRecord = true;
                                 // Start recording
                                 mMediaRecorder.start();
-                            } catch (CameraAccessException e) {
-                                e.printStackTrace();
+                            }
+                            catch (CameraAccessException ex) {
+                                Log.e(TAG, ex.getMessage(), ex);
+                                Helpers.Logger.LogExceptionToFile("Camera2Source.createCameraTrackRecordSession", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
                             }
                         }
 
@@ -940,16 +939,18 @@ public class Camera2Source {
                                 Toast.makeText(activity, "Failed Track & Record", Toast.LENGTH_SHORT).show();
                             }
                         }
-                        @Override
-                        public void onClosed(@NonNull CameraCaptureSession cameraCaptureSession)
-                        {
-                            String s = "moo";
-                        }
+//                        @Override
+//                        public void onClosed(@NonNull CameraCaptureSession cameraCaptureSession)
+//                        {
+//                            String s = "moo";
+//                        }
                     }
                     , null
             );
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
+        }
+        catch (CameraAccessException ex) {
+            Log.e(TAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("Camera2Source.createCameraTrackRecordSession", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
         }
     }
 
@@ -994,8 +995,10 @@ public class Camera2Source {
                             }
                         }
                     }, mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
+        }
+        catch (CameraAccessException ex) {
+            Log.e(TAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("Camera2Source.createPreviewSession", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
         }
     }
 
@@ -1011,8 +1014,10 @@ public class Camera2Source {
             HandlerThread thread = new HandlerThread("CameraPreview");
             thread.start();
             mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
+        }
+        catch (CameraAccessException ex) {
+            Log.e(TAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("Camera2Source.updatePreview", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
         }
     }
 
@@ -1109,8 +1114,9 @@ public class Camera2Source {
                             // Wait for the next frame to be received from the camera, since we
                             // don't have it yet.
                             mLock.wait();
-                        } catch (InterruptedException e) {
-                            Log.d(TAG, "Frame processing loop terminated.", e);
+                        } catch (InterruptedException ex) {
+                            Log.d(TAG, "Frame processing loop terminated.", ex);
+                            //Helpers.Logger.LogExceptionToFile("Camera2Source.updatePreview", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
                             return;
                         }
                     }
@@ -1155,6 +1161,7 @@ public class Camera2Source {
                     mDetector.receiveFrame(outputFrame);
                 } catch (Throwable t) {
                     Log.e(TAG, "Exception thrown from receiver.", t);
+                    //Helpers.Logger.LogExceptionToFile("Camera2Source.updatePreview", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
                 }
             }
         }

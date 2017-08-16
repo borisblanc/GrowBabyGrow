@@ -44,6 +44,7 @@ import java.util.List;
 
 public class CaptureActivity extends AppCompatActivity {
     private static final String TAG = "CaptureActivity";
+    private String errorfilename = "CaptureActivityErrors";
 
     private Context context;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
@@ -84,121 +85,114 @@ public class CaptureActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        try {
-            super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState);
 
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE); lock this in manifest instead
-            setContentView(R.layout.captureactivity_main);
-            context = getApplicationContext();
-            recButton = (Button) findViewById(R.id.btn_record);
-            mPreview = (CameraSourcePreview) findViewById(R.id.preview);
-            mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
-            ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
-            toggleoverlayButton = (Button) findViewById(R.id.btn_toggle_overlay);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE); lock this in manifest instead
+        setContentView(R.layout.captureactivity_main);
+        context = getApplicationContext();
+        recButton = (Button) findViewById(R.id.btn_record);
+        mPreview = (CameraSourcePreview) findViewById(R.id.preview);
+        mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
+        ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
+        toggleoverlayButton = (Button) findViewById(R.id.btn_toggle_overlay);
 
-            sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
+        sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
 
-            fs_current = new FaceSession();
-            fs_current.MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
-            fs_current.OriginalVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_orig_mp4pathname), null);
+        fs_current = new FaceSession();
+        //fs_current.MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
+        fs_current.OriginalVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_orig_mp4pathname), null);
 
-            FaceSessionProperty fsp1 = fs_current.GetNewProp();
-            fsp1._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
-            fsp1._lastfacekey = getString(R.string.p_file1_saved_trim1_last_face);
-            fsp1._lastfacetskey = getString(R.string.p_file1_saved_trim1_last_face_ts);
+        FaceSessionProperty fsp1 = fs_current.GetNewProp();
+        fsp1._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim1_mp4pathname), null);
+        fsp1._lastfacekey = getString(R.string.p_file1_saved_trim1_last_face);
+        fsp1._lastfacetskey = getString(R.string.p_file1_saved_trim1_last_face_ts);
 
-            FaceSessionProperty fsp2 = fs_current.GetNewProp();
-            fsp2._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
-            fsp2._lastfacekey = getString(R.string.p_file1_saved_trim2_last_face);
-            fsp2._lastfacetskey = getString(R.string.p_file1_saved_trim2_last_face_ts);
+        FaceSessionProperty fsp2 = fs_current.GetNewProp();
+        fsp2._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim2_mp4pathname), null);
+        fsp2._lastfacekey = getString(R.string.p_file1_saved_trim2_last_face);
+        fsp2._lastfacetskey = getString(R.string.p_file1_saved_trim2_last_face_ts);
 
-            FaceSessionProperty fsp3 = fs_current.GetNewProp();
-            fsp3._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
-            fsp3._lastfacekey = getString(R.string.p_file1_saved_trim3_last_face);
-            fsp3._lastfacetskey = getString(R.string.p_file1_saved_trim3_last_face_ts);
+        FaceSessionProperty fsp3 = fs_current.GetNewProp();
+        fsp3._trimmedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_trim3_mp4pathname), null);
+        fsp3._lastfacekey = getString(R.string.p_file1_saved_trim3_last_face);
+        fsp3._lastfacetskey = getString(R.string.p_file1_saved_trim3_last_face_ts);
 
-            isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
-            OverlayBitmapFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), null);
-            usingFrontCamera = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_current_session_camera_facing_is_front), false);
+        isnewsession = sharedpreferences.getBoolean(getString(R.string.p_file1_is_new), false);
+        OverlayBitmapFilePath = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), null);
+        usingFrontCamera = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_current_session_camera_facing_is_front), false);
 
-            if (!isnewsession) {//if not new session try to track face from last session
-                Gson gson = new Gson();
-                String json = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face), "");
-                lastsessionface = gson.fromJson(json, Face.class);
-            }
-
-
-
-            if (checkGooglePlayAvailability()) {
-
-                requestPermissionThenOpenCamera();
-
-
-                toggleoverlayButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (isoverlyshown) {
-
-                            isoverlyshown = false;
-                            mFaceGraphic.showoverlay = false;
-                        }
-                        else {
-                            isoverlyshown = true;
-                            mFaceGraphic.showoverlay = true;
-                        }
-                    }
-                });
-
-
-                recButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (mCamera2Source.mTrackRecord) {
-
-                            stopCameraSource(); //call this to release everything or all the shit breaks
-                            trackRecord = false;
-                            recButton.setText(R.string.record);
-                            requestPermissionThenOpenCamera(); //back to preview mode
-
-                            //this will have to stay constant throughout Grow baby session, if back and front don't support same resolutions will have to show user error or lock down camera facing
-                            VerifySaveLockedDownVidSize(mCamera2Source.mVideoSize);
-                            try {
-
-                                RunFaceProcessing(fs_current);
-
-                                //trim all preview videos
-                                //Toast.makeText(context, "Starting Trim Video", Toast.LENGTH_SHORT).show();
-                                for (FaceSessionProperty fsp : fs_current._props) {
-                                    CreateTrimmedVideo(fsp._previewbestfacedata, fs_current.OriginalVideoOutputFilepath, fsp._trimmedVideoOutputFilepath);
-                                    FindSaveLastFace(fs_current._faces, fsp);
-                                }
-
-                                Toast.makeText(context, "Smiles Captured & Created!", Toast.LENGTH_SHORT).show();
-                                //move control to edit activity
-                                TransfertoVideoEdit();
-                            }
-                            catch(IllegalArgumentException ex)
-                            {
-                                Toast.makeText(context, ex.getMessage(), Toast.LENGTH_SHORT).show();
-                                fs_current._faces.clear(); //remove all faces and try again
-                            }
-                        }
-                        else {
-                            stopCameraSource(); //call this to release everything or all the shit breaks
-                            trackRecord = true;
-                            recButton.setText(R.string.stop);
-                            requestPermissionThenOpenCamera();
-                        }
-                    }
-                });
-
-
-            }
-        } catch (Throwable e) {
-            Log.d(TAG,e.getMessage());
+        if (!isnewsession) {//if not new session try to track face from last session
+            Gson gson = new Gson();
+            String json = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face), "");
+            lastsessionface = gson.fromJson(json, Face.class);
         }
 
+
+        if (checkGooglePlayAvailability()) {
+
+            requestPermissionThenOpenCamera();
+
+
+            toggleoverlayButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isoverlyshown) {
+
+                        isoverlyshown = false;
+                        mFaceGraphic.showoverlay = false;
+                    }
+                    else {
+                        isoverlyshown = true;
+                        mFaceGraphic.showoverlay = true;
+                    }
+                }
+            });
+
+
+            recButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mCamera2Source.mTrackRecord) {
+
+                        stopCameraSource(); //call this to release everything or all the shit breaks
+                        trackRecord = false;
+                        recButton.setText(R.string.record);
+                        requestPermissionThenOpenCamera(); //back to preview mode
+
+                        //this will have to stay constant throughout Grow baby session, if back and front don't support same resolutions will have to show user error or lock down camera facing
+                        VerifySaveLockedDownVidSize(mCamera2Source.mVideoSize);
+                        try {
+
+                            RunFaceProcessing(fs_current);
+
+                            //trim all preview videos
+                            //Toast.makeText(context, "Starting Trim Video", Toast.LENGTH_SHORT).show();
+                            for (FaceSessionProperty fsp : fs_current._props) {
+                                CreateTrimmedVideo(fsp._previewbestfacedata, fs_current.OriginalVideoOutputFilepath, fsp._trimmedVideoOutputFilepath);
+                                FindSaveLastFace(fs_current._faces, fsp);
+                            }
+
+                            Toast.makeText(context, "Smiles Captured & Created!", Toast.LENGTH_SHORT).show();
+                            //move control to edit activity
+                            TransfertoVideoEdit();
+                        }
+                        catch(IllegalArgumentException ex) //meant to catch recording issues and bubbles up here so toast can be show to user to try again, don't need to log these
+                        {
+                            Toast.makeText(context, ex.getMessage(), Toast.LENGTH_SHORT).show();
+                            fs_current._faces.clear(); //remove all faces and try again
+                        }
+                    }
+                    else {
+                        stopCameraSource(); //call this to release everything or all the shit breaks
+                        trackRecord = true;
+                        recButton.setText(R.string.stop);
+                        requestPermissionThenOpenCamera();
+                    }
+                }
+            });
+
+        }
     }
 
 
@@ -219,8 +213,14 @@ public class CaptureActivity extends AppCompatActivity {
             int width = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_width), 0);
             int height = sharedpreferences.getInt(getString(R.string.p_file1_saved_main_mp4_fixed_height), 0);
 
+            //should not happen but just logging for now to see if it does
             if (width != recordedsize.getWidth() || height != recordedsize.getHeight())
-                throw new IllegalStateException("Resolution of video for saved project has changed! This is a problem!");
+            {
+                IllegalStateException ex  = new IllegalStateException("Resolution of video for saved project has changed! This is a problem!");
+                Log.d(TAG, ex.getMessage(), ex);
+                Helpers.Logger.LogExceptionToFile("VideoEditActivity.line306", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
+            }
+
         }
     }
 
@@ -269,15 +269,15 @@ public class CaptureActivity extends AppCompatActivity {
         if (bestfacetimestamps == null)
             return;
 
-        VideoUtils.TrimMedia(OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath, bestfacetimestamps.firstTimeStamp, bestfacetimestamps.lastTimeStamp, false, true);
+        VideoUtils.TrimMedia(OriginalVideoOutputFilepath, TrimmedVideoOutputFilepath, bestfacetimestamps.firstTimeStamp, bestfacetimestamps.lastTimeStamp, false, true, getApplicationContext());
     }
 
     //process all of first preview (data & results) and subsequent data only for all other previews
     private void Processfaces(ArrayList<Helpers.FrameData> _faces, FaceSessionProperty P)
     {
-        if (_faces == null || _faces.size() < GetFrameTotal()) {
+        if (_faces == null || _faces.size() < GetFrameTotal())
             throw new IllegalArgumentException("Not enough frames supplied. Try Recording Again!!");
-        }
+
 
         int coreframeslength = GetCoreFrames(); //core sample of frames will be two seconds of video might in future vary depending on user settings
         int computelimit = _faces.size() - GetFrameTotal(); //this will keep walking average calcs only happening within range
@@ -619,7 +619,7 @@ public class CaptureActivity extends AppCompatActivity {
     {
         private ArrayList<Helpers.FrameData> _faces = new ArrayList<>();
         private ArrayList<FaceSessionProperty> _props;
-        private String MainMergedVideoOutputFilepath;
+        //private String MainMergedVideoOutputFilepath;
         private String OriginalVideoOutputFilepath;
 
         private FaceSession ()

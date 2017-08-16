@@ -53,6 +53,7 @@ public class VideoUtils {
 
     private static final String LOGTAG = "VideoUtils";
     private static final int DEFAULT_BUFFER_SIZE = 1 * 1024 * 1024;
+    private static String errorfilename = "VideoUtilsErrors";
 
     /**
      * Remove the sound track.
@@ -61,14 +62,9 @@ public class VideoUtils {
 //            genVideoUsingMuxer(filePath, dstFileInfo.mFile.getPath(), -1.0, -1.0, false, true);
 //    }
 
-    public static void TrimMedia(String srcPath, String dstPath, Long startMs, Long endMs, boolean useAudio, boolean useVideo)
+    public static void TrimMedia(String srcPath, String dstPath, Long startMs, Long endMs, boolean useAudio, boolean useVideo, Context appcontext)
     {
-        String TAG = ".TrimMedia";
-        try {
-            genTrimVideoUsingMuxer(srcPath,  dstPath,  startMs,  endMs,  useAudio, useVideo);
-        } catch (IOException e) {
-            Log.d(LOGTAG + TAG, e.getMessage());
-        }
+        genTrimVideoUsingMuxer(srcPath,  dstPath,  startMs,  endMs,  useAudio, useVideo, appcontext);
     }
 
 
@@ -83,17 +79,23 @@ public class VideoUtils {
      * @param useVideo true if keep the video track from the source.
      * @throws IOException
      */
-    private static void genTrimVideoUsingMuxer(String srcPath, String dstPath, Long startMs, Long endMs, boolean useAudio, boolean useVideo) throws IOException {
+    private static void genTrimVideoUsingMuxer(String srcPath, String dstPath, Long startMs, Long endMs, boolean useAudio, boolean useVideo, Context appcontext)
+    {
         // Set up MediaExtractor to read from the source.
         MediaExtractor extractor = new MediaExtractor();
-        extractor.setDataSource(srcPath);
-        int trackCount = extractor.getTrackCount();
-        // Set up MediaMuxer for the destination.
-        MediaMuxer muxer;
-        muxer = new MediaMuxer(dstPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+        MediaMuxer muxer = null;
+        int trackCount = 0;
+        try {
+            extractor.setDataSource(srcPath);
+            trackCount = extractor.getTrackCount();
+            muxer = new MediaMuxer(dstPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+        } catch (IOException ex) {
+            Log.d(LOGTAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoUtils.genTrimVideoUsingMuxer", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
+        }
         // Set up the tracks and retrieve the max buffer size for selected
         // tracks.
-        HashMap<Integer, Integer> indexMap = new HashMap<Integer, Integer>(trackCount);
+        HashMap<Integer, Integer> indexMap = new HashMap<>(trackCount);
         int bufferSize = -1;
         for (int i = 0; i < trackCount; i++) {
             MediaFormat format = extractor.getTrackFormat(i);
@@ -162,7 +164,7 @@ public class VideoUtils {
         muxer.release();
     }
 
-    public static void MuxAudioVideo(String outputfilepath, String videofilepath, String audiopath) {
+    public static void MuxAudioVideo(String outputfilepath, String videofilepath, String audiopath, Context appcontext) {
         try {
 
             MediaExtractor videoExtractor = new MediaExtractor();
@@ -174,8 +176,8 @@ public class VideoUtils {
             //final AssetFileDescriptor afd= context.getResources().openRawResourceFd(audioFilerawid);
             audioExtractor.setDataSource(audiopath);
 
-            Log.d(LOGTAG, "Video Extractor Track Count " + videoExtractor.getTrackCount());
-            Log.d(LOGTAG, "Audio Extractor Track Count " + audioExtractor.getTrackCount());
+//            Log.d(LOGTAG, "Video Extractor Track Count " + videoExtractor.getTrackCount());
+//            Log.d(LOGTAG, "Audio Extractor Track Count " + audioExtractor.getTrackCount());
 
             MediaMuxer muxer = new MediaMuxer(outputfilepath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
 
@@ -187,8 +189,8 @@ public class VideoUtils {
             MediaFormat audioFormat = audioExtractor.getTrackFormat(0);
             int audioTrack = muxer.addTrack(audioFormat);
 
-            Log.d(LOGTAG, "Video Format " + videoFormat.toString());
-            Log.d(LOGTAG, "Audio Format " + audioFormat.toString());
+//            Log.d(LOGTAG, "Video Format " + videoFormat.toString());
+//            Log.d(LOGTAG, "Audio Format " + audioFormat.toString());
 
             boolean sawEOS = false;
             int frameCount = 0;
@@ -223,8 +225,8 @@ public class VideoUtils {
 
 
                     frameCount++;
-                    Log.d(LOGTAG, "Frame (" + frameCount + ") Video PresentationTimeUs:" + videoBufferInfo.presentationTimeUs + " Flags:" + videoBufferInfo.flags + " Size(KB) " + videoBufferInfo.size / 1024);
-                    Log.d(LOGTAG, "Frame (" + frameCount + ") Audio PresentationTimeUs:" + audioBufferInfo.presentationTimeUs + " Flags:" + audioBufferInfo.flags + " Size(KB) " + audioBufferInfo.size / 1024);
+//                    Log.d(LOGTAG, "Frame (" + frameCount + ") Video PresentationTimeUs:" + videoBufferInfo.presentationTimeUs + " Flags:" + videoBufferInfo.flags + " Size(KB) " + videoBufferInfo.size / 1024);
+//                    Log.d(LOGTAG, "Frame (" + frameCount + ") Audio PresentationTimeUs:" + audioBufferInfo.presentationTimeUs + " Flags:" + audioBufferInfo.flags + " Size(KB) " + audioBufferInfo.size / 1024);
 
                 }
             }
@@ -233,10 +235,7 @@ public class VideoUtils {
 
 
             boolean sawEOS2 = false;
-            int frameCount2 = 0;
             while (!sawEOS2) {
-                frameCount2++;
-
                 audioBufferInfo.offset = offset;
                 audioBufferInfo.size = audioExtractor.readSampleData(audioBuf, offset);
 
@@ -250,10 +249,8 @@ public class VideoUtils {
                     muxer.writeSampleData(audioTrack, audioBuf, audioBufferInfo);
                     audioExtractor.advance();
 
-
-                    Log.d(LOGTAG, "Frame (" + frameCount + ") Video PresentationTimeUs:" + videoBufferInfo.presentationTimeUs + " Flags:" + videoBufferInfo.flags + " Size(KB) " + videoBufferInfo.size / 1024);
-                    Log.d(LOGTAG, "Frame (" + frameCount + ") Audio PresentationTimeUs:" + audioBufferInfo.presentationTimeUs + " Flags:" + audioBufferInfo.flags + " Size(KB) " + audioBufferInfo.size / 1024);
-
+//                    Log.d(LOGTAG, "Frame (" + frameCount + ") Video PresentationTimeUs:" + videoBufferInfo.presentationTimeUs + " Flags:" + videoBufferInfo.flags + " Size(KB) " + videoBufferInfo.size / 1024);
+//                    Log.d(LOGTAG, "Frame (" + frameCount + ") Audio PresentationTimeUs:" + audioBufferInfo.presentationTimeUs + " Flags:" + audioBufferInfo.flags + " Size(KB) " + audioBufferInfo.size / 1024);
                 }
             }
 
@@ -263,73 +260,18 @@ public class VideoUtils {
             muxer.release();
 
 
-        } catch (IOException e) {
-            Log.d(LOGTAG, "Mixer Error 1 " + e.getMessage());
-        } catch (Exception e) {
-            Log.d(LOGTAG, "Mixer Error 2 " + e.getMessage());
+        }
+        catch (Exception ex) {
+            Log.d(LOGTAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoUtils.MuxAudioVideo", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
         }
     }
 
-    //works good for similar videos only, Must have same fps, resolution and codec, might not need it if replacement below is fast enough (MuxMergeVideos)
-    public static void Mp4ParserMergeVideos(String outputfilepath, String FirstVideoPath, String SecondVideoPath) {
 
-        Movie[] clips = new Movie[2];
-        try {
-            //location of the movie clip storage
-            //File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "TestMerge");
-
-            //Build the two clips into movies
-
-            Movie firstClip = MovieCreator.build(FirstVideoPath);
-            Movie secondClip = MovieCreator.build(SecondVideoPath);
-
-            //Add both movie clips
-            clips[0] = firstClip;
-            clips[1] = secondClip;
-
-            //List for audio and video tracks
-            List<Track> videoTracks = new LinkedList<>();
-            List<Track> audioTracks = new LinkedList<>();
-
-            //Iterate all the movie clips and find the audio and videos
-            for (Movie movie : clips) {
-                for (Track track : movie.getTracks()) {
-                    if (track.getHandler().equals("soun"))
-                        audioTracks.add(track);
-                    if (track.getHandler().equals("vide"))
-                        videoTracks.add(track);
-                }
-            }
-
-            //Result movie from putting the audio and video together from the two clips
-            Movie result = new Movie();
-
-            //Append all audio and video
-            if (videoTracks.size() > 0)
-                result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
-
-            if (audioTracks.size() > 0)
-                result.addTrack(new AppendTrack(audioTracks.toArray(new Track[audioTracks.size()])));
-
-            //Output the resulting movie to a new mp4 file
-//        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-//        String outputLocation = mediaStorageDir.getPath() + timeStamp;
-            Container out = new DefaultMp4Builder().build(result);
-            FileChannel fc = new RandomAccessFile(String.format(outputfilepath), "rw").getChannel();
-
-            out.writeContainer(fc);
-
-            fc.close();
-        }
-        catch (IOException e) {
-            Log.d(LOGTAG, "Merge Error " + e.getMessage());
-        }
-
-    }
 
     //this one works better than Mp4ParserMergeVideos for some different video types, but they still need to have same resolution might not be as fast
     //Can't use anything with audio or this will not work, must keep copy of audio free version for all merging because will need to trim song and re-add it anyways
-    public static boolean MuxMergeVideos(File dst, File... sources) {
+    public static boolean MuxMergeVideos(Context appcontext, File dst, File... sources) {
 
         int MAX_SAMPLE_SIZE = 1000000; //not sure best value for this yet
         int APPEND_DELAY = 0; //not sure best value for this yet
@@ -358,7 +300,7 @@ public class VideoUtils {
             int dstTrackIndex = -1;
 
             for (int fileIndex = 0; fileIndex < sources.length; fileIndex++) {
-                int numberOfSamplesInSource = getNumberOfSamples(sources[fileIndex]);
+                int numberOfSamplesInSource = getNumberOfSamples(sources[fileIndex], appcontext);
 //                if (VERBOSE) {
 //                    Log.d(TAG, String.format("Source file: %s", sources[fileIndex].getPath()));
 //                }
@@ -420,8 +362,10 @@ public class VideoUtils {
 
             result = true;
         }
-        catch (IOException e) {
+        catch (IOException ex) {
             result = false;
+            Log.d(LOGTAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoUtils.MuxMergeVideos", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
         }
         finally {
             if (extractor != null) {
@@ -436,7 +380,7 @@ public class VideoUtils {
     }
 
 
-    public static int getNumberOfSamples(File src) {
+    private static int getNumberOfSamples(File src, Context appcontext) {
         MediaExtractor extractor = new MediaExtractor();
         int result;
         try {
@@ -448,8 +392,10 @@ public class VideoUtils {
                 result ++;
             }
         }
-        catch(IOException e) {
+        catch(IOException ex) {
             result = -1;
+            Log.d(LOGTAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoUtils.getNumberOfSamples", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
         }
         finally {
             extractor.release();
@@ -496,7 +442,7 @@ public class VideoUtils {
     }
 
     //uses jcodec might need to find way to do this with phones codecs instead
-    public static void CreatevideoFromBitmaps(File fullpath, ArrayList<Bitmap> bitmaps, int numofframes) {
+    public static void CreatevideoFromBitmaps(File fullpath, ArrayList<Bitmap> bitmaps, int numofframes, Context appcontext) {
         try {
             SequenceEncoder encoder = new SequenceEncoder(fullpath);
             for(Bitmap bmap: bitmaps)
@@ -509,8 +455,9 @@ public class VideoUtils {
             }
             encoder.finish();
 
-        } catch (IOException e) {
-            Log.d(LOGTAG, "CreatevideoFromBitmap Error " + e.getMessage());
+        } catch (IOException ex) {
+            Log.d(LOGTAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoUtils.CreatevideoFromBitmaps", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
         }
     }
 
@@ -550,15 +497,18 @@ public class VideoUtils {
         }
     }
 
-    public static ArrayList<Long> Getvidtimestamps(String Videopath){
+    public static ArrayList<Long> GetVidTimestamps(String Videopath, Context appcontext)
+    {
 
         ArrayList<Long> vidtimes = new ArrayList<>();
         MediaExtractor extractor = new MediaExtractor();
 
         try {
             extractor.setDataSource(Videopath);
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        catch (IOException ex) {
+            Log.d(LOGTAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoUtils.GetVidTimestamps", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
         }
 
         //int trackindex = extractor.selectTrack(0);
@@ -608,9 +558,8 @@ public class VideoUtils {
 
 
 
-    public static void CopyResourcetoDisk(InputStream in, String outpath)
+    public static void CopyResourcetoDisk(InputStream in, String outpath, Context appcontext)
     {
-        //InputStream in = getResources().openRawResource(R.raw.myresource);
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(outpath);
@@ -622,19 +571,78 @@ public class VideoUtils {
                 out.write(buff, 0, read);
             }
         }
-        catch (IOException e) {
-            e.printStackTrace();
+        catch (IOException ex) {
+            Log.d(LOGTAG, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("VideoUtils.CopyResourcetoDisk", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
         }
         finally {
             try {
                 in.close();
                 out.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ex) {
+                Log.d(LOGTAG, ex.getMessage(), ex);
+                Helpers.Logger.LogExceptionToFile("VideoUtils.CopyResourcetoDisk", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
             }
         }
     }
 
+
+    //works good for similar videos only, Must have same fps, resolution and codec, might not need it if replacement below is fast enough (MuxMergeVideos)
+//    public static void Mp4ParserMergeVideos(String outputfilepath, String FirstVideoPath, String SecondVideoPath) {
+//
+//        Movie[] clips = new Movie[2];
+//        try {
+//            //location of the movie clip storage
+//            //File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "TestMerge");
+//
+//            //Build the two clips into movies
+//
+//            Movie firstClip = MovieCreator.build(FirstVideoPath);
+//            Movie secondClip = MovieCreator.build(SecondVideoPath);
+//
+//            //Add both movie clips
+//            clips[0] = firstClip;
+//            clips[1] = secondClip;
+//
+//            //List for audio and video tracks
+//            List<Track> videoTracks = new LinkedList<>();
+//            List<Track> audioTracks = new LinkedList<>();
+//
+//            //Iterate all the movie clips and find the audio and videos
+//            for (Movie movie : clips) {
+//                for (Track track : movie.getTracks()) {
+//                    if (track.getHandler().equals("soun"))
+//                        audioTracks.add(track);
+//                    if (track.getHandler().equals("vide"))
+//                        videoTracks.add(track);
+//                }
+//            }
+//
+//            //Result movie from putting the audio and video together from the two clips
+//            Movie result = new Movie();
+//
+//            //Append all audio and video
+//            if (videoTracks.size() > 0)
+//                result.addTrack(new AppendTrack(videoTracks.toArray(new Track[videoTracks.size()])));
+//
+//            if (audioTracks.size() > 0)
+//                result.addTrack(new AppendTrack(audioTracks.toArray(new Track[audioTracks.size()])));
+//
+//            //Output the resulting movie to a new mp4 file
+////        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+////        String outputLocation = mediaStorageDir.getPath() + timeStamp;
+//            Container out = new DefaultMp4Builder().build(result);
+//            FileChannel fc = new RandomAccessFile(String.format(outputfilepath), "rw").getChannel();
+//
+//            out.writeContainer(fc);
+//
+//            fc.close();
+//        }
+//        catch (IOException e) {
+//            Log.d(LOGTAG, "Merge Error " + e.getMessage());
+//        }
+//
+//    }
 
 
 }

@@ -141,20 +141,20 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
             myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * bitmapscale, smallface.getHeight() * bitmapscale, false);
         }
 
-        animation1 = new ArrayList<>();
-
-        AssetManager am = context.getAssets();
-        for (int i = 0; i < 18; i++)
-        {
-            Bitmap bmp = null;
-            try {
-                bmp = BitmapFactory.decodeStream(am.open("Animation1/frame_" + i +".gif"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            animation1.add(bmp);
-
-        }
+//        animation1 = new ArrayList<>();
+//
+//        AssetManager am = context.getAssets();
+//        for (int i = 0; i < 18; i++)
+//        {
+//            Bitmap bmp = null;
+//            try {
+//                bmp = BitmapFactory.decodeStream(am.open("Animation1/frame_" + i +".gif"));
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            animation1.add(bmp);
+//
+//        }
     }
 
     public void setId(int id) {
@@ -247,15 +247,15 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         }
 
 
-        if (Math.round(numberofgoodfaces) >= 10)
-        {
-            if (animatecounter <= 17) {
-                canvas.drawBitmap(animation1.get((int)Math.round(animatecounter)), x + ID_X_OFFSET *2 , y + ID_Y_OFFSET * 2, null);
-                animatecounter += .3;
-            }
-            else
-                animatecounter = 0;
-        }
+//        if (Math.round(numberofgoodfaces) >= 10)
+//        {
+//            if (animatecounter <= 17) {
+//                canvas.drawBitmap(animation1.get((int)Math.round(animatecounter)), x + ID_X_OFFSET *2 , y + ID_Y_OFFSET * 2, null);
+//                animatecounter += .3; //rate of frames
+//            }
+//            else
+//                animatecounter = 0;
+//        }
 
     }
 
