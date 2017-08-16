@@ -1,6 +1,7 @@
 package com.app.growbabygrow.Classes;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,6 +18,8 @@ import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.Landmark;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import static android.R.attr.x;
 
@@ -30,6 +33,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
     private Bitmap smiley;
     private Bitmap cool;
     private Bitmap myface;
+
+    private ArrayList<Bitmap> animation1;
     public Boolean showoverlay = false;
 
     private BitmapFactory.Options opt;
@@ -87,6 +92,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
     private Face lastsessionface;
 
+    private double animatecounter = 0;
+
 //    public FaceGraphic(GraphicOverlay overlay, Context context) {
 //        super(overlay);
 //        opt = new BitmapFactory.Options();
@@ -132,6 +139,21 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
             int bitmapscale = context.getResources().getInteger(R.integer.overlay_image_scale); //global constant for bitmap scale
             Bitmap smallface = BitmapFactory.decodeFile(overlaybitmap.getAbsolutePath());
             myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * bitmapscale, smallface.getHeight() * bitmapscale, false);
+        }
+
+        animation1 = new ArrayList<>();
+
+        AssetManager am = context.getAssets();
+        for (int i = 0; i < 18; i++)
+        {
+            Bitmap bmp = null;
+            try {
+                bmp = BitmapFactory.decodeStream(am.open("Animation1/frame_" + i +".gif"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            animation1.add(bmp);
+
         }
     }
 
@@ -225,6 +247,15 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         }
 
 
+        if (Math.round(numberofgoodfaces) >= 10)
+        {
+            if (animatecounter <= 17) {
+                canvas.drawBitmap(animation1.get((int)Math.round(animatecounter)), x + ID_X_OFFSET *2 , y + ID_Y_OFFSET * 2, null);
+                animatecounter += .3;
+            }
+            else
+                animatecounter = 0;
+        }
 
     }
 
