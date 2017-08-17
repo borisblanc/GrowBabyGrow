@@ -243,6 +243,7 @@ public class VideoEditActivity extends AppCompatActivity {
                     if (!performMerge)
                         return;
 
+                    Toast.makeText(context, "Merging Baby Grow!", Toast.LENGTH_SHORT).show();
                     Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200); //not working here!! why??
                     //face image for next session overlay
                     Thread th = new Thread(new Runnable() {
@@ -295,7 +296,8 @@ public class VideoEditActivity extends AppCompatActivity {
                             while (!ispreviewready) {
                                 try {
                                     Thread.sleep(1000);
-                                } catch (InterruptedException ex) {
+                                }
+                                catch (InterruptedException ex) {
                                     Log.d(TAG, ex.getMessage(), ex);
                                     Helpers.Logger.LogExceptionToFile("VideoEditActivity.line306", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
                                 }
@@ -417,8 +419,6 @@ public class VideoEditActivity extends AppCompatActivity {
 
         detector.release();
     }
-
-
 
 
     private Bitmap crop (Bitmap src, Face face)

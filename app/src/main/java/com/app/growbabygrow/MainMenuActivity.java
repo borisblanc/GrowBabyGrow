@@ -22,10 +22,7 @@ import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.app.growbabygrow.Classes.Helpers;
-import com.app.growbabygrow.Classes.Utils;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
@@ -95,7 +92,6 @@ public class MainMenuActivity extends AppCompatActivity {
         return new File(baseVideoFileDir, "overlay_" + GetHash() + ".bmp");
     }
 
-
     private ListView mDrawerList;
     private RelativeLayout mDrawerPane;
     private Helpers.DrawerListAdapter mAdapter;
@@ -134,6 +130,8 @@ public class MainMenuActivity extends AppCompatActivity {
             Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
             Period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
             MainMergedVideoOutputFilepath_has_Audio = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_main_has_audio), false);
+            usingFrontCamera = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_current_session_camera_facing_is_front), false);
+            camSwitch.setChecked(usingFrontCamera);
 
 
             if (Name == null) {//no projects exist
@@ -162,7 +160,6 @@ public class MainMenuActivity extends AppCompatActivity {
                                     SharedPreferences.Editor editor = sharedpreferences.edit();
                                     //set isnew flag so we can create intro movie later this will be set to false after intro video is created and merged in videoedit
                                     editor.putBoolean(getString(R.string.p_file1_is_new), true);
-
                                     editor.putString(getString(R.string.p_file1_saved_name), Name);
                                     editor.putString(getString(R.string.p_file1_saved_period), Period);
                                     editor.putString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), OverlayBitmapFilePath().getAbsolutePath());

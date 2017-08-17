@@ -76,7 +76,7 @@ public class Camera2Source {
 
 
     public static final int CAMERA_FLASH_AUTO = CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH;
-    private int mFlashMode = CAMERA_FLASH_AUTO;
+    //private int mFlashMode = CAMERA_FLASH_AUTO;
 
     public static final int CAMERA_AF_AUTO = CaptureRequest.CONTROL_AF_MODE_AUTO;
     private int mFocusMode = CAMERA_AF_AUTO;
@@ -288,10 +288,10 @@ public class Camera2Source {
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
-            if (mTrackRecord)
+            //if (mTrackRecord)
                 createCameraTrackRecordSession();
-            else
-                createPreviewSession();
+//            else
+//                createPreviewSession();
             //mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         }
         @Override
@@ -355,10 +355,10 @@ public class Camera2Source {
             return this;
         }
 
-        public Builder setFlashMode(int mode) {
-            mCameraSource.mFlashMode = mode;
-            return this;
-        }
+//        public Builder setFlashMode(int mode) {
+//            mCameraSource.mFlashMode = mode;
+//            return this;
+//        }
 
         /**
          * Sets the camera to use (either {@link #CAMERA_FACING_BACK} or
@@ -870,13 +870,15 @@ public class Camera2Source {
      */
     private void createCameraTrackRecordSession() {
         try {
-            closePreviewSession();
+            //closePreviewSession();
+
+            List<Surface> outputs = new ArrayList<>();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
-            assert texture != null;
 
             // We configure the size of default buffer to be the size of camera preview we want.
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
 
+            //image reader sends frames to runnable
             mImageReaderPreview = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.YUV_420_888, 1);
             mImageReaderPreview.setOnImageAvailableListener(mOnPreviewAvailableListener, mBackgroundHandler);
 
@@ -887,13 +889,19 @@ public class Camera2Source {
             mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             mPreviewRequestBuilder.addTarget(surface);
             mPreviewRequestBuilder.addTarget(mImageReaderPreview.getSurface());
+            outputs.add(surface);
+            outputs.add(mImageReaderPreview.getSurface());
 
-            Surface recorderSurface = mMediaRecorder.getSurface();
-            //surfaces.add(recorderSurface);
-            mPreviewRequestBuilder.addTarget(recorderSurface);
+            if (mTrackRecord) {
+                Surface recorderSurface = mMediaRecorder.getSurface();
+                mPreviewRequestBuilder.addTarget(recorderSurface);
+                outputs.add(recorderSurface);
+            }
+
+
 
             // Here, we create a CameraCaptureSession for camera preview.
-            mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReaderPreview.getSurface(), mMediaRecorder.getSurface()),
+            mCameraDevice.createCaptureSession(outputs,
 
                     new CameraCaptureSession.StateCallback() {
                         @Override
@@ -908,9 +916,10 @@ public class Camera2Source {
                             try {
                                 // Auto focus should be continuous for camera preview.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, mFocusMode);
-                                if(mFlashSupported) {
-                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, mFlashMode);
-                                }
+
+//                                if (mFlashSupported) {
+//                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, mFlashMode);
+//                                }
                                 //should stabilize if possible
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CONTROL_VIDEO_STABILIZATION_MODE_ON);
 
@@ -921,9 +930,11 @@ public class Camera2Source {
                                 //mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest, null, mBackgroundHandler);
 
-                                mTrackRecord = true;
+
+
                                 // Start recording
-                                mMediaRecorder.start();
+                                if (mTrackRecord)
+                                    mMediaRecorder.start();
                             }
                             catch (CameraAccessException ex) {
                                 Log.e(TAG, ex.getMessage(), ex);
@@ -954,72 +965,72 @@ public class Camera2Source {
         }
     }
 
-    private void closePreviewSession() {
-        if (mPreviewSession != null) {
-            mPreviewSession.close();
-            mPreviewSession = null;
-        }
-    }
+//    private void closePreviewSession() {
+//        if (mPreviewSession != null) {
+//            mPreviewSession.close();
+//            mPreviewSession = null;
+//        }
+//    }
 
     /**
      * Start the camera preview.
      */
-    private void createPreviewSession() {
-        if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
-            return;
-        }
-        try {
-            //closePreviewSession();
-            SurfaceTexture texture = mTextureView.getSurfaceTexture();
-            assert texture != null;
-            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-            mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+//    private void createPreviewSession() {
+//        if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
+//            return;
+//        }
+//        try {
+//            //closePreviewSession();
+//            SurfaceTexture texture = mTextureView.getSurfaceTexture();
+//            assert texture != null;
+//            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+//            mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+//
+//            Surface previewSurface = new Surface(texture);
+//            mPreviewBuilder.addTarget(previewSurface);
+//
+//            mCameraDevice.createCaptureSession(Collections.singletonList(previewSurface),
+//                    new CameraCaptureSession.StateCallback() {
+//
+//                        @Override
+//                        public void onConfigured(@NonNull CameraCaptureSession session) {
+//                            mPreviewSession = session;
+//                            updatePreview();
+//                        }
+//
+//                        @Override
+//                        public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+//                            Activity activity = (Activity) mContext;
+//                            if (null != activity) {
+//                                Toast.makeText(activity, "Failed Preview", Toast.LENGTH_SHORT).show();
+//                            }
+//                        }
+//                    }, mBackgroundHandler);
+//        }
+//        catch (CameraAccessException ex) {
+//            Log.e(TAG, ex.getMessage(), ex);
+//            Helpers.Logger.LogExceptionToFile("Camera2Source.createPreviewSession", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
+//        }
+//    }
 
-            Surface previewSurface = new Surface(texture);
-            mPreviewBuilder.addTarget(previewSurface);
-
-            mCameraDevice.createCaptureSession(Collections.singletonList(previewSurface),
-                    new CameraCaptureSession.StateCallback() {
-
-                        @Override
-                        public void onConfigured(@NonNull CameraCaptureSession session) {
-                            mPreviewSession = session;
-                            updatePreview();
-                        }
-
-                        @Override
-                        public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                            Activity activity = (Activity) mContext;
-                            if (null != activity) {
-                                Toast.makeText(activity, "Failed Preview", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }, mBackgroundHandler);
-        }
-        catch (CameraAccessException ex) {
-            Log.e(TAG, ex.getMessage(), ex);
-            Helpers.Logger.LogExceptionToFile("Camera2Source.createPreviewSession", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
-        }
-    }
-
-    /**
-     * Update the camera preview. {@link #createPreviewSession()} needs to be called in advance.
-     */
-    private void updatePreview() {
-        if (null == mCameraDevice) {
-            return;
-        }
-        try {
-            mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-            HandlerThread thread = new HandlerThread("CameraPreview");
-            thread.start();
-            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
-        }
-        catch (CameraAccessException ex) {
-            Log.e(TAG, ex.getMessage(), ex);
-            Helpers.Logger.LogExceptionToFile("Camera2Source.updatePreview", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
-        }
-    }
+//    /**
+//     * Update the camera preview. {@link #createPreviewSession()} needs to be called in advance.
+//     */
+//    private void updatePreview() {
+//        if (null == mCameraDevice) {
+//            return;
+//        }
+//        try {
+//            mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+//            HandlerThread thread = new HandlerThread("CameraPreview");
+//            thread.start();
+//            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
+//        }
+//        catch (CameraAccessException ex) {
+//            Log.e(TAG, ex.getMessage(), ex);
+//            Helpers.Logger.LogExceptionToFile("Camera2Source.updatePreview", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
+//        }
+//    }
 
     /**
      * This runnable controls access to the underlying receiver, calling it to process frames when

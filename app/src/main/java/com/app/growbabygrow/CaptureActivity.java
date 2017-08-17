@@ -420,16 +420,18 @@ public class CaptureActivity extends AppCompatActivity {
 
     private void createCameraSource(int facing)
     {
-        if (trackRecord) {
-            previewFaceDetector = new FaceDetector.Builder(context)
-                    .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-                    .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-                    .setMode(FaceDetector.ACCURATE_MODE) //need accurate mode for Euler Y
-                    .setProminentFaceOnly(true)
-                    .setTrackingEnabled(true)
-                    .setMinFaceSize((float)0.05)
-                    .build();
 
+        previewFaceDetector = new FaceDetector.Builder(context)
+                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                .setMode(FaceDetector.ACCURATE_MODE) //need accurate mode for Euler Y
+                .setProminentFaceOnly(true)
+                .setTrackingEnabled(true)
+                .setMinFaceSize((float)0.05)
+                .build();
+
+
+        if (trackRecord) {
             CustomFaceDetector faceDetector = new CustomFaceDetector(previewFaceDetector, fs_current._faces);
 
             if (previewFaceDetector.isOperational()) {
@@ -441,10 +443,11 @@ public class CaptureActivity extends AppCompatActivity {
                 Toast.makeText(context, "FACE DETECTION NOT AVAILABLE", Toast.LENGTH_SHORT).show();
             }
 
+
             if (useCamera2) {
                 mCamera2Source = new Camera2Source.Builder(context, faceDetector, fs_current.OriginalVideoOutputFilepath)
                         .setFocusMode(Camera2Source.CAMERA_AF_AUTO)
-                        .setFlashMode(Camera2Source.CAMERA_FLASH_AUTO)
+                        //.setFlashMode(Camera2Source.CAMERA_FLASH_AUTO)
                         .setFacing(facing) //Camera2Source.CAMERA_FACING_FRONT = 1 or CAMERA_FACING_BACK = 0
                         .build();
 
@@ -467,8 +470,16 @@ public class CaptureActivity extends AppCompatActivity {
         }
         else //preview only camera 2 only for now
         {
-            mCamera2Source = new Camera2Source.Builder(context)
-                    .setFacing(facing)
+            if (previewFaceDetector.isOperational()) {
+                previewFaceDetector.setProcessor(new LargestFaceFocusingProcessor.Builder(previewFaceDetector, new GraphicFaceTracker(mGraphicOverlay)).build());
+            }
+            else {
+                Toast.makeText(context, "FACE DETECTION NOT AVAILABLE", Toast.LENGTH_SHORT).show();
+            }
+
+            mCamera2Source = new Camera2Source.Builder(context, previewFaceDetector, null)
+                    .setFocusMode(Camera2Source.CAMERA_AF_AUTO)
+                    .setFacing(facing) //Camera2Source.CAMERA_FACING_FRONT = 1 or CAMERA_FACING_BACK = 0
                     .build();
             startCameraSource();
         }

@@ -135,14 +135,17 @@ public class Utils {
             bos = new BufferedOutputStream(new FileOutputStream(fullfilepath));
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
         }
-        catch (Exception ex){
+        catch (Exception ex)
+        {
             Log.d(tag, ex.getMessage(), ex);
             Helpers.Logger.LogExceptionToFile(tag, Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
         }
-        finally {
+        finally
+        {
             try {
                 bos.close();
-            } catch (IOException ex) {
+            }
+            catch (IOException ex) {
                 Log.d(tag, ex.getMessage(), ex);
                 Helpers.Logger.LogExceptionToFile(tag, Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
             }
