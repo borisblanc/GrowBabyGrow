@@ -309,16 +309,16 @@ public class AudioActivity extends AppCompatActivity {
             InputStream in = getResources().openRawResource(rawmusicid);
             File audiofile = new File(baseVideoDir, rawmusicid + ".m4a");
             if (!audiofile.exists()) //if not copied to disk yet then do it
-                VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath());
+                VideoUtils.CopyResourcetoDisk(in, audiofile.getAbsolutePath(), getApplicationContext());
 
 
             long videoDuration = VideoUtils.GetMediaDurationMilli(MainMergedVideoOutputFile().getAbsolutePath());
 
             //trims mp3
-            VideoUtils.TrimMedia(audiofile.getAbsolutePath(), new File(baseVideoDir, rawmusicid + "_trim.m4a").getAbsolutePath(), 0L, videoDuration, true, false);
+            VideoUtils.TrimMedia(audiofile.getAbsolutePath(), new File(baseVideoDir, rawmusicid + "_trim.m4a").getAbsolutePath(), 0L, videoDuration, true, false, getApplicationContext());
 
             //must merge into new mp4 with audio and leave original alone for later merges
-            VideoUtils.MuxAudioVideo(MainMergedVideoOutputFilepath_with_audio, MainMergedVideoOutputFile().getAbsolutePath(), new File(baseVideoDir, rawmusicid + "_trim.m4a").getAbsolutePath());
+            VideoUtils.MuxAudioVideo(MainMergedVideoOutputFilepath_with_audio, MainMergedVideoOutputFile().getAbsolutePath(), new File(baseVideoDir, rawmusicid + "_trim.m4a").getAbsolutePath(), getApplicationContext());
             DeselectOthers(0);
             SetAudioMovieInfo(rawmusicid);
         }
@@ -383,17 +383,17 @@ public class AudioActivity extends AppCompatActivity {
 
     private class MusicFile
     {
-        public String _Name;
-        public String _Duration;
-        public int _FileId;
-        public String _Artist;
-        public int _PlayerId;
+        String _Name;
+        String _Duration;
+        int _FileId;
+        String _Artist;
+        int _PlayerId;
 
-        public View _MusicPlayer;
-        public MusicPlayerController _MPController;
+        View _MusicPlayer;
+        MusicPlayerController _MPController;
 
 
-        public MusicFile(int fileId, String name, String duration, String artist, int playerid)
+        MusicFile(int fileId, String name, String duration, String artist, int playerid)
         {
             _Name = name;
             _Duration = duration;

@@ -240,34 +240,36 @@ public class VideoEditActivity extends AppCompatActivity {
 //                            })
 //                            .setNegativeButton(android.R.string.no, null).show();
 
-                    if (performMerge) {
-                        Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
-                        //face image for next session overlay
-                        Thread th = new Thread(new Runnable() {
-                            public void run() {
-                                ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
-                                SetNextSessionface(SelectedTrimmedVideoface); //next session face
-                            }
-                        });
-                        th.start();
+                    if (!performMerge)
+                        return;
 
-                        VideoUtils.MuxMergeVideos(getApplicationContext(), new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
+                    Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200); //not working here!! why??
+                    //face image for next session overlay
+                    Thread th = new Thread(new Runnable() {
+                        public void run() {
+                            ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
+                            SetNextSessionface(SelectedTrimmedVideoface); //next session face
+                        }
+                    });
+                    th.start();
 
-                        if (MainMergedVideoOutputFilepath_has_Audio) //if audio version exists need to merge it also
-                            MergeAudio();
+                    VideoUtils.MuxMergeVideos(getApplicationContext(), new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
+
+                    if (MainMergedVideoOutputFilepath_has_Audio) //if audio version exists need to merge it also
+                        MergeAudio();
 
 
-                        Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
-                        HidePreviewsShowGoodbye();
-                        Utils.animateView(progressOverlay, View.GONE, 0, 200);
-                    }
+                    Toast.makeText(context, "Merging into Baby Grow Completed", Toast.LENGTH_SHORT).show();
+                    HidePreviewsShowGoodbye();
+                    Utils.animateView(progressOverlay, View.GONE, 0, 200);
                 }
                 else //first time when no movie yet rename selected trim to main and add merge in intro movie
                 {
 
-                    performMerge = SyncDialogue.getYesNoWithExecutionStop("Merge Baby Grow?", "Are you sure you want merge this Video into your Baby Grow?", VideoEditActivity.this);
+                    performMerge = SyncDialogue.getYesNoWithExecutionStop("Create New Baby Grow?", "Are you sure you want to start your Baby Grow with this video?", VideoEditActivity.this);
                     if (!performMerge)
                         return;
+
                     //need to block UI thread and show loading overlay if preview isn't ready yet and poll until it is
                     if (!ispreviewready) {
                         Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_LONG).show();
