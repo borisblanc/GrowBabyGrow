@@ -74,10 +74,6 @@ public class Camera2Source {
     public static final int CAMERA_FACING_FRONT = 1;
     private int mFacing = CAMERA_FACING_BACK;
 
-
-    public static final int CAMERA_FLASH_AUTO = CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH;
-    //private int mFlashMode = CAMERA_FLASH_AUTO;
-
     public static final int CAMERA_AF_AUTO = CaptureRequest.CONTROL_AF_MODE_AUTO;
     private int mFocusMode = CAMERA_AF_AUTO;
 
@@ -109,11 +105,6 @@ public class Camera2Source {
      */
     private Handler mBackgroundHandler;
 
-    /**
-     * Camera state: Showing camera preview.
-     */
-    private static final int STATE_PREVIEW = 0;
-
 
     private int mDisplayOrientation;
 
@@ -127,12 +118,6 @@ public class Camera2Source {
      */
     private CaptureRequest mPreviewRequest;
 
-    //    /**
-//     * The current state of camera state for taking pictures.
-//     *
-//     * @see #mCaptureCallback
-//     */
-    private int mState = STATE_PREVIEW;
 
     /**
      * A {@link CameraCaptureSession } for camera preview.
@@ -191,11 +176,6 @@ public class Camera2Source {
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
     /**
-     * Whether the current camera device supports Flash or not.
-     */
-    private boolean mFlashSupported;
-
-    /**
      * Dedicated thread and associated runnable for calling into the detector with frames, as the
      * frames become available from the camera.
      */
@@ -215,47 +195,13 @@ public class Camera2Source {
 
     public String mNextVideoAbsolutePath;
 
-    private CameraCaptureSession mPreviewSession;
-//    /**
-//     * An {@link ImageReader} that handles still image capture.
-//     */
-//    private ImageReader mImageReaderStill;
 
     /**
      * An {@link ImageReader} that handles live preview.
      */
     private ImageReader mImageReaderPreview;
 
-    private CaptureRequest.Builder mPreviewBuilder;
-
-    public boolean mTrackRecord;
-
-//    private TextureView.SurfaceTextureListener mSurfaceTextureListener = new TextureView.SurfaceTextureListener() {
-//
-//        @Override
-//        public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-//            //openCameraRecorder(width, height);
-//        }
-//
-//        @Override
-//        public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
-//            configureTransform(width, height);
-//        }
-//
-//        @Override
-//        public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
-//            return true;
-//        }
-//
-//        @Override
-//        public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture)
-//        {
-//
-//        }
-//
-//    };
-
-
+    public boolean mRecord;
 
 
     /**
@@ -322,17 +268,6 @@ public class Camera2Source {
         private final Detector<?> mDetector;
         private Camera2Source mCameraSource = new Camera2Source();
 
-        //for preview only
-        public Builder (Context context)
-        {
-            if (context == null) {
-                throw new IllegalArgumentException("No context supplied.");
-            }
-
-            mDetector = null;
-            mCameraSource.mContext = context;
-        }
-
         /**
          * Creates a camera source builder with the supplied context and detector.  Camera preview
          * images will be streamed to the associated detector upon starting the camera source. Also video recording/saving will start to path specified
@@ -355,10 +290,6 @@ public class Camera2Source {
             return this;
         }
 
-//        public Builder setFlashMode(int mode) {
-//            mCameraSource.mFlashMode = mode;
-//            return this;
-//        }
 
         /**
          * Sets the camera to use (either {@link #CAMERA_FACING_BACK} or
@@ -388,20 +319,20 @@ public class Camera2Source {
     /**
      * Callback interface used to notify on completion of camera auto focus.
      */
-    public interface AutoFocusCallback {
-        /**
-         * Called when the camera auto focus completes.  If the camera
-         * does not support auto-focus and autoFocus is called,
-         * onAutoFocus will be called immediately with a fake value of
-         * <code>success</code> set to <code>true</code>.
-         * <p/>
-         * The auto-focus routine does not lock auto-exposure and auto-white
-         * balance after it completes.
-         *
-         * @param success true if focus was successful, false if otherwise
-         */
-        void onAutoFocus(boolean success);
-    }
+//    public interface AutoFocusCallback {
+//        /**
+//         * Called when the camera auto focus completes.  If the camera
+//         * does not support auto-focus and autoFocus is called,
+//         * onAutoFocus will be called immediately with a fake value of
+//         * <code>success</code> set to <code>true</code>.
+//         * <p/>
+//         * The auto-focus routine does not lock auto-exposure and auto-white
+//         * balance after it completes.
+//         *
+//         * @param success true if focus was successful, false if otherwise
+//         */
+//        void onAutoFocus(boolean success);
+//    }
 
     //==============================================================================================
     // Public
@@ -517,7 +448,7 @@ public class Camera2Source {
      * @throws IOException if the supplied texture view could not be used as the preview display
      */
     @RequiresPermission(Manifest.permission.CAMERA)
-    public Camera2Source start(AutoFitTextureView textureView, int displayOrientation, boolean trackRecord) throws IOException {
+    public Camera2Source start(AutoFitTextureView textureView, int displayOrientation, boolean Record) throws IOException {
         mDisplayOrientation = displayOrientation;
         if(ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             if (cameraStarted) {
@@ -532,7 +463,7 @@ public class Camera2Source {
 
             mTextureView = textureView;
 
-            mTrackRecord = trackRecord;
+            mRecord = Record;
             if (mTextureView.isAvailable()) {
                 setUpCameraOutputs(mTextureView.getWidth(), mTextureView.getHeight());
             }
@@ -558,41 +489,41 @@ public class Camera2Source {
 
 
 
-    private Size getBestAspectPictureSize(android.util.Size[] supportedPictureSizes) {
-        float targetRatio = Utils.getScreenRatio(mContext);
-        Size bestSize = null;
-        TreeMap<Double, List> diffs = new TreeMap<>();
-
-        for (android.util.Size size : supportedPictureSizes) {
-            //float ratio = (float)size.getWidth() / size.getHeight();
-            float ratio = (float) size.getHeight()/ size.getWidth(); //flipped for landscape
-            double diff = Math.abs(ratio - targetRatio);
-            if (diff < maxRatioTolerance){
-                if (diffs.keySet().contains(diff)){
-                    //add the value to the list
-                    diffs.get(diff).add(size);
-                } else {
-                    List newList = new ArrayList<>();
-                    newList.add(size);
-                    diffs.put(diff, newList);
-                }
-            }
-        }
-
-        //diffs now contains all of the usable sizes
-        //now let's see which one has the least amount of
-        for (Map.Entry entry: diffs.entrySet()){
-            List<android.util.Size> entries = (List)entry.getValue();
-            for (android.util.Size s: entries) {
-                if(bestSize == null) {
-                    bestSize = new Size(s.getWidth(), s.getHeight());
-                } else if(bestSize.getWidth() < s.getWidth() || bestSize.getHeight() < s.getHeight()) {
-                    bestSize = new Size(s.getWidth(), s.getHeight());
-                }
-            }
-        }
-        return bestSize;
-    }
+//    private Size getBestAspectPictureSize(android.util.Size[] supportedPictureSizes) {
+//        float targetRatio = Utils.getScreenRatio(mContext);
+//        Size bestSize = null;
+//        TreeMap<Double, List> diffs = new TreeMap<>();
+//
+//        for (android.util.Size size : supportedPictureSizes) {
+//            //float ratio = (float)size.getWidth() / size.getHeight();
+//            float ratio = (float) size.getHeight()/ size.getWidth(); //flipped for landscape
+//            double diff = Math.abs(ratio - targetRatio);
+//            if (diff < maxRatioTolerance){
+//                if (diffs.keySet().contains(diff)){
+//                    //add the value to the list
+//                    diffs.get(diff).add(size);
+//                } else {
+//                    List newList = new ArrayList<>();
+//                    newList.add(size);
+//                    diffs.put(diff, newList);
+//                }
+//            }
+//        }
+//
+//        //diffs now contains all of the usable sizes
+//        //now let's see which one has the least amount of
+//        for (Map.Entry entry: diffs.entrySet()){
+//            List<android.util.Size> entries = (List)entry.getValue();
+//            for (android.util.Size s: entries) {
+//                if(bestSize == null) {
+//                    bestSize = new Size(s.getWidth(), s.getHeight());
+//                } else if(bestSize.getWidth() < s.getWidth() || bestSize.getHeight() < s.getHeight()) {
+//                    bestSize = new Size(s.getWidth(), s.getHeight());
+//                }
+//            }
+//        }
+//        return bestSize;
+//    }
 
     /**
      * Given {@code choices} of {@code Size}s supported by a camera, choose the smallest one that
@@ -709,7 +640,8 @@ public class Camera2Source {
             mCameraId = manager.getCameraIdList()[mFacing];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraId);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            if (map == null) {return;}
+            if (map == null)
+                return;
 
 
             // Find out if we need to swap dimension to get the preview size relative to sensor
@@ -775,15 +707,13 @@ public class Camera2Source {
                 mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
             }
 
-            // Check if the flash is supported.
-            Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-            mFlashSupported = available == null ? false : available;
 
             configureTransform(width, height);
-            if (mTrackRecord) { //don't do this for preview only
+            if (mRecord) { //don't do this for preview only
                 mMediaRecorder = new MediaRecorder();
                 setUpMediaRecorder();
             }
+
             manager.openCamera(mCameraId, mStateCallback, mBackgroundHandler);
         } catch (CameraAccessException ex) {
             Log.d(TAG, ex.getMessage(), ex);
@@ -793,7 +723,7 @@ public class Camera2Source {
         } catch (NullPointerException ex) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
-            Log.d(TAG, "Camera Error: "+ex.getMessage());
+            Log.d(TAG, "Camera Error: "+ ex.getMessage());
             Helpers.Logger.LogExceptionToFile("Camera2Source.setUpCameraOutputs", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
         }
     }
@@ -820,7 +750,7 @@ public class Camera2Source {
 
     public void stopRecordingVideo() {
 
-        mTrackRecord = false;
+        mRecord = false;
         if (mMediaRecorder != null) {
             mMediaRecorder.stop();
             mMediaRecorder.reset();
@@ -870,7 +800,6 @@ public class Camera2Source {
      */
     private void createCameraTrackRecordSession() {
         try {
-            //closePreviewSession();
 
             List<Surface> outputs = new ArrayList<>();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
@@ -892,12 +821,11 @@ public class Camera2Source {
             outputs.add(surface);
             outputs.add(mImageReaderPreview.getSurface());
 
-            if (mTrackRecord) {
+            if (mRecord) {
                 Surface recorderSurface = mMediaRecorder.getSurface();
                 mPreviewRequestBuilder.addTarget(recorderSurface);
                 outputs.add(recorderSurface);
             }
-
 
 
             // Here, we create a CameraCaptureSession for camera preview.
@@ -917,23 +845,16 @@ public class Camera2Source {
                                 // Auto focus should be continuous for camera preview.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, mFocusMode);
 
-//                                if (mFlashSupported) {
-//                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, mFlashMode);
-//                                }
                                 //should stabilize if possible
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CONTROL_VIDEO_STABILIZATION_MODE_ON);
-
-
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
                                 //mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest, null, mBackgroundHandler);
 
-
-
                                 // Start recording
-                                if (mTrackRecord)
+                                if (mRecord)
                                     mMediaRecorder.start();
                             }
                             catch (CameraAccessException ex) {
@@ -965,72 +886,6 @@ public class Camera2Source {
         }
     }
 
-//    private void closePreviewSession() {
-//        if (mPreviewSession != null) {
-//            mPreviewSession.close();
-//            mPreviewSession = null;
-//        }
-//    }
-
-    /**
-     * Start the camera preview.
-     */
-//    private void createPreviewSession() {
-//        if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
-//            return;
-//        }
-//        try {
-//            //closePreviewSession();
-//            SurfaceTexture texture = mTextureView.getSurfaceTexture();
-//            assert texture != null;
-//            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-//            mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-//
-//            Surface previewSurface = new Surface(texture);
-//            mPreviewBuilder.addTarget(previewSurface);
-//
-//            mCameraDevice.createCaptureSession(Collections.singletonList(previewSurface),
-//                    new CameraCaptureSession.StateCallback() {
-//
-//                        @Override
-//                        public void onConfigured(@NonNull CameraCaptureSession session) {
-//                            mPreviewSession = session;
-//                            updatePreview();
-//                        }
-//
-//                        @Override
-//                        public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-//                            Activity activity = (Activity) mContext;
-//                            if (null != activity) {
-//                                Toast.makeText(activity, "Failed Preview", Toast.LENGTH_SHORT).show();
-//                            }
-//                        }
-//                    }, mBackgroundHandler);
-//        }
-//        catch (CameraAccessException ex) {
-//            Log.e(TAG, ex.getMessage(), ex);
-//            Helpers.Logger.LogExceptionToFile("Camera2Source.createPreviewSession", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
-//        }
-//    }
-
-//    /**
-//     * Update the camera preview. {@link #createPreviewSession()} needs to be called in advance.
-//     */
-//    private void updatePreview() {
-//        if (null == mCameraDevice) {
-//            return;
-//        }
-//        try {
-//            mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-//            HandlerThread thread = new HandlerThread("CameraPreview");
-//            thread.start();
-//            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
-//        }
-//        catch (CameraAccessException ex) {
-//            Log.e(TAG, ex.getMessage(), ex);
-//            Helpers.Logger.LogExceptionToFile("Camera2Source.updatePreview", Helpers.Logger.ErrorLoggerFilePath(mContext, errorfilename), ex);
-//        }
-//    }
 
     /**
      * This runnable controls access to the underlying receiver, calling it to process frames when

@@ -140,11 +140,11 @@ public class CaptureActivity extends AppCompatActivity {
                     if (isoverlyshown) {
 
                         isoverlyshown = false;
-                        mFaceGraphic.showoverlay = false;
+                        mFaceGraphic.show_Prev_Session_Overlay = false;
                     }
                     else {
                         isoverlyshown = true;
-                        mFaceGraphic.showoverlay = true;
+                        mFaceGraphic.show_Prev_Session_Overlay = true;
                     }
                 }
             });
@@ -153,12 +153,14 @@ public class CaptureActivity extends AppCompatActivity {
             recButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mCamera2Source.mTrackRecord) {
+                    if (mCamera2Source.mRecord) {
 
                         stopCameraSource(); //call this to release everything or all the shit breaks
                         trackRecord = false;
                         recButton.setText(R.string.record);
                         requestPermissionThenOpenCamera(); //back to preview mode
+                        mFaceGraphic.show_Smile_Counter = false;
+                        mFaceGraphic.show_Prev_Session_Overlay = false; //don't show prev session overlay twice
 
                         //this will have to stay constant throughout Grow baby session, if back and front don't support same resolutions will have to show user error or lock down camera facing
                         VerifySaveLockedDownVidSize(mCamera2Source.mVideoSize);
@@ -188,6 +190,8 @@ public class CaptureActivity extends AppCompatActivity {
                         trackRecord = true;
                         recButton.setText(R.string.stop);
                         requestPermissionThenOpenCamera();
+                        mFaceGraphic.show_Smile_Counter = true;
+                        mFaceGraphic.show_Prev_Session_Overlay = false;
                     }
                 }
             });
