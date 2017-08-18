@@ -93,19 +93,6 @@
         app:layout_constraintLeft_toRightOf="@+id/textViewNewTitle"
         app:layout_constraintRight_toLeftOf="@+id/buttonSeeOrig" />
 
-    <TextView
-        android:id="@+id/textViewFab"
-        android:layout_width="165dp"
-        android:layout_height="35dp"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="59dp"
-        android:layout_marginRight="59dp"
-        android:text="Merge Video..."
-        android:textColor="@android:color/black"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
-
     <ImageView
         android:id="@+id/imageViewBGMain"
         android:layout_width="142dp"

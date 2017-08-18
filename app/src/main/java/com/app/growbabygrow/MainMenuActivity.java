@@ -11,6 +11,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
@@ -20,23 +21,26 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 import com.app.growbabygrow.Classes.Helpers;
+import com.app.growbabygrow.Classes.Utils;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
+
+import io.github.douglasjunior.androidSimpleTooltip.SimpleTooltip;
 
 import static com.app.growbabygrow.R.id.fab;
 
 
 public class MainMenuActivity extends AppCompatActivity {
     public static final String TAG = "MainMenuActivity";
-    private TextView tvnewproject;
     private FloatingActionButton fabnewproj;
     private EditText txtname;
     private Boolean savedexists;
     private Boolean startbabygrow;
+    private Boolean inedit;
     private Spinner timeperiods;
     private ImageButton delete;
     private ImageButton hamburger;
@@ -117,7 +121,6 @@ public class MainMenuActivity extends AppCompatActivity {
             txtname = (EditText) findViewById(R.id.editTextName);
             timeperiods = (Spinner) findViewById(R.id.spinnerTime);
             fabnewproj = (FloatingActionButton) findViewById(fab);
-            tvnewproject = (TextView) findViewById(R.id.TV_noProjects);
             delete = (ImageButton) findViewById(R.id.deletebtn);
             hamburger = (ImageButton) findViewById(R.id.btn_hamburger);
             camSwitch = (Switch) findViewById(R.id.switchCameraface);
@@ -138,7 +141,10 @@ public class MainMenuActivity extends AppCompatActivity {
                 ShowBabyGrowNew();
                 savedexists = false;
                 startbabygrow = false;
-            } else {
+                inedit = false;
+            }
+            else
+            {
                 savedexists = true;
                 startbabygrow = true;
                 ShowBabyGrowReady(Name, Period);
@@ -147,37 +153,42 @@ public class MainMenuActivity extends AppCompatActivity {
             fabnewproj.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (!startbabygrow) {
-                        if (!savedexists) {
+                    if (!startbabygrow)
+                    {
+                        if ((txtname.getText().toString().isEmpty() || timeperiods.getSelectedItem().toString().equals("Select video schedule..")) && !inedit)
+                        {
                             ShowBabyGrowInput();
-                            savedexists = true;
-                        } else {
-                            if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule..")) {
-                                try {
-                                    Name = txtname.getText().toString();
-                                    Period = timeperiods.getSelectedItem().toString();
-
-                                    SharedPreferences.Editor editor = sharedpreferences.edit();
-                                    //set isnew flag so we can create intro movie later this will be set to false after intro video is created and merged in videoedit
-                                    editor.putBoolean(getString(R.string.p_file1_is_new), true);
-                                    editor.putString(getString(R.string.p_file1_saved_name), Name);
-                                    editor.putString(getString(R.string.p_file1_saved_period), Period);
-                                    editor.putString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), OverlayBitmapFilePath().getAbsolutePath());
-                                    editor.apply();
-
-                                    startbabygrow = true;
-                                    ShowBabyGrowReady(Name, Period);
-
-                                } catch (Exception ex) {
-                                    Log.d(TAG, ex.getMessage());
-                                }
-
-                            } else {
-                                Toast.makeText(context, "Please enter all required fields to proceed!", Toast.LENGTH_SHORT).show();
-                            }
-
+                            inedit = true;
                         }
-                    } else {
+                        else if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule.."))
+                        {
+                            try {
+                                Name = txtname.getText().toString();
+                                Period = timeperiods.getSelectedItem().toString();
+
+                                SharedPreferences.Editor editor = sharedpreferences.edit();
+                                //set isnew flag so we can create intro movie later this will be set to false after intro video is created and merged in videoedit
+                                editor.putBoolean(getString(R.string.p_file1_is_new), true);
+                                editor.putString(getString(R.string.p_file1_saved_name), Name);
+                                editor.putString(getString(R.string.p_file1_saved_period), Period);
+                                editor.putString(getString(R.string.p_file1_saved_selected_last_week_face_bitmap_path), OverlayBitmapFilePath().getAbsolutePath());
+                                editor.apply();
+
+                                savedexists = true;
+                                startbabygrow = true;
+                                inedit = false;
+                                ShowBabyGrowReady(Name, Period);
+
+                            } catch (Exception ex) {
+                                Log.d(TAG, ex.getMessage());
+                            }
+                        }
+                        else {
+                            Toast.makeText(context, "Please enter all required fields to proceed!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    else
+                    {
 
                         SharedPreferences.Editor editor = sharedpreferences.edit();
                         if (sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null) == null) //if main merge video file does not exist create new names and save for all files
@@ -218,6 +229,8 @@ public class MainMenuActivity extends AppCompatActivity {
                                     ShowBabyGrowNew();
                                     savedexists = false;
                                     startbabygrow = false;
+                                    txtname.setText("");
+                                    timeperiods.setSelection(0);
                                 }
                             })
                             .setNegativeButton(android.R.string.no, null).show();
@@ -246,7 +259,37 @@ public class MainMenuActivity extends AppCompatActivity {
             });
 
 
+        txtname.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule..") && !savedexists)
+                    {
+                        Utils.SetFabTooltip(context, fabnewproj, "Save Baby Grow Project", true);
+                    }
+                }
+            }
+        });
+
+        timeperiods.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule..") && !savedexists)
+                {
+                    Utils.SetFabTooltip(context, fabnewproj, "Save Baby Grow Project", true);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
+        });
+
     }
+
+
 
     private void populateDrawer()// Populate the Navigation Drawer with options
     {
@@ -305,8 +348,8 @@ public class MainMenuActivity extends AppCompatActivity {
 
     private void ShowBabyGrowNew()
     {
-        tvnewproject.setText(R.string.add_new_project);
         fabnewproj.setImageResource(android.R.drawable.ic_input_add);
+        Utils.SetFabTooltip(context, fabnewproj, "Start New Baby Grow Project", false);
         timeperiods.setVisibility(View.INVISIBLE);
         txtname.setVisibility(View.INVISIBLE);
         delete.setVisibility(View.INVISIBLE);
@@ -315,7 +358,6 @@ public class MainMenuActivity extends AppCompatActivity {
 
     private void ShowBabyGrowInput()
     {
-        tvnewproject.setText(R.string.save_project_settings);
         fabnewproj.setImageResource(android.R.drawable.ic_menu_save);
         txtname.setVisibility(View.VISIBLE);
         txtname.setEnabled(true);
@@ -324,9 +366,10 @@ public class MainMenuActivity extends AppCompatActivity {
         delete.setVisibility(View.INVISIBLE);
     }
 
-    private void ShowBabyGrowReady(String name, String period) {
-        tvnewproject.setText(R.string.go_capture_start);
+    private void ShowBabyGrowReady(String name, String period)
+    {
         fabnewproj.setImageResource(android.R.drawable.star_big_on);
+        Utils.SetFabTooltip(context, fabnewproj, "Start Recording...", false);
         txtname.setVisibility(View.VISIBLE);
         txtname.setText(name);
         txtname.setEnabled(false);

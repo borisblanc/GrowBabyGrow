@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.ImageFormat;
@@ -21,9 +22,11 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.app.growbabygrow.R;
 import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.face.Face;
 
@@ -36,6 +39,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import io.github.douglasjunior.androidSimpleTooltip.SimpleTooltip;
+import io.github.douglasjunior.androidSimpleTooltip.SimpleTooltipUtils;
 
 public class Utils {
 
@@ -453,10 +459,42 @@ public class Utils {
 //        final int scaledWidth = (int) (bitmapWidth * scale);
 //        final int scaledHeight = (int) (bitmapHeight * scale);
 
-        final Bitmap decoded = Bitmap.createScaledBitmap(bitmap, newwidth, newheight, true);
-        final Canvas canvas = new Canvas(decoded);
+        //final Canvas canvas = new Canvas(decoded);
 
-        return decoded;
+        return Bitmap.createScaledBitmap(bitmap, newwidth, newheight, true);
+    }
+
+    public static void SetFabTooltip(Context context, View v, String text, boolean isanimated)
+    {
+        new SimpleTooltip.Builder(context)
+                .anchorView(v)
+                .text(text)
+                .gravity(Gravity.START)
+//                .onDismissListener(new SimpleTooltip.OnDismissListener() {
+//                    @Override
+//                    public void onDismiss(SimpleTooltip tooltip) {
+//                        System.out.println("dismiss " + tooltip);
+//                    }
+//                })
+//                .onShowListener(new SimpleTooltip.OnShowListener() {
+//                    @Override
+//                    public void onShow(SimpleTooltip tooltip) {
+//                        System.out.println("show " + tooltip);
+//                    }
+//                })
+                .animated(isanimated)
+//                .backgroundColor(Color.GRAY)
+                .arrowColor(Color.GRAY)
+//                .textColor(Color.WHITE)
+                .arrowHeight((int) SimpleTooltipUtils.pxFromDp(30))
+                //.arrowWidth((int) SimpleTooltipUtils.pxFromDp(50))
+                //.maxWidth(R.dimen.simpletooltip_max_width)
+
+                //.animationDuration(2000)
+                .contentView(R.layout.tooltip_context, R.id.tooltipTv)
+                .build()
+                .show();
+
     }
 
 

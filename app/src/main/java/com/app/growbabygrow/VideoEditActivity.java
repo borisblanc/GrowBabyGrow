@@ -75,7 +75,6 @@ public class VideoEditActivity extends AppCompatActivity {
     private ImageView prev2_imageview;
     private ImageView prev3_imageview;
     private TextView main_title;
-    private TextView txt_fab;
     private TextView new_title;
     private Button orig_view_btn;
     private Button retry_btn;
@@ -115,7 +114,6 @@ public class VideoEditActivity extends AppCompatActivity {
         main_title = (TextView) findViewById(R.id.textViewBGTitle);
         orig_view_btn = (Button) findViewById(R.id.buttonSeeOrig);
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        txt_fab = (TextView) findViewById(R.id.textViewFab);
         new_title = (TextView) findViewById(R.id.textViewNewTitle);
         Radio_prev1 = (RadioButton) findViewById(R.id.radioButtonprev1);
         Radio_prev2 = (RadioButton) findViewById(R.id.radioButtonprev2);
@@ -167,7 +165,7 @@ public class VideoEditActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 fab.setVisibility(View.VISIBLE);
-                txt_fab.setVisibility(View.VISIBLE);
+                Utils.SetFabTooltip(context, fab, "Merge Selected Video", true);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath1;
                 SelectedTrimmedVideoface = TrimmedVideo1face;
                 SelectedTrimmedVideofacets = TrimmedVideo1facets;
@@ -178,7 +176,7 @@ public class VideoEditActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 fab.setVisibility(View.VISIBLE);
-                txt_fab.setVisibility(View.VISIBLE);
+                Utils.SetFabTooltip(context, fab, "Merge Selected Video", true);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath2;
                 SelectedTrimmedVideoface = TrimmedVideo2face;
                 SelectedTrimmedVideofacets = TrimmedVideo2facets;
@@ -189,7 +187,7 @@ public class VideoEditActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 fab.setVisibility(View.VISIBLE);
-                txt_fab.setVisibility(View.VISIBLE);
+                Utils.SetFabTooltip(context, fab, "Merge Selected Video", true);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath3;
                 SelectedTrimmedVideoface = TrimmedVideo3face;
                 SelectedTrimmedVideofacets = TrimmedVideo3facets;
@@ -499,18 +497,18 @@ public class VideoEditActivity extends AppCompatActivity {
         String period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
         switch (period) {
             case "Twice Weekly":
-                txt_fab.setText("See you in a couple days!");
+                Utils.SetFabTooltip(context, fab, "See you in a couple days..", false);
                 break;
             case "Weekly":
-                txt_fab.setText("See you next week!");
+                Utils.SetFabTooltip(context, fab, "See you next week...", false);
                 break;
             case "Bi-weekly":
-                txt_fab.setText("See you in a couple weeks!");
+                Utils.SetFabTooltip(context, fab, "See you in a couple weeks...", false);
                 break;
             case "Monthly":
-                txt_fab.setText("See you next month!");
+                Utils.SetFabTooltip(context, fab, "See you next month...", false);
                 break;
-            default: txt_fab.setText("See you next week!");
+            default: Utils.SetFabTooltip(context, fab, "Exit baby Grow...", false);
                 break;
 
         }

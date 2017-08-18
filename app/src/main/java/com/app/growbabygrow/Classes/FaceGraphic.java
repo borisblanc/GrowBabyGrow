@@ -33,7 +33,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
     private Bitmap myface;
 
     private ArrayList<Bitmap> animation1;
-    public Boolean show_Prev_Session_Overlay = true;
+    public Boolean show_Prev_Session_Overlay = false;
     public Boolean show_Smile_Counter = false;
 
     private BitmapFactory.Options opt;
@@ -74,6 +74,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
     private int prev_session_overlay_counter = 0;
 
+    private Context mContext;
+
 
     public FaceGraphic(GraphicOverlay overlay, Context context, Face Lastsessionface, String OverlayBitmapFilePath) {
         super(overlay);
@@ -96,7 +98,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 
         opt = new BitmapFactory.Options();
         opt.inScaled = false;
-        resources = context.getResources();
+        mContext = context;
+        resources = mContext.getResources();
 
         smiley = BitmapFactory.decodeResource(resources, R.drawable.smile2, opt);
         cool = BitmapFactory.decodeResource(resources, R.drawable.cool, opt);
@@ -179,13 +182,15 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         canvas.drawRect(left, top, right, bottom, mBoxPaint);
 
         //for preview only show prev session overlay to show user last week position
-        if (show_Prev_Session_Overlay && lastsessionface != null && myface != null && prev_session_overlay_counter < 50) //prev_session_overlay_counter < 50 says it will show for 50 frames, not sure what fps is here
+        if (show_Prev_Session_Overlay && lastsessionface != null && myface != null) //&& prev_session_overlay_counter < 50) //prev_session_overlay_counter < 50 says it will show for 50 frames, not sure what fps is here
         {
             float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
             float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
             canvas.drawCircle(oldx, oldy, FACE_POSITION_RADIUS, mFacePositionPaint); //this will show center of face from last week
             canvas.drawBitmap(myface, oldx - (myface.getWidth() / 2), oldy - (myface.getHeight() / 2), null); //puts image in center of where it was last week
-            prev_session_overlay_counter++; //determines how long prev session overlay will display for on screen
+
+            //Utils.SetFabTooltip(mContext, myface, "Save Baby Grow Project", true);
+            //prev_session_overlay_counter++; //determines how long prev session overlay will display for on screen
         }
     }
 
