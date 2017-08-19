@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.app.growbabygrow.Classes.Helpers;
 import com.app.growbabygrow.Classes.SyncDialogue;
+import com.app.growbabygrow.Classes.Utils;
 import com.app.growbabygrow.Classes.VideoUtils;
 
 
@@ -44,6 +45,8 @@ public class AudioActivity extends AppCompatActivity {
     private String MainMergedVideoOutputFilepath;
     private String MainMergedVideoOutputFilepath_with_audio;
     private Boolean MainMergedVideoOutputFilepath_has_Audio;
+    private String Name;
+    private String exportDirectory;
     private ImageButton hamburger;
     private ListView mDrawerList;
     private RelativeLayout mDrawerPane;
@@ -68,6 +71,8 @@ public class AudioActivity extends AppCompatActivity {
         MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
         MainMergedVideoOutputFilepath_with_audio = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname_with_audio), null);
         MainMergedVideoOutputFilepath_has_Audio = sharedpreferences.getBoolean(getString(R.string.p_file1_saved_main_has_audio), false);
+        Name = sharedpreferences.getString(getString(R.string.p_file1_saved_name), null);
+        exportDirectory = sharedpreferences.getString(getString(R.string.p_file1_saved_export_directory), null);
 
         populateDrawer();
 
@@ -91,8 +96,13 @@ public class AudioActivity extends AppCompatActivity {
     private void populateDrawer()// Populate the Navigation Drawer with options
     {
         mNavItems.add(new Helpers.NavItem(getString(R.string.StartDrawer),"Start Menu", "Begin New BabyGrow", android.R.drawable.star_big_on));
-        mNavItems.add(new Helpers.NavItem(getString(R.string.VideoDrawer), "View Video", "View Saved BabyGrow", R.drawable.video_icon));
-        mNavItems.add(new Helpers.NavItem(getString(R.string.MusicDrawer), "Add Music", "Baby Grow Music", R.drawable.music_icon));
+
+        if (new File(MainMergedVideoOutputFilepath).exists()) {
+            mNavItems.add(new Helpers.NavItem(getString(R.string.VideoDrawer), "View Video", "View Saved BabyGrow", R.drawable.video_icon));
+            mNavItems.add(new Helpers.NavItem(getString(R.string.MusicDrawer), "Add Music", "Add BabyGrow Music", R.drawable.music_icon));
+            mNavItems.add(new Helpers.NavItem(getString(R.string.ExportDrawer), "Export Video", "Export BabyGrow Video", R.drawable.export));
+        }
+
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         mDrawerPane = (RelativeLayout) findViewById(R.id.drawerPane);
         mDrawerList = (ListView) findViewById(R.id.navList);
@@ -132,6 +142,20 @@ public class AudioActivity extends AppCompatActivity {
         }
         else if (currentNav.mName.equals(getString(R.string.MusicDrawer)))
         {
+            mDrawerLayout.closeDrawer(mDrawerPane);
+        }
+        else if (currentNav.mName.equals(getString(R.string.ExportDrawer)))
+        {
+            File exportsource;
+
+            if (MainMergedVideoOutputFilepath_has_Audio)
+                exportsource = new File(MainMergedVideoOutputFilepath_with_audio);
+            else
+                exportsource = new File(MainMergedVideoOutputFilepath);
+
+            String expath = Utils.exportMain(exportsource, Name, new File(exportDirectory), context);
+
+            Toast.makeText(context, "Baby Grow Exported to " + expath , Toast.LENGTH_LONG).show();
             mDrawerLayout.closeDrawer(mDrawerPane);
         }
         else
@@ -329,6 +353,7 @@ public class AudioActivity extends AppCompatActivity {
             editor.putBoolean(getString(R.string.p_file1_saved_main_has_audio), true);
             editor.putInt(getString(R.string.p_file1_saved_main_audio_file_id), rawmusicid);
             editor.apply();
+            MainMergedVideoOutputFilepath_has_Audio = true;
         }
 
 

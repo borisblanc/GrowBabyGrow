@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GrowBabyGrow</string>
+    <string name="app_name">BabyGrow</string>
     <string name="add_new_project">New Baby Grow…</string>
     <string name="take_picture">PICTURE</string>
     <string name="switch_camera">SWITCH</string>
@@ -11,6 +11,7 @@
     <string name="StartDrawer">Start</string>
     <string name="VideoDrawer">Video</string>
     <string name="MusicDrawer">Music</string>
+    <string name="ExportDrawer">Export</string>
 
     <string name="ActivityName">ActivityName</string>
 
@@ -70,6 +71,7 @@
     <string name="p_file1_saved_selected_last_week_face_scale">saved_selected_last_week_face_scale</string>
 
     <string name="p_file1_saved_intro_mp4pathname">saved_intro_mp4pathname</string>
+    <string name="p_file1_saved_export_directory">saved_export_directory</string>
 
 
     <string name="p_file2_key">com.app.growbabygrow.pfile2</string>

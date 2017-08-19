@@ -56,7 +56,7 @@
                 android:id="@+id/avatar"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@mipmap/cheese"
+                android:src="@drawable/baby_icon"
                 android:layout_marginTop="15dp" />
 
             <LinearLayout
@@ -71,20 +71,20 @@
                     android:id="@+id/userName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="GrowBabyGrow"
+                    android:text="BabyGrow"
                     android:textColor="#fff"
-                    android:textSize="16sp"
+                    android:textSize="26sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/desc"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginTop="4dp"
-                    android:text="View Profile"
-                    android:textColor="#fff"
-                    android:textSize="12sp" />
+                <!--<TextView-->
+                    <!--android:id="@+id/desc"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_gravity="bottom"-->
+                    <!--android:layout_marginTop="4dp"-->
+                    <!--android:text="View Profile"-->
+                    <!--android:textColor="#fff"-->
+                    <!--android:textSize="12sp" />-->
             </LinearLayout>
         </RelativeLayout>
 

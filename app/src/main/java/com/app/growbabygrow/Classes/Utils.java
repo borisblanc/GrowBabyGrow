@@ -25,6 +25,7 @@ import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.app.growbabygrow.R;
 import com.google.android.gms.common.images.Size;
@@ -33,10 +34,12 @@ import com.google.android.gms.vision.face.Face;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -153,7 +156,7 @@ public class Utils {
             }
             catch (IOException ex) {
                 Log.d(tag, ex.getMessage(), ex);
-                Helpers.Logger.LogExceptionToFile(tag, Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
+                Helpers.Logger.LogExceptionToFile("Utils.Savebitmap", Helpers.Logger.ErrorLoggerFilePath(appcontext, errorfilename), ex);
             }
 
         }
@@ -495,6 +498,46 @@ public class Utils {
                 .build()
                 .show();
 
+    }
+
+    public static void copyFile(File src, File dst) throws IOException
+    {
+        FileChannel inChannel = new FileInputStream(src).getChannel();
+        FileChannel outChannel = new FileOutputStream(dst).getChannel();
+        try
+        {
+            inChannel.transferTo(0, inChannel.size(), outChannel);
+        }
+        finally
+        {
+            if (inChannel != null)
+                inChannel.close();
+            if (outChannel != null)
+                outChannel.close();
+        }
+    }
+
+    public static String exportMain(File exportsource, String babyname, File exportDirectory, Context context)
+    {
+
+        Calendar calendar = Calendar.getInstance();
+
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int min = calendar.get(Calendar.MINUTE);
+        int sec = calendar.get(Calendar.SECOND);
+        File dstsource = new File(exportDirectory, babyname + "_babygrow_" + year + "_" + month + "_" + day + "_" + min + "_" + sec + ".mp4");
+
+
+        try {
+            Utils.copyFile(exportsource, dstsource);
+        } catch (IOException ex) {
+            Log.d(tag, ex.getMessage(), ex);
+            Helpers.Logger.LogExceptionToFile("Utils.exportMain", Helpers.Logger.ErrorLoggerFilePath(context, errorfilename), ex);
+        }
+
+        return dstsource.getAbsolutePath();
     }
 
 
