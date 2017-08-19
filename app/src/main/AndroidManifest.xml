@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+
+
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -21,6 +24,7 @@
         android:roundIcon="@drawable/baby_icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <receiver android:name="com.app.growbabygrow.Classes.AlarmReceiver"/>
         <activity
             android:name=".CaptureActivity"
             android:screenOrientation="landscape">
@@ -50,7 +54,8 @@
             android:screenOrientation="landscape" />
         <activity
             android:name=".AudioActivity"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape" />
+
     </application>
 
 </manifest>

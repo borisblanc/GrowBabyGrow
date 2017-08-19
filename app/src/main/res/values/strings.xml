@@ -73,6 +73,8 @@
     <string name="p_file1_saved_intro_mp4pathname">saved_intro_mp4pathname</string>
     <string name="p_file1_saved_export_directory">saved_export_directory</string>
 
+    <string name="p_file1_saved_shown_tooltips_overlay_count">saved_shown_tooltips_overlay_count</string>
+    <string name="p_file1_saved_shown_tooltips_record_count">saved_shown_tooltips_record_count</string>
 
     <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
 

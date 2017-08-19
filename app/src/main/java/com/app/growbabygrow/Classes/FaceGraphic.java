@@ -189,7 +189,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
             canvas.drawCircle(oldx, oldy, FACE_POSITION_RADIUS, mFacePositionPaint); //this will show center of face from last week
             canvas.drawBitmap(myface, oldx - (myface.getWidth() / 2), oldy - (myface.getHeight() / 2), null); //puts image in center of where it was last week
 
-            //Utils.SetFabTooltip(mContext, myface, "Save Baby Grow Project", true);
+            //Utils.SetViewTooltip(mContext, myface, "Save Baby Grow Project", true);
             //prev_session_overlay_counter++; //determines how long prev session overlay will display for on screen
         }
     }

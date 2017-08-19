@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/FrameLayoutcap"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
@@ -19,28 +21,36 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:orientation="horizontal">
-        <Button
-            android:id="@+id/btn_record"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/record" />
 
         <Button
+            android:id="@+id/btn_record"
+            android:layout_width="80dp"
+            android:layout_height="40dp"
+            android:background="@android:color/holo_red_dark"
+            android:text="@string/record"
+            android:textColor="@android:color/black" />
+
+
+        <ImageButton
             android:id="@+id/btn_toggle_overlay"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Toggle" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginLeft="10dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/baby_icon"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/baby_icon" />
 
 
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/ivAutoFocus"
-        android:contentDescription="@null"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:src="@drawable/btn_autofocus"
-        android:visibility="gone"/>
+    <!--<ImageView-->
+        <!--android:id="@+id/ivAutoFocus"-->
+        <!--android:contentDescription="@null"-->
+        <!--android:layout_width="60dp"-->
+        <!--android:layout_height="60dp"-->
+        <!--android:src="@drawable/btn_autofocus"-->
+        <!--android:visibility="gone"/>-->
 </FrameLayout>

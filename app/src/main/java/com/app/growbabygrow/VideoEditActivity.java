@@ -16,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -165,7 +166,7 @@ public class VideoEditActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 fab.setVisibility(View.VISIBLE);
-                Utils.SetFabTooltip(context, fab, "Merge Selected Video", true);
+                Utils.SetViewTooltip(context, fab, "Merge Selected Video", true, Gravity.START);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath1;
                 SelectedTrimmedVideoface = TrimmedVideo1face;
                 SelectedTrimmedVideofacets = TrimmedVideo1facets;
@@ -176,7 +177,7 @@ public class VideoEditActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 fab.setVisibility(View.VISIBLE);
-                Utils.SetFabTooltip(context, fab, "Merge Selected Video", true);
+                Utils.SetViewTooltip(context, fab, "Merge Selected Video", true, Gravity.START);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath2;
                 SelectedTrimmedVideoface = TrimmedVideo2face;
                 SelectedTrimmedVideofacets = TrimmedVideo2facets;
@@ -187,7 +188,7 @@ public class VideoEditActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 fab.setVisibility(View.VISIBLE);
-                Utils.SetFabTooltip(context, fab, "Merge Selected Video", true);
+                Utils.SetViewTooltip(context, fab, "Merge Selected Video", true, Gravity.START);
                 SelectedTrimmedVideoOutputFilepath = TrimmedVideoOutputFilepath3;
                 SelectedTrimmedVideoface = TrimmedVideo3face;
                 SelectedTrimmedVideofacets = TrimmedVideo3facets;
@@ -497,18 +498,18 @@ public class VideoEditActivity extends AppCompatActivity {
         String period = sharedpreferences.getString(getString(R.string.p_file1_saved_period), null);
         switch (period) {
             case "Twice Weekly":
-                Utils.SetFabTooltip(context, fab, "See you in a couple days..", false);
+                Utils.SetViewTooltip(context, fab, "See you in a couple days..", false, Gravity.START);
                 break;
             case "Weekly":
-                Utils.SetFabTooltip(context, fab, "See you next week...", false);
+                Utils.SetViewTooltip(context, fab, "See you next week...", false, Gravity.START);
                 break;
             case "Bi-weekly":
-                Utils.SetFabTooltip(context, fab, "See you in a couple weeks...", false);
+                Utils.SetViewTooltip(context, fab, "See you in a couple weeks...", false, Gravity.START);
                 break;
             case "Monthly":
-                Utils.SetFabTooltip(context, fab, "See you next month...", false);
+                Utils.SetViewTooltip(context, fab, "See you next month...", false, Gravity.START);
                 break;
-            default: Utils.SetFabTooltip(context, fab, "Exit baby Grow...", false);
+            default: Utils.SetViewTooltip(context, fab, "Exit baby Grow...", false, Gravity.START);
                 break;
 
         }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,9 +13,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,8 +54,8 @@ public class CaptureActivity extends AppCompatActivity {
     private Context context;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private static final int REQUEST_STORAGE_PERMISSION = 201;
-    private TextView cameraVersion;
-    private ImageView ivAutoFocus;
+    //private TextView cameraVersion;
+    //private ImageView ivAutoFocus;
 
     // CAMERA VERSION ONE DECLARATIONS
     private CameraSource mCameraSource = null;
@@ -79,7 +84,7 @@ public class CaptureActivity extends AppCompatActivity {
     private FaceSession fs_current;
     private Face lastsessionface;
     private boolean isnewsession;
-    public Button toggleoverlayButton;
+    public ImageButton toggleoverlayButton;
     private Boolean isoverlyshown = false;
     private String OverlayBitmapFilePath;
 
@@ -94,10 +99,25 @@ public class CaptureActivity extends AppCompatActivity {
         recButton = (Button) findViewById(R.id.btn_record);
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
-        ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
-        toggleoverlayButton = (Button) findViewById(R.id.btn_toggle_overlay);
+        //ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
+        toggleoverlayButton = (ImageButton) findViewById(R.id.btn_toggle_overlay);
 
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
+
+
+        //if user views < 2 show increment and save
+        int reccluestooltipviews = sharedpreferences.getInt(getString(R.string.p_file1_saved_shown_tooltips_record_count), 0);
+        if (reccluestooltipviews < 2){
+            FrameLayout parent = (FrameLayout) findViewById(R.id.FrameLayoutcap);
+            Utils.SetViewTooltipCV(context, parent, "Please try to get at least 40 'Good Looks' for best results. ", true, Gravity.BOTTOM, false);
+            reccluestooltipviews++;
+            SharedPreferences.Editor editor = sharedpreferences.edit();
+            editor.putInt(getString(R.string.p_file1_saved_shown_tooltips_record_count), reccluestooltipviews);
+            editor.apply();
+        }
+
+
+
 
         fs_current = new FaceSession();
         //fs_current.MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
@@ -126,6 +146,20 @@ public class CaptureActivity extends AppCompatActivity {
             Gson gson = new Gson();
             String json = sharedpreferences.getString(getString(R.string.p_file1_saved_selected_last_week_face), "");
             lastsessionface = gson.fromJson(json, Face.class);
+            toggleoverlayButton.setVisibility(View.VISIBLE);
+
+            //if user views < 2 show increment and save
+            int overlaytooltipviews = sharedpreferences.getInt(getString(R.string.p_file1_saved_shown_tooltips_overlay_count), 0);
+            if (overlaytooltipviews < 2){
+                Utils.SetViewTooltipCV(context, toggleoverlayButton, "Toggle Last Sessions Face Location (align faces with last session's face position for smoother transitions).", true, Gravity.END, true);
+                overlaytooltipviews++;
+                SharedPreferences.Editor editor = sharedpreferences.edit();
+                editor.putInt(getString(R.string.p_file1_saved_shown_tooltips_overlay_count), overlaytooltipviews);
+                editor.apply();
+            }
+        }
+        else {
+            toggleoverlayButton.setVisibility(View.INVISIBLE);
         }
 
 
@@ -158,6 +192,7 @@ public class CaptureActivity extends AppCompatActivity {
                         stopCameraSource(); //call this to release everything or all the shit breaks
                         trackRecord = false;
                         recButton.setText(R.string.record);
+                        recButton.setBackgroundColor(Color.GRAY);
                         requestPermissionThenOpenCamera(); //back to preview mode
                         mFaceGraphic.show_Smile_Counter = false;
                         mFaceGraphic.show_Prev_Session_Overlay = false; //don't show prev session overlay twice
@@ -189,6 +224,7 @@ public class CaptureActivity extends AppCompatActivity {
                         stopCameraSource(); //call this to release everything or all the shit breaks
                         trackRecord = true;
                         recButton.setText(R.string.stop);
+                        recButton.setBackgroundColor(Color.RED);
                         requestPermissionThenOpenCamera();
                         mFaceGraphic.show_Smile_Counter = true;
                         mFaceGraphic.show_Prev_Session_Overlay = false;

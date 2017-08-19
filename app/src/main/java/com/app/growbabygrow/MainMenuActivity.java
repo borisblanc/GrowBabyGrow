@@ -1,5 +1,7 @@
 package com.app.growbabygrow;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,6 +14,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
@@ -22,6 +25,8 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.Toast;
+
+import com.app.growbabygrow.Classes.AlarmReceiver;
 import com.app.growbabygrow.Classes.Helpers;
 import com.app.growbabygrow.Classes.Utils;
 
@@ -42,7 +47,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private EditText txtname;
     private Boolean savedexists;
     private Boolean startbabygrow;
-    private Boolean inedit;
+    private Boolean inedit = false;
     private Spinner timeperiods;
     private ImageButton delete;
     private ImageButton hamburger;
@@ -144,7 +149,6 @@ public class MainMenuActivity extends AppCompatActivity {
             ShowBabyGrowNew();
             savedexists = false;
             startbabygrow = false;
-            inedit = false;
         }
         else
         {
@@ -153,6 +157,7 @@ public class MainMenuActivity extends AppCompatActivity {
             ShowBabyGrowReady(Name, Period);
         }
 
+        setNextReminder(); //set next reminder right away based on when they open app
         populateDrawer();
 
         fabnewproj.setOnClickListener(new View.OnClickListener() {
@@ -183,6 +188,7 @@ public class MainMenuActivity extends AppCompatActivity {
                             startbabygrow = true;
                             inedit = false;
                             ShowBabyGrowReady(Name, Period);
+                            setNextReminder();
 
                         } catch (Exception ex) {
                             Log.d(TAG, ex.getMessage());
@@ -265,15 +271,13 @@ public class MainMenuActivity extends AppCompatActivity {
         });
 
 
-
-
         txtname.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
                     if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule..") && !savedexists)
                     {
-                        Utils.SetFabTooltip(context, fabnewproj, "Save Baby Grow Project", true);
+                        Utils.SetViewTooltip(context, fabnewproj, "Save Baby Grow Project", true, Gravity.START);
                     }
                 }
             }
@@ -284,7 +288,7 @@ public class MainMenuActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 if (!txtname.getText().toString().isEmpty() && !timeperiods.getSelectedItem().toString().equals("Select video schedule..") && !savedexists)
                 {
-                    Utils.SetFabTooltip(context, fabnewproj, "Save Baby Grow Project", true);
+                    Utils.SetViewTooltip(context, fabnewproj, "Save Baby Grow Project", true, Gravity.START);
                 }
             }
 
@@ -296,7 +300,6 @@ public class MainMenuActivity extends AppCompatActivity {
         });
 
     }
-
 
 
     private void populateDrawer()// Populate the Navigation Drawer with options
@@ -362,7 +365,6 @@ public class MainMenuActivity extends AppCompatActivity {
 
             String expath = Utils.exportMain(exportsource, Name, exportDirectory, context);
 
-
             Toast.makeText(context, "Baby Grow Exported to " + expath , Toast.LENGTH_LONG).show();
             mDrawerLayout.closeDrawer(mDrawerPane);
         }
@@ -377,7 +379,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private void ShowBabyGrowNew()
     {
         fabnewproj.setImageResource(android.R.drawable.ic_input_add);
-        Utils.SetFabTooltip(context, fabnewproj, "Start New Baby Grow Project", false);
+        Utils.SetViewTooltip(context, fabnewproj, "Start New Baby Grow Project", false, Gravity.START);
         timeperiods.setVisibility(View.INVISIBLE);
         txtname.setVisibility(View.INVISIBLE);
         delete.setVisibility(View.INVISIBLE);
@@ -397,7 +399,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private void ShowBabyGrowReady(String name, String period)
     {
         fabnewproj.setImageResource(android.R.drawable.star_big_on);
-        Utils.SetFabTooltip(context, fabnewproj, "Start Recording...", false);
+        Utils.SetViewTooltip(context, fabnewproj, "Start Recording...", false, Gravity.START);
         txtname.setVisibility(View.VISIBLE);
         txtname.setText(name);
         txtname.setEnabled(false);
@@ -471,5 +473,45 @@ public class MainMenuActivity extends AppCompatActivity {
 
     };
 
+    private void setNextReminder()
+    {
+        //check for existing reminder
+//        Intent intent = new Intent(MainMenuActivity.this, AlarmReceiver.class);//the same as up
+//        intent.setAction(AlarmReceiver.ACTION_ALARM_RECEIVER);//the same as up
+//        boolean alarmUp = (PendingIntent.getBroadcast(MainMenuActivity.this, 1001, intent, PendingIntent.FLAG_NO_CREATE) != null);//just changed the flag
 
+
+        if (Period == null) //if period has'nt been defined exit
+            return;
+
+        Calendar calendar = Calendar.getInstance();
+
+        switch (Period) {
+            case "Twice Weekly":
+                calendar.add(Calendar.DATE, 4);
+                calendar.set(Calendar.HOUR_OF_DAY, 9);
+                calendar.set(Calendar.MINUTE, 30);
+                break;
+            case "Weekly":
+                calendar.add(Calendar.DATE, 7);
+                calendar.set(Calendar.HOUR_OF_DAY, 9);
+                calendar.set(Calendar.MINUTE, 30);
+                break;
+            case "Bi-weekly":
+                calendar.add(Calendar.DATE, 14);
+                calendar.set(Calendar.HOUR_OF_DAY, 9);
+                calendar.set(Calendar.MINUTE, 30);
+                break;
+            case "Monthly":
+                calendar.add(Calendar.DATE, 30);
+                calendar.set(Calendar.HOUR_OF_DAY, 9);
+                calendar.set(Calendar.MINUTE, 30);
+                break;
+        }
+
+        Intent intent1 = new Intent(MainMenuActivity.this, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainMenuActivity.this, 0, intent1, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager am = (AlarmManager) MainMenuActivity.this.getSystemService(ALARM_SERVICE);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+    }
 }

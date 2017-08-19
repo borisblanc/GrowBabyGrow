@@ -379,7 +379,6 @@ public class Utils {
     {
         File from = new File(dir, fromname);
         File to = new File(dir, toname);
-
         return from.exists() && from.renameTo(to);
     }
 
@@ -467,12 +466,48 @@ public class Utils {
         return Bitmap.createScaledBitmap(bitmap, newwidth, newheight, true);
     }
 
-    public static void SetFabTooltip(Context context, View v, String text, boolean isanimated)
+
+
+    public static void SetViewTooltip(Context context, View v, String text, boolean isanimated, int gravity)
     {
         new SimpleTooltip.Builder(context)
                 .anchorView(v)
                 .text(text)
-                .gravity(Gravity.START)
+                .gravity(gravity)
+//                .onDismissListener(new SimpleTooltip.OnDismissListener() {
+//                    @Override
+//                    public void onDismiss(SimpleTooltip tooltip) {
+//                        System.out.println("dismiss " + tooltip);
+//                    }
+//                })
+//                .onShowListener(new SimpleTooltip.OnShowListener() {
+//                    @Override
+//                    public void onShow(SimpleTooltip tooltip) {
+//                        System.out.println("show " + tooltip);
+//                    }
+//                })
+                .animated(isanimated)
+                .backgroundColor(Color.GRAY)
+                .arrowColor(Color.GRAY)
+                .textColor(Color.WHITE)
+                .arrowHeight((int) SimpleTooltipUtils.pxFromDp(30))
+                //.arrowWidth((int) SimpleTooltipUtils.pxFromDp(50))
+                //.maxWidth(R.dimen.simpletooltip_max_width)
+
+                //.animationDuration(2000)
+                //.contentView(R.layout.tooltip_context, R.id.tooltipTv)
+                .build()
+                .show();
+
+    }
+
+
+    public static void SetViewTooltipCV(Context context, View v, String text, boolean isanimated, int gravity, boolean showarrow)
+    {
+        new SimpleTooltip.Builder(context)
+                .anchorView(v)
+                .text(text)
+                .gravity(gravity)
 //                .onDismissListener(new SimpleTooltip.OnDismissListener() {
 //                    @Override
 //                    public void onDismiss(SimpleTooltip tooltip) {
@@ -490,6 +525,7 @@ public class Utils {
                 .arrowColor(Color.GRAY)
 //                .textColor(Color.WHITE)
                 .arrowHeight((int) SimpleTooltipUtils.pxFromDp(30))
+                .showArrow(showarrow)
                 //.arrowWidth((int) SimpleTooltipUtils.pxFromDp(50))
                 //.maxWidth(R.dimen.simpletooltip_max_width)
 
