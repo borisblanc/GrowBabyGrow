@@ -9,15 +9,15 @@
     android:keepScreenOn="true"
     android:fitsSystemWindows="false">
 
-    <com.app.growbabygrow.Classes.CameraSourcePreview
+    <com.app.babygrow.Classes.CameraSourcePreview
         android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <com.app.growbabygrow.Classes.GraphicOverlay
+        <com.app.babygrow.Classes.GraphicOverlay
             android:id="@+id/faceOverlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-    </com.app.growbabygrow.Classes.CameraSourcePreview>
+    </com.app.babygrow.Classes.CameraSourcePreview>
 
     <LinearLayout
         android:layout_width="match_parent"

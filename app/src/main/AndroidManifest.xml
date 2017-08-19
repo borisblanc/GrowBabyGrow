@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.app.growbabygrow">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.app.babygrow">
+
+    <uses-sdk
+        android:minSdkVersion="21"
+        android:targetSdkVersion="25" />
+
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:resizeable="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -9,13 +20,9 @@
 
 
 
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="true" />
-    <uses-feature
-        android:name="android.hardware.camera.front"
-        android:required="true" />
-    <uses-feature android:name="android.hardware.camera2.full" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+    <uses-feature android:name="android.hardware.camera2.full" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -24,7 +31,7 @@
         android:roundIcon="@drawable/baby_icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <receiver android:name="com.app.growbabygrow.Classes.AlarmReceiver"/>
+        <receiver android:name=".Classes.AlarmReceiver"/>
         <activity
             android:name=".CaptureActivity"
             android:screenOrientation="landscape">

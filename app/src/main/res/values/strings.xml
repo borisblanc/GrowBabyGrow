@@ -39,7 +39,7 @@
 
 
     <!-- shared preference keys for saved session info and videos -->
-    <string name="p_file1_key">com.app.growbabygrow.pfile1</string>
+    <string name="p_file1_key">com.app.babygrow.pfile1</string>
     <string name="p_file1_is_new">is_new</string>
     <string name="p_file1_saved_name">saved_name</string>
     <string name="p_file1_saved_period">saved_period</string>
@@ -76,7 +76,7 @@
     <string name="p_file1_saved_shown_tooltips_overlay_count">saved_shown_tooltips_overlay_count</string>
     <string name="p_file1_saved_shown_tooltips_record_count">saved_shown_tooltips_record_count</string>
 
-    <string name="p_file2_key">com.app.growbabygrow.pfile2</string>
+    <string name="p_file2_key">com.app.babygrow.pfile2</string>
 
 
 
