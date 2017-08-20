@@ -4,18 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -25,15 +19,12 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.app.babygrow.Classes.Helpers;
 import com.app.babygrow.Classes.Bigflake.ExtractDecodeEditEncodeMuxTest;
+import com.app.babygrow.Classes.Helpers;
 import com.app.babygrow.Classes.SyncDialogue;
 import com.app.babygrow.Classes.Utils;
 import com.app.babygrow.Classes.VideoUtils;
-import com.app.babygrow.R;
-import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
-import com.google.android.gms.vision.face.FaceDetector;
 import com.google.gson.Gson;
 
 import java.io.File;
@@ -243,16 +234,19 @@ public class VideoEditActivity extends AppCompatActivity {
                     if (!performMerge)
                         return;
 
+                    SetNextSessionface(SelectedTrimmedVideoface); //next session face
+
                     Toast.makeText(context, "Merging Baby Grow!", Toast.LENGTH_SHORT).show();
                     Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200); //not working here!! why??
                     //face image for next session overlay
-                    Thread th = new Thread(new Runnable() {
-                        public void run() {
-                            ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
-                            SetNextSessionface(SelectedTrimmedVideoface); //next session face
-                        }
-                    });
-                    th.start();
+//                    Thread th = new Thread(new Runnable() {
+//                        public void run() {
+//                            ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
+//
+//                        }
+//                    });
+//                    th.start();
+
 
                     VideoUtils.MuxMergeVideos(getApplicationContext(), new File(MainMergedVideoOutputFilepath), new File(MainMergedVideoOutputFilepath), new File(SelectedTrimmedVideoOutputFilepath));
 
@@ -271,6 +265,8 @@ public class VideoEditActivity extends AppCompatActivity {
                     if (!performMerge)
                         return;
 
+                    SetNextSessionface(SelectedTrimmedVideoface); //next session face
+
                     //need to block UI thread and show loading overlay if preview isn't ready yet and poll until it is
                     if (!ispreviewready) {
                         Toast.makeText(context, "Creating first Baby Grow, this should only take a few seconds!", Toast.LENGTH_LONG).show();
@@ -281,13 +277,13 @@ public class VideoEditActivity extends AppCompatActivity {
                     }
 
                     //face image for previous session overlay
-                    Thread thbitmap = new Thread(new Runnable() {
-                        public void run() {
-                            ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
-                            SetNextSessionface(SelectedTrimmedVideoface); //next session face
-                        }
-                    });
-                    thbitmap.start();
+//                    Thread thbitmap = new Thread(new Runnable() {
+//                        public void run() {
+//                            //ExtractEditSaveBitmap(SelectedTrimmedVideoOutputFilepath, OverlayBitmapFilePath, SelectedTrimmedVideofacets);
+//
+//                        }
+//                    });
+//                    thbitmap.start();
 
 
                     Thread th = new Thread(new Runnable() {
@@ -313,6 +309,8 @@ public class VideoEditActivity extends AppCompatActivity {
                                 VideoUtils.MuxMergeVideos(getApplicationContext(), new File(MainMergedVideoOutputFilepath), new File(tempintrofile.getAbsolutePath()), new File(SelectedTrimmedVideoOutputFilepath));
                                 if (tempintrofile.exists())
                                     tempintrofile.delete();
+
+
 
                                 runOnUiThread(new Runnable() { //run this shit on UI thread
                                     @Override
@@ -363,109 +361,110 @@ public class VideoEditActivity extends AppCompatActivity {
     }
 
     //do this on separate thread
-    private void ExtractEditSaveBitmap(String inputvideopath, String Savepath, Long Timestampmilli)
-    {
-        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(inputvideopath);
-        Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime(Timestampmilli * 1000); //convert unit to microsecond
-        SaveLastFaceImage(bitmap, Savepath);
-    }
+//    private void ExtractEditSaveBitmap(String inputvideopath, String Savepath, Long Timestampmilli)
+//    {
+//        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+//        mediaMetadataRetriever.setDataSource(inputvideopath);
+//        Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime(Timestampmilli * 1000); //convert unit to microsecond
+//        SaveLastFaceImage(bitmap, Savepath);
+//    }
+//
+//
+//    private void SaveLastFaceImage(Bitmap origbitmap, String Savepath)
+//    {
+//        FaceDetector detector = new FaceDetector.Builder(context)
+//                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+//                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+//                .setMode(FaceDetector.FAST_MODE)
+//                .setProminentFaceOnly(true)
+//                .setTrackingEnabled(true)
+//                .build();
+//
+//
+//        Bitmap scaledbmap = Utils.scaleBitmap(origbitmap, context.getResources().getInteger(R.integer.overlay_image_scale)); //face detector too slow without scaling
+//        Frame newframe = new Frame.Builder().setBitmap(scaledbmap).build();
+//
+//        SparseArray faces = detector.detect(newframe); //todo sometimes no face is detected when face is off screen need to think of how to handle this
+//
+//        //Utils.testSavebitmap(scaledbmap, Savepath);
+//        Face face = Utils.GetFirstFace(faces); //this face is only good for cropping image, can't use this for overlay because its not relative to preview dimensions just bitmap dimensions
+//
+//
+//
+//        try {
+//            Bitmap cropped = crop(scaledbmap, face);
+//            scaledbmap.recycle();
+//            Bitmap newbitmap = Bitmap.createBitmap(cropped.getWidth(), cropped.getHeight(), Bitmap.Config.ARGB_8888);
+//            fade(cropped, newbitmap);
+//            cropped.recycle();
+//
+//            Bitmap finalbitmap = null;
+//
+//            if (usingFrontCamera) //mirror for front camera only
+//            {
+//                finalbitmap = flip(newbitmap);
+//                newbitmap.recycle();
+//            }
+//            else
+//                finalbitmap = newbitmap;
+//
+//            Utils.Savebitmap(finalbitmap, Savepath, getApplicationContext());
+//        }
+//        catch(Exception ex)
+//        {
+//            Log.e(TAG, ex.getMessage(), ex);
+//            Helpers.Logger.LogExceptionToFile("VideoEditActivity.SaveLastFaceImage", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
+//        }
+//
+//        detector.release();
+//    }
 
 
-    private void SaveLastFaceImage(Bitmap origbitmap, String Savepath)
-    {
-        FaceDetector detector = new FaceDetector.Builder(context)
-                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-                .setMode(FaceDetector.FAST_MODE)
-                .setProminentFaceOnly(true)
-                .setTrackingEnabled(true)
-                .build();
+//    private Bitmap crop (Bitmap src, Face face)
+//    {
+//        Bitmap cropped = null;
+//        try {
+//            int actualCropX = (int) face.getPosition().x < 0f ? (int) 0f : (int) face.getPosition().x;
+//            int actualCropY = (int) face.getPosition().y < 0f ? (int) 0f : (int) face.getPosition().y;
+//            int facewidth = (int) face.getWidth();
+//            int faceheight = (int) face.getHeight();
+//
+//            //todo will need to experiment with different use cases of when face goes off screen for this.
+//            if (src.getHeight() <= (actualCropY + faceheight)) //this happens when face is too low/high and cut off on bottom/top
+//                faceheight = src.getHeight() - actualCropY - 1;
+//
+//            if (src.getWidth() <= (actualCropX + facewidth)) //this happens when face is too off to the side and cut off on left/right
+//                facewidth = src.getWidth() - actualCropX -1;
+//
+//            cropped = Bitmap.createBitmap(src, actualCropX , actualCropY, facewidth, faceheight); //crop
+//        }
+//        catch(Exception ex)
+//        {
+//            Log.e(TAG, ex.getMessage(), ex);
+//            Helpers.Logger.LogExceptionToFile("VideoEditActivity.crop", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
+//        }
+//
+//        //src.recycle();
+//        return cropped;
+//    }
 
 
-        Bitmap scaledbmap = Utils.scaleBitmap(origbitmap, context.getResources().getInteger(R.integer.overlay_image_scale)); //face detector too slow without scaling
-        Frame newframe = new Frame.Builder().setBitmap(scaledbmap).build();
-
-        SparseArray faces = detector.detect(newframe); //todo sometimes no face is detected when face is off screen need to think of how to handle this
-
-        //Utils.testSavebitmap(scaledbmap, Savepath);
-        Face face = Utils.GetFirstFace(faces); //this face is only good for cropping image, can't use this for overlay because its not relative to preview dimensions just bitmap dimensions
-
-
-        try {
-            Bitmap cropped = crop(scaledbmap, face);
-            scaledbmap.recycle();
-            Bitmap newbitmap = Bitmap.createBitmap(cropped.getWidth(), cropped.getHeight(), Bitmap.Config.ARGB_8888);
-            fade(cropped, newbitmap);
-            cropped.recycle();
-
-            Bitmap finalbitmap = null;
-
-            if (usingFrontCamera) //mirror for front camera only
-            {
-                finalbitmap = flip(newbitmap);
-                newbitmap.recycle();
-            }
-            else
-                finalbitmap = newbitmap;
-
-            Utils.Savebitmap(finalbitmap, Savepath, getApplicationContext());
-        }
-        catch(Exception ex)
-        {
-            Log.e(TAG, ex.getMessage(), ex);
-            Helpers.Logger.LogExceptionToFile("VideoEditActivity.SaveLastFaceImage", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
-        }
-
-        detector.release();
-    }
-
-
-    private Bitmap crop (Bitmap src, Face face)
-    {
-        Bitmap cropped = null;
-        try {
-            int actualCropX = (int) face.getPosition().x < 0f ? (int) 0f : (int) face.getPosition().x;
-            int actualCropY = (int) face.getPosition().y < 0f ? (int) 0f : (int) face.getPosition().y;
-            int facewidth = (int) face.getWidth();
-            int faceheight = (int) face.getHeight();
-
-            //todo will need to experiment with different use cases of when face goes off screen for this.
-            if (src.getHeight() <= (actualCropY + faceheight)) //this happens when face is too low/high and cut off on bottom/top
-                faceheight = src.getHeight() - actualCropY - 1;
-
-            if (src.getWidth() <= (actualCropX + facewidth)) //this happens when face is too off to the side and cut off on left/right
-                facewidth = src.getWidth() - actualCropX -1;
-
-            cropped = Bitmap.createBitmap(src, actualCropX , actualCropY, facewidth, faceheight); //crop
-        }
-        catch(Exception ex)
-        {
-            Log.e(TAG, ex.getMessage(), ex);
-            Helpers.Logger.LogExceptionToFile("VideoEditActivity.crop", Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), errorfilename), ex);
-        }
-
-        //src.recycle();
-        return cropped;
-    }
-
-
-    private Bitmap flip (Bitmap src)
-    {
-        Matrix m = new Matrix();
-        m.preScale(-1, 1);
-        Bitmap dst = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, false);
-        dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
-        return dst;
-    }
-
-    private void fade (Bitmap src, Bitmap dst)
-    {
-        Canvas canvas = new Canvas(dst);
-        Paint alphapaint = new Paint();
-        alphapaint.setAlpha(80); //transparency
-        canvas.drawBitmap(src, 0, 0, alphapaint);
-    }
+//    private Bitmap flip (Bitmap src)
+//    {
+//        Matrix m = new Matrix();
+//        m.preScale(-1, 1);
+//        Bitmap dst = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, false);
+//        dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
+//        return dst;
+//    }
+//
+//    private void fade (Bitmap src, Bitmap dst)
+//    {
+//        Canvas canvas = new Canvas(dst);
+//        Paint alphapaint = new Paint();
+//        alphapaint.setAlpha(80); //transparency
+//        canvas.drawBitmap(src, 0, 0, alphapaint);
+//    }
 
 
     private void CreatePreview(final int width, final int height)

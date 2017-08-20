@@ -21,7 +21,7 @@ import java.util.ArrayList;
 public class FaceGraphic extends GraphicOverlay.Graphic {
     private Bitmap smiley;
     private Bitmap cool;
-    private Bitmap myface;
+    //private Bitmap myface;
 
     private ArrayList<Bitmap> animation1;
     public Boolean show_Prev_Session_Overlay = false;
@@ -51,6 +51,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
     private Paint mFacePositionPaint;
     private Paint mIdPaint;
     private Paint mBoxPaint;
+    private Paint mBoxPaintLastweek;
 
     private static int mCurrentColorIndex = 0;
 
@@ -86,6 +87,11 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         mBoxPaint.setStyle(Paint.Style.STROKE);
         mBoxPaint.setStrokeWidth(BOX_STROKE_WIDTH);
 
+        mBoxPaintLastweek = new Paint();
+        mBoxPaintLastweek.setColor(Color.GRAY);
+        mBoxPaintLastweek.setStyle(Paint.Style.STROKE);
+        mBoxPaintLastweek.setStrokeWidth(BOX_STROKE_WIDTH);
+
 
         opt = new BitmapFactory.Options();
         opt.inScaled = false;
@@ -96,13 +102,13 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         cool = BitmapFactory.decodeResource(resources, R.drawable.cool, opt);
         lastsessionface = Lastsessionface;
 
-        File overlaybitmap = new File(OverlayBitmapFilePath);
-        if (overlaybitmap.exists()) {
-
-            int bitmapscale = context.getResources().getInteger(R.integer.overlay_image_scale); //global constant for bitmap scale
-            Bitmap smallface = BitmapFactory.decodeFile(overlaybitmap.getAbsolutePath());
-            myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * bitmapscale, smallface.getHeight() * bitmapscale, false);
-        }
+//        File overlaybitmap = new File(OverlayBitmapFilePath);
+//        if (overlaybitmap.exists()) {
+//
+//            int bitmapscale = context.getResources().getInteger(R.integer.overlay_image_scale); //global constant for bitmap scale
+//            Bitmap smallface = BitmapFactory.decodeFile(overlaybitmap.getAbsolutePath());
+//            myface = Bitmap.createScaledBitmap(smallface, smallface.getWidth() * bitmapscale, smallface.getHeight() * bitmapscale, false);
+//        }
 
 //        animation1 = new ArrayList<>();
 //
@@ -164,25 +170,40 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         }
 
         // Draws a bounding box around the face, for both preview and recording
+//        float xOffset = scaleX(face.getWidth() / 2.0f);
+//        float yOffset = scaleY(face.getHeight() / 2.0f);
+//        float left = x - xOffset;
+//        float top = y - yOffset;
+//        float right = x + xOffset;
+//        float bottom = y + yOffset;
+//        canvas.drawRect(left, top, right, bottom, mBoxPaint);
+        drawrectforface(x, y, face, canvas, mBoxPaint);
+
+        //for preview only show prev session overlay to show user last week position
+        if (show_Prev_Session_Overlay && lastsessionface != null)// && myface != null) //&& prev_session_overlay_counter < 50) //prev_session_overlay_counter < 50 says it will show for 50 frames, not sure what fps is here
+        {
+            float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
+            float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
+            //canvas.drawCircle(oldx, oldy, FACE_POSITION_RADIUS, mFacePositionPaint); //this will show center of face from last week
+
+            drawrectforface(oldx, oldy, lastsessionface, canvas, mBoxPaintLastweek);
+
+            //canvas.drawBitmap(myface, oldx - (myface.getWidth() / 2), oldy - (myface.getHeight() / 2), null); //puts image in center of where it was last week
+
+
+            //prev_session_overlay_counter++; //determines how long prev session overlay will display for on screen
+        }
+    }
+
+    private void drawrectforface(float x, float y, Face face, Canvas canvas, Paint boxpaint)
+    {
         float xOffset = scaleX(face.getWidth() / 2.0f);
         float yOffset = scaleY(face.getHeight() / 2.0f);
         float left = x - xOffset;
         float top = y - yOffset;
         float right = x + xOffset;
         float bottom = y + yOffset;
-        canvas.drawRect(left, top, right, bottom, mBoxPaint);
-
-        //for preview only show prev session overlay to show user last week position
-        if (show_Prev_Session_Overlay && lastsessionface != null && myface != null) //&& prev_session_overlay_counter < 50) //prev_session_overlay_counter < 50 says it will show for 50 frames, not sure what fps is here
-        {
-            float oldx = translateX(lastsessionface.getPosition().x + lastsessionface.getWidth() / 2);
-            float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
-            canvas.drawCircle(oldx, oldy, FACE_POSITION_RADIUS, mFacePositionPaint); //this will show center of face from last week
-            canvas.drawBitmap(myface, oldx - (myface.getWidth() / 2), oldy - (myface.getHeight() / 2), null); //puts image in center of where it was last week
-
-            //Utils.SetViewTooltip(mContext, myface, "Save Baby Grow Project", true);
-            //prev_session_overlay_counter++; //determines how long prev session overlay will display for on screen
-        }
+        canvas.drawRect(left, top, right, bottom, boxpaint);
     }
 
 

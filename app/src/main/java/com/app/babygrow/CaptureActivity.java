@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -190,7 +191,10 @@ public class CaptureActivity extends AppCompatActivity {
                         stopCameraSource(); //call this to release everything or all the shit breaks
                         trackRecord = false;
                         recButton.setText(R.string.record);
-                        recButton.setBackgroundColor(Color.GRAY);
+                        recButton.setTextColor(Color.WHITE);
+                        Drawable roundedbackgroundred= getResources().getDrawable( R.drawable.buttonshapered );
+                        recButton.setBackground(roundedbackgroundred);
+
                         requestPermissionThenOpenCamera(); //back to preview mode
                         mFaceGraphic.show_Smile_Counter = false;
                         mFaceGraphic.show_Prev_Session_Overlay = false; //don't show prev session overlay twice
@@ -222,7 +226,9 @@ public class CaptureActivity extends AppCompatActivity {
                         stopCameraSource(); //call this to release everything or all the shit breaks
                         trackRecord = true;
                         recButton.setText(R.string.stop);
-                        recButton.setBackgroundColor(Color.RED);
+                        recButton.setTextColor(Color.RED);
+                        Drawable roundedbackgroundwhite = getResources().getDrawable( R.drawable.buttonshapewhite );
+                        recButton.setBackground(roundedbackgroundwhite);
                         requestPermissionThenOpenCamera();
                         mFaceGraphic.show_Smile_Counter = true;
                         mFaceGraphic.show_Prev_Session_Overlay = false;
