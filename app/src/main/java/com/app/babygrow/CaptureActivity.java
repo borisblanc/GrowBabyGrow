@@ -116,8 +116,6 @@ public class CaptureActivity extends AppCompatActivity {
         }
 
 
-
-
         fs_current = new FaceSession();
         //fs_current.MainMergedVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_main_mp4pathname), null);
         fs_current.OriginalVideoOutputFilepath = sharedpreferences.getString(getString(R.string.p_file1_saved_orig_mp4pathname), null);
@@ -305,7 +303,6 @@ public class CaptureActivity extends AppCompatActivity {
         }
 
     }
-
 
 
     private void CreateTrimmedVideo(Helpers.Tuple<Long,Long> bestfacetimestamps, String OriginalVideoOutputFilepath, String TrimmedVideoOutputFilepath)
@@ -575,10 +572,10 @@ public class CaptureActivity extends AppCompatActivity {
         /**
          * Start tracking the detected face instance within the face overlay.
          */
-        @Override
-        public void onNewItem(int faceId, Face item) {
-            mFaceGraphic.setId(faceId);
-        }
+//        @Override
+//        public void onNewItem(int faceId, Face item) {
+//            mFaceGraphic.setId(faceId);
+//        }
 
         /**
          * Update the position/characteristics of the face within the overlay.

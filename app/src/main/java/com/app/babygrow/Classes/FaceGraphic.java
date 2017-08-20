@@ -126,9 +126,10 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
 //        }
     }
 
-    public void setId(int id) {
-        faceId = id;
-    }
+
+//    public void setId(int id) {
+//        faceId = id;
+//    }
 
 
     /**
@@ -169,15 +170,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
             canvas.drawText("Smiles: " + Math.round(numberofsmiles), 100, canvas.getHeight() - 100, mIdPaint);
         }
 
-        // Draws a bounding box around the face, for both preview and recording
-//        float xOffset = scaleX(face.getWidth() / 2.0f);
-//        float yOffset = scaleY(face.getHeight() / 2.0f);
-//        float left = x - xOffset;
-//        float top = y - yOffset;
-//        float right = x + xOffset;
-//        float bottom = y + yOffset;
-//        canvas.drawRect(left, top, right, bottom, mBoxPaint);
-        drawrectforface(x, y, face, canvas, mBoxPaint);
+        drawShapeOverFace(x, y, face, canvas, mBoxPaint, false);
 
         //for preview only show prev session overlay to show user last week position
         if (show_Prev_Session_Overlay && lastsessionface != null)// && myface != null) //&& prev_session_overlay_counter < 50) //prev_session_overlay_counter < 50 says it will show for 50 frames, not sure what fps is here
@@ -186,7 +179,7 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
             float oldy = translateY(lastsessionface.getPosition().y + lastsessionface.getHeight() / 2);
             //canvas.drawCircle(oldx, oldy, FACE_POSITION_RADIUS, mFacePositionPaint); //this will show center of face from last week
 
-            drawrectforface(oldx, oldy, lastsessionface, canvas, mBoxPaintLastweek);
+            drawShapeOverFace(oldx, oldy, lastsessionface, canvas, mBoxPaintLastweek, true);
 
             //canvas.drawBitmap(myface, oldx - (myface.getWidth() / 2), oldy - (myface.getHeight() / 2), null); //puts image in center of where it was last week
 
@@ -195,7 +188,8 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         }
     }
 
-    private void drawrectforface(float x, float y, Face face, Canvas canvas, Paint boxpaint)
+    // Draws a bounding shape around the face, for both preview and recording
+    private void drawShapeOverFace(float x, float y, Face face, Canvas canvas, Paint boxpaint, boolean drawoval)
     {
         float xOffset = scaleX(face.getWidth() / 2.0f);
         float yOffset = scaleY(face.getHeight() / 2.0f);
@@ -203,7 +197,11 @@ public class FaceGraphic extends GraphicOverlay.Graphic {
         float top = y - yOffset;
         float right = x + xOffset;
         float bottom = y + yOffset;
-        canvas.drawRect(left, top, right, bottom, boxpaint);
+
+        if (!drawoval)
+            canvas.drawRect(left, top, right, bottom, boxpaint);
+        else
+            canvas.drawOval(left, top, right, bottom, boxpaint);
     }
 
 
