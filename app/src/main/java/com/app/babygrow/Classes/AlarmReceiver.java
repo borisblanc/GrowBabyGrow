@@ -33,7 +33,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
-        NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(context).setSmallIcon(R.drawable.baby_icon)
+        NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(context).setSmallIcon(R.drawable.baby_icon2)
                 .setContentTitle("BabyGrow")
                 .setContentText("Time To Record New BabyGrow.").setSound(alarmSound)
                 .setAutoCancel(true).setWhen(when)

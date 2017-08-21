@@ -40,9 +40,9 @@
             android:layout_height="40dp"
             android:layout_marginLeft="10dp"
             android:adjustViewBounds="true"
-            android:background="@drawable/baby_icon"
+            android:background="@drawable/baby_icon2"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/baby_icon" />
+            app:srcCompat="@drawable/baby_icon2" />
 
 
     </LinearLayout>

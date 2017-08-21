@@ -30,6 +30,7 @@ import com.app.babygrow.Classes.AlarmReceiver;
 import com.app.babygrow.Classes.Helpers;
 import com.app.babygrow.Classes.Utils;
 import com.app.babygrow.R;
+import com.splunk.mint.Mint;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -42,6 +43,8 @@ import static com.app.babygrow.R.id.fab;
 
 
 public class MainMenuActivity extends AppCompatActivity {
+
+
     public static final String TAG = "MainMenuActivity";
     private FloatingActionButton fabnewproj;
     private EditText txtname;
@@ -114,7 +117,8 @@ public class MainMenuActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
+        Mint.initAndStartSession(this.getApplication(), "5a6be33e");
+        //Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
 
@@ -122,6 +126,7 @@ public class MainMenuActivity extends AppCompatActivity {
             finish();
             return; // add this to prevent from doing unnecessary stuffs
         }
+
 
         context = getApplicationContext();
 
@@ -467,7 +472,6 @@ public class MainMenuActivity extends AppCompatActivity {
         public void uncaughtException(Thread thread, Throwable ex) {
             String tag = "Unhandled Exception";
             Log.d(tag, ex.getMessage(), ex);
-
             Helpers.Logger.LogExceptionToFile(tag, Helpers.Logger.ErrorLoggerFilePath(getApplicationContext(), "Unhandled"), ex, thread.getName());
         }
 
