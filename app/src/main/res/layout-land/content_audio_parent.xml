@@ -18,78 +18,77 @@
 
         <TextView
             android:id="@+id/txtmain"
-            android:layout_width="306dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="85dp"
+            android:layout_width="365dp"
+            android:layout_height="29dp"
+            android:layout_marginStart="70dp"
             android:text="Select Music for your Baby Grow..."
             android:textAlignment="viewStart"
             android:textColor="@android:color/black"
-            android:textSize="18sp"
-            app:layout_constraintLeft_toLeftOf="parent"
+            android:textSize="24sp"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginLeft="70dp"
-            android:layout_marginTop="0dp" />
+            android:layout_marginTop="0dp"
+            app:layout_constraintLeft_toLeftOf="parent" />
 
         <include
             android:id="@+id/audiochild1"
             layout="@layout/content_audio_child"
-            android:layout_width="305dp"
-            android:layout_height="140dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
             android:layout_marginStart="70dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/txtmain"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintHorizontal_bias="0.794"
             android:layout_marginTop="0dp"
-            app:layout_constraintHorizontal_bias="0.506" />
+            app:layout_constraintTop_toBottomOf="@+id/txtmain" />
 
         <include
             android:id="@+id/audiochild2"
             layout="@layout/content_audio_child"
-            android:layout_width="305dp"
-            android:layout_height="140dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
             android:layout_marginStart="70dp"
             android:layout_marginTop="2dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/audiochild1" />
+            app:layout_constraintTop_toBottomOf="@+id/audiochild1"
+            android:layout_marginEnd="8dp" />
 
         <include
             android:id="@+id/audiochild3"
             layout="@layout/content_audio_child"
-            android:layout_width="305dp"
-            android:layout_height="140dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
             android:layout_marginStart="70dp"
             android:layout_marginTop="2dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/audiochild2" />
+            app:layout_constraintTop_toBottomOf="@+id/audiochild2"
+            android:layout_marginEnd="8dp" />
 
         <include
             android:id="@+id/audiochild4"
             layout="@layout/content_audio_child"
-            android:layout_width="305dp"
-            android:layout_height="140dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
             android:layout_marginStart="70dp"
             android:layout_marginTop="2dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/audiochild3" />
+            app:layout_constraintTop_toBottomOf="@+id/audiochild3"
+            android:layout_marginEnd="8dp"/>
 
         <include
             android:id="@+id/audiochild5"
             layout="@layout/content_audio_child"
-            android:layout_width="305dp"
-            android:layout_height="140dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
             android:layout_marginStart="70dp"
             android:layout_marginTop="2dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/audiochild4" />
+            app:layout_constraintTop_toBottomOf="@+id/audiochild4"
+            android:layout_marginEnd="8dp"/>
 
         <ImageButton
             android:id="@+id/btn_hamburger"

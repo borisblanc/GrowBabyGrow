@@ -32,8 +32,7 @@
         android:theme="@style/AppTheme">
         <receiver android:name=".Classes.AlarmReceiver"/>
         <activity
-            android:name=".CaptureActivity"
-            android:screenOrientation="landscape">
+            android:name=".CaptureActivity">
             <intent-filter>
                 <action android:name="android.intent.action.CaptureActivity" />
 
@@ -42,7 +41,6 @@
         </activity>
         <activity
             android:name=".MainMenuActivity"
-            android:screenOrientation="landscape"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -59,8 +57,7 @@
             android:name=".VideoViewActivity"
             android:screenOrientation="landscape" />
         <activity
-            android:name=".AudioActivity"
-            android:screenOrientation="landscape" />
+            android:name=".AudioActivity" />
 
     </application>
 

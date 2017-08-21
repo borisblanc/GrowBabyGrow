@@ -1,12 +1,16 @@
 package com.app.babygrow;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -29,6 +33,7 @@ import com.app.babygrow.Classes.Helpers;
 import com.app.babygrow.Classes.Camera2Source;
 import com.app.babygrow.Classes.CameraSource;
 import com.app.babygrow.Classes.FaceGraphic;
+import com.app.babygrow.Classes.OrientationManager;
 import com.app.babygrow.Classes.Utils;
 import com.app.babygrow.Classes.VideoUtils;
 import com.app.babygrow.R;
@@ -46,15 +51,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class CaptureActivity extends AppCompatActivity {
+public class CaptureActivity extends AppCompatActivity implements OrientationManager.OrientationListener {
     private static final String TAG = "CaptureActivity";
     private String errorfilename = "CaptureActivityErrors";
 
     private Context context;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private static final int REQUEST_STORAGE_PERMISSION = 201;
-    //private TextView cameraVersion;
-    //private ImageView ivAutoFocus;
 
     // CAMERA VERSION ONE DECLARATIONS
     private CameraSource mCameraSource = null;
@@ -86,23 +89,31 @@ public class CaptureActivity extends AppCompatActivity {
     public ImageButton toggleoverlayButton;
     private Boolean isoverlyshown = false;
     private String OverlayBitmapFilePath;
+    private OrientationManager orientationManager;
+    private View progressOverlay;
+    private OrientationManager.ScreenOrientation lastScreenOrientation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        context = getApplicationContext();
+
+
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE); lock this in manifest instead
         setContentView(R.layout.captureactivity_main);
-        context = getApplicationContext();
+
         recButton = (Button) findViewById(R.id.btn_record);
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
-        //ivAutoFocus = (ImageView) findViewById(R.id.ivAutoFocus);
         toggleoverlayButton = (ImageButton) findViewById(R.id.btn_toggle_overlay);
+        progressOverlay = findViewById(R.id.progress_overlay);
+
+        orientationManager = new OrientationManager(context, SensorManager.SENSOR_DELAY_NORMAL, this);
+        orientationManager.enable();
 
         sharedpreferences = getSharedPreferences(getString(R.string.p_file1_key), Context.MODE_PRIVATE);
-
 
         //if user views < 2 show increment and save
         int reccluestooltipviews = sharedpreferences.getInt(getString(R.string.p_file1_saved_shown_tooltips_record_count), 0);
@@ -186,6 +197,9 @@ public class CaptureActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (mCamera2Source.mRecord) {
 
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); //allow rotation again
+                        orientationManager.enable(); //bring back monitoring
+
                         stopCameraSource(); //call this to release everything or all the shit breaks
                         trackRecord = false;
                         recButton.setText(R.string.record);
@@ -221,6 +235,8 @@ public class CaptureActivity extends AppCompatActivity {
                         }
                     }
                     else {
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); //lock screen while recording
+                        orientationManager.disable(); //disable orientationManager tracking while locked
                         stopCameraSource(); //call this to release everything or all the shit breaks
                         trackRecord = true;
                         recButton.setText(R.string.stop);
@@ -554,12 +570,42 @@ public class CaptureActivity extends AppCompatActivity {
         mPreview.stop();
     }
 
-//    private class GraphicFaceTrackerFactory implements MultiProcessor.Factory<Face> {
-//        @Override
-//        public Tracker<Face> create(Face face) {
-//            return new GraphicFaceTracker(mGraphicOverlay);
-//        }
-//    }
+
+
+    @Override
+    public void onOrientationChange(OrientationManager.ScreenOrientation screenOrientation)
+    {
+        switch(screenOrientation){
+            case PORTRAIT:
+                if (lastScreenOrientation == null || lastScreenOrientation != OrientationManager.ScreenOrientation.PORTRAIT) { //stops dup notification
+                    Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
+                    Toast.makeText(context, "Please position phone in Landscape to Begin Baby Grow Recording.", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case REVERSED_PORTRAIT:
+                if (lastScreenOrientation == null || lastScreenOrientation != OrientationManager.ScreenOrientation.REVERSED_PORTRAIT) { //stops dup notification
+                    Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
+                    Toast.makeText(context, "Please position phone in Landscape to Begin Baby Grow Recording.", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case REVERSED_LANDSCAPE:
+                if (lastScreenOrientation == null || lastScreenOrientation != OrientationManager.ScreenOrientation.REVERSED_LANDSCAPE) { //stops dup notification
+                    Utils.animateView(progressOverlay, View.VISIBLE, 0.4f, 200);
+                    Toast.makeText(context, "Please position phone in Landscape to Begin Baby Grow Recording.", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case LANDSCAPE:
+                if (lastScreenOrientation != null && lastScreenOrientation != OrientationManager.ScreenOrientation.LANDSCAPE) { //stops dup notification
+                    Utils.animateView(progressOverlay, View.GONE, 0, 200);
+                    Toast.makeText(context, "Baby Grow now Ready, Thank you.", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+
+        lastScreenOrientation = screenOrientation;
+    }
+
+
 
     private class GraphicFaceTracker extends Tracker<Face> {
         private GraphicOverlay mOverlay;
@@ -646,6 +692,7 @@ public class CaptureActivity extends AppCompatActivity {
         super.onPause();
         wasActivityResumed = true;
         stopCameraSource();
+        orientationManager.disable();
     }
 
     @Override
@@ -655,17 +702,21 @@ public class CaptureActivity extends AppCompatActivity {
         if(previewFaceDetector != null) {
             previewFaceDetector.release();
         }
+        orientationManager.disable();
     }
 
     @Override
     public void onBackPressed(){
+
         if (trackRecord)
             Toast.makeText(context, "Please press stop on record First!", Toast.LENGTH_SHORT).show();
         else
+        {
+            orientationManager.disable();
             super.onBackPressed();
+        }
 
     }
-
 
     private class FaceSession
     {
@@ -700,6 +751,8 @@ public class CaptureActivity extends AppCompatActivity {
             _previewfinalscores = new ArrayList<>();
         }
     }
+
+
 
 }
 
